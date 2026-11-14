@@ -11,7 +11,7 @@
   const E = window.ELNINO, IDX = window.NINO34, $ = id => document.getElementById(id); if (!E || !IDX || !$('elPanel')) return;
   const API = () => window.EJ && window.EJ.follow, COLS = E.cols, ROWS = E.rows, MONTHS = E.months, OFF = (E.start - IDX.start) * 12;
   let lastIdx = IDX.values.length - 1; while (lastIdx > 0 && IDX.values[lastIdx] === null) lastIdx--;
-  const MAXM = lastIdx - OFF, SPM = 0.17685, MN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const MAXM = lastIdx - OFF, MN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const label = m => `${MN[m % 12]} ${E.start + Math.floor(m / 12)}`, idxAt = m => (OFF + m >= 0 && OFF + m < IDX.values.length) ? IDX.values[OFF + m] : null;
   const sgn = v => (v >= 0 ? '+' : '') + v.toFixed(1), state = v => v === null ? 'not published yet' : v >= 0.5 ? 'El Niño range (at or above +0.5)' : v <= -0.5 ? 'La Niña range (at or below -0.5)' : 'near normal';
   let D = null, month = 191, on = false, run = null, cache = {};
@@ -43,40 +43,49 @@
   };
 
   // ---- the overlay ----
-  const layer = $('elLayer'), vid = $('elVid'), MASK = [[0, 0.70, 0.435, 1.0], [0, 0, 0.36, 0.075]];      // NASA's timeline inset and title, in fractions of the map
-  const SHIFT_X = (((-180 - E.shift * 2.25) + 180) % 360 + 360) % 360 / 360;                              // where the movie's left edge falls on our -180..180 map
-  const tint = a => a === null ? null : a >= 0 ? `rgba(${Math.round(255 - 40 * Math.min(1, a / 4))},${Math.round(210 - 190 * Math.min(1, a / 4))},${Math.round(190 - 170 * Math.min(1, a / 4))},0.9)` : `rgba(${Math.round(190 + 70 * Math.max(-1, a / 4))},${Math.round(215 + 40 * Math.max(-1, a / 4) - 60 * Math.min(1, -a / 4))},${Math.round(240 - 30 * Math.min(1, -a / 4))},0.9)`;
+  // Drawn from elnino_fine.js (a 3-degree grid, 120 x 60 cells per month, decoded from NASA's movie by tools/analyse-nino.html), scaled up smoothly.
+  // Near-normal water, land and the parts of the movie covered by NASA's own timeline inset are transparent, so the temperature map shows through there.
+  const layer = $('elLayer'), LUTC = [[5, 48, 97], [19, 75, 134], [33, 102, 172], [50, 124, 183], [67, 147, 195], [106, 172, 208], [146, 197, 222], [177, 213, 231], [241, 244, 246], [247, 243, 240], [248, 192, 164], [244, 165, 130], [229, 130, 103], [214, 96, 77], [196, 60, 60], [178, 24, 43], [140, 12, 37], [103, 0, 31]];   // NASA's colour bar, -4.5 to +4.5 degrees in 0.5 steps
+  let FD = null, off = null;
+  const fine = () => { const F = window.ELNINO_FINE; if (!F) return null; if (!FD) { const b = atob(F.b64); FD = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) FD[i] = b.charCodeAt(i); } return F; };
   function draw() {
-    if (!layer) return; const st = $('stage'), w = st.clientWidth, h = st.clientHeight, dpr = window.devicePixelRatio || 1;
+    if (!layer) return; const st = $('stage'), w = st.clientWidth, h = st.clientHeight, dpr = window.devicePixelRatio || 1, mapEl = $('map');
     if (layer.width !== Math.round(w * dpr) || layer.height !== Math.round(h * dpr)) { layer.width = Math.round(w * dpr); layer.height = Math.round(h * dpr); }
     const c = layer.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
-    layer.style.display = (on && onSST() && month < MONTHS) ? 'block' : 'none'; if (layer.style.display === 'none') { const m0 = $('map'); if (m0) m0.style.filter = ''; return; }
-    const solo = $('elSolo').checked; const mapEl = $('map'); if (mapEl) mapEl.style.filter = solo ? '' : 'grayscale(0.85)';      // fade the temperature map to grey so the anomaly colours stand out layer.style.opacity = $('elOpacity').value / 100; layer.style.mixBlendMode = solo ? 'normal' : 'multiply';
-    if (vid && vid.readyState >= 2) {
-      for (const ox of [SHIFT_X * w, SHIFT_X * w - w]) {
-        const vw = vid.videoWidth, vh = vid.videoHeight, sy = vh * 10 / 1080, sh = vh * 960 / 1080;       // the 2:1 map fills video rows 10 to 970 of 1080
-        c.drawImage(vid, 0, sy, vw, sh, ox, 0, w, h);
-        c.drawImage(vid, 0.92 * vw, sy, 0.035 * vw, sh, ox + 0.955 * w, 0, 0.035 * w, h);                   // cover the latitude ruler at the right edge with the strip next to it
-        MASK.forEach(([x0, y0, x1, y1]) => { if (solo) { c.fillStyle = '#cfd4d9'; c.fillRect(ox + x0 * w, y0 * h, (x1 - x0) * w, (y1 - y0) * h); } else c.clearRect(ox + x0 * w, y0 * h, (x1 - x0) * w, (y1 - y0) * h); });     // NASA's own inset and labels cover these parts: no anomaly data there
-      }
-    } else {                                                                                                          // movie not ready: draw the decoded grid instead (coarse)
-      const cw = w / COLS, ch = h / ROWS;
-      for (let r = 0; r < ROWS; r++) for (let cc = 0; cc < COLS; cc++) { const col = tint(anom(month, r, cc)); if (col) { c.fillStyle = col; c.fillRect(cc * cw, r * ch, cw + 0.5, ch + 0.5); } }
+    const show = on && onSST() && month < MONTHS; layer.style.display = show ? 'block' : 'none';
+    if (!show) { if (mapEl) mapEl.style.filter = ''; return; }
+    const solo = $('elSolo').checked; layer.style.opacity = $('elOpacity').value / 100; layer.style.mixBlendMode = 'normal';
+    if (mapEl) mapEl.style.filter = solo ? '' : 'grayscale(0.85)';                    // fade the temperature map to grey so the anomaly colours stand out
+    const F = fine(); if (!F) return;
+    if (!off) { off = document.createElement('canvas'); off.width = F.cols; off.height = F.rows; }
+    const og = off.getContext('2d'), img = og.createImageData(F.cols, F.rows), base = month * F.cols * F.rows, NC = F.cols, NR = F.rows, val = new Float32Array(NC * NR);
+    for (let i = 0; i < NC * NR; i++) val[i] = FD[base + i] === 255 ? NaN : (FD[base + i] - 100) / 10;
+    for (let r = 0; r < NR; r++) {                                                        // the movie has a latitude ruler at its right edge (about 41 to 28 W): fill that narrow gap from the cells either side, where both are water
+      const l = r * NC + 45, rt = r * NC + 51; if (!isNaN(val[l]) && !isNaN(val[rt])) for (let k = 46; k <= 50; k++) if (isNaN(val[r * NC + k])) val[r * NC + k] = val[l] + (val[rt] - val[l]) * (k - 45) / 6;
     }
+    for (let i = 0; i < NC * NR; i++) {
+      const k = i * 4, a = val[i];
+      const cx = i % NC, cy = Math.floor(i / NC);
+      if (isNaN(a) && ((cx >= 52 && cx <= 103 && cy >= 42) || (cx >= 52 && cx <= 95 && cy <= 4))) { img.data[k] = 205; img.data[k + 1] = 210; img.data[k + 2] = 215; img.data[k + 3] = solo ? 255 : 150; continue; }       // grey boxes: NASA's own timeline inset and title cover the movie here, so there is no anomaly data
+      if (isNaN(a)) {                                                                     // no data (land, or covered by NASA's inset): transparent, but with a neighbour's colour so smoothing does not leave dark fringes
+        let col = solo ? [140, 147, 153] : [200, 200, 200]; if (!solo) for (let d = 1; d <= 3; d++) { const n = !isNaN(val[i - d]) && (i - d) >= Math.floor(i / NC) * NC ? val[i - d] : (!isNaN(val[i + d]) && (i + d) < (Math.floor(i / NC) + 1) * NC ? val[i + d] : null); if (n !== null) { col = LUTC[Math.max(0, Math.min(17, Math.floor((n + 4.5) / 0.5)))]; break; } }
+        img.data[k] = col[0]; img.data[k + 1] = col[1]; img.data[k + 2] = col[2]; img.data[k + 3] = solo ? 255 : 0; continue;
+      }
+      const col = LUTC[Math.max(0, Math.min(17, Math.floor((a + 4.5) / 0.5)))];
+      img.data[k] = col[0]; img.data[k + 1] = col[1]; img.data[k + 2] = col[2]; img.data[k + 3] = solo ? 255 : Math.round(255 * 0.95 * Math.max(0, Math.min(1, (Math.abs(a) - 0.1) / 0.6)));
+    }
+    og.putImageData(img, 0, 0); c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.drawImage(off, 0, 0, w, h);
   }
-  const monthTime = m => Math.min((vid && vid.duration ? vid.duration : 77) - 0.05, (m + 0.5) * SPM);
   function setMonth(m, quiet) {
     month = Math.max(0, Math.min(MAXM, Math.round(m))); cache = {}; $('elMonth').value = month;
     const v = idxAt(month); $('elMonthOut').textContent = label(month);
     if (!quiet) $('elStatus').textContent = `${label(month)}: Niño 3.4 index ${v === null ? 'not published yet' : sgn(v) + ' °C, ' + state(v)}.` + (month >= MONTHS ? ' NASA\'s anomaly movie ends in 2017, so there is no map for this month: only the index is available (use "Play the years").' : '');
-    if (month < MONTHS && vid && vid.readyState >= 1 && !run) { vid.currentTime = monthTime(month); }
     draw();
   }
-  if (vid) { vid.addEventListener('seeked', draw); vid.addEventListener('loadeddata', draw); }
 
   // ---- play the years ----
   function stopYears(msg) {
-    if (!run) return; const A = API(); clearInterval(run.timer); cancelAnimationFrame(run.raf); run = null; window.EJ_following = false; if (vid) vid.pause();
+    if (!run) return; const A = API(); clearInterval(run.timer); cancelAnimationFrame(run.raf); run = null; window.EJ_following = false;
     A.hold(false); A.hardStop(); $('elYears').textContent = '▶ Play the years'; $('elYears').setAttribute('aria-pressed', 'false'); if (msg) $('elStatus').textContent = msg; draw();
   }
   const prevStop = window.EJ_followStop; window.EJ_followStop = () => { if (prevStop) prevStop(); stopYears(); };
@@ -111,8 +120,6 @@
       if (!run) return; const a = window.EJ.A; if (!a || a.ctx !== ctx) { stopYears(); return; }
       const el = ctx.currentTime - t0, m = Math.max(q0 * 3, Math.min(MAXM, Math.floor(q0 * 3 + el / MS)));
       if (m !== month) { month = m; cache = {}; $('elMonth').value = m; $('elMonthOut').textContent = label(m); }
-      if (month < MONTHS && vid) { const want = monthTime(month); if (vid.paused || Math.abs(vid.currentTime - want) > 0.6) { vid.currentTime = want; vid.playbackRate = SPM / MS; if (vid.paused) vid.play().catch(() => {}); } }
-      else if (vid && !vid.paused) vid.pause();
       draw(); const q = Math.floor(month / 3);
       if (q !== lastQ) { lastQ = q; const v = q3(q); $('elStatus').textContent = v === null ? '' : `${label(month)}: Niño 3.4 index ${sgn(v)} °C (three-month mean), ${state(v)}.` + (qinfo[q] && qinfo[q].z >= 1 ? ` Rising ${qinfo[q].z.toFixed(1)} times faster than its usual quarter-to-quarter change${qinfo[q].rapid ? ': a rapid onset' : ''}.` : '') + (month >= MONTHS ? ' No map after 2017: index only.' : ''); }
       if (el > nQ * QS + 1.2) { const vs = [0, 1, 2].map(k => idxAt(MAXM - k)).filter(v => v !== null); stopYears(`That is the whole record, to ${label(MAXM)}. The latest index values are ${vs.map(sgn).join(', ')} °C (the newest first).`); return; }

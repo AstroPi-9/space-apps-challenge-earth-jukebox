@@ -176,6 +176,7 @@ window.SOURCE_HASHES = {
   "assets/year/f158.jpg": "b8fc498c8382534a6588be9c40d0e5d66885f58829897ef4969de57bf883cfb9",
   "assets/year/f159.jpg": "e9b84f864f6133cd320f610e582c366cef0f7d354e31e9f61d1dc5ad22494a57",
   "density_grid.js": "709733e512d509a474a1fedf5cc6a51c8757b82f70c93c1bb0333d85be3195b9",
+  "elnino_fine.js": "abae6c3637bfaa34522b5204ee633be92811278df84366f6924c8547fe0f00ca",
   "elnino_grid.js": "63c2910395758771be81de3782ef5d18f12ac2b54ace250738d0cbad57d8be83",
   "flow_field.js": "09f748def4bf617eb3a858f8879fa631ad388a93ec125f3b0efa79eab81826a0",
   "grid.js": "c802efb66869c09c662a5b417c49ed53e43410a5e49eed9f54593f869812a94e",

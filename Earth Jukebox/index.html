@@ -99,11 +99,11 @@
     </section>
     <section id="elPanel" class="panel" hidden aria-label="El Niño layer">
       <h2>El Niño layer</h2>
-      <p class="sub">An add-on for this map. It lays NASA's monthly sea surface temperature <strong>anomaly</strong> (how much warmer or cooler than normal, 1982 to 2017) over the average temperature map, and adds NOAA's Niño 3.4 index, the standard measure of El Niño. When you press Play, the sweep also plays the anomaly under the beam: bright glass notes where the water is warmer than normal and dull kalimba notes where it is cooler, with higher pitch meaning warmer than normal. The music turns sad where it is warmer than normal, and urgent where it is much warmer.</p>
+      <p class="sub">An add-on for this map. It lays NASA's monthly sea surface temperature <strong>anomaly</strong> (how much warmer or cooler than normal, 1982 to 2017) over the average temperature map, and adds NOAA's Niño 3.4 index, the standard measure of El Niño. When you press Play, the sweep also plays the anomaly under the beam: bright glass notes where the water is warmer than normal and dull kalimba notes where it is cooler, with higher pitch meaning warmer than normal. The music turns sad where it is warmer than normal, and urgent where it is much warmer. Grey boxes on the map mark places where NASA's own timeline covers the movie, so there is no anomaly data. Land and near-normal water are left clear, so the temperature map (shown in grey while the layer is on) shows through.</p>
       <div class="controls">
         <label><input id="elOn" type="checkbox"> Add the El Niño layer</label>
         <label><input id="elSolo" type="checkbox"> Hide the temperature map under it</label>
-        <label>Layer strength <input id="elOpacity" type="range" min="10" max="100" value="70"></label>
+        <label>Layer strength <input id="elOpacity" type="range" min="10" max="100" value="90"></label>
       </div>
       <div class="controls" id="elPresets" role="group" aria-label="Choose a month"></div>
       <div class="controls">
@@ -111,7 +111,6 @@
         <button id="elYears" type="button" aria-pressed="false">&#9654; Play the years</button>
       </div>
       <p id="elStatus" class="sub" aria-live="polite">Tick "Add the El Niño layer", choose a month, and press Play, or press "Play the years" to hear the Niño 3.4 index from 1982 to the latest month while the maps change.</p>
-      <video id="elVid" src="assets/elnino/nino34.webm" muted playsinline preload="auto" style="display:none" aria-hidden="true"></video>
     </section>
     <p id="vcap" class="sub" style="display:none"></p>
     <div id="tlineWrap" style="display:none;margin:6px 0"><label>Time in the year <input id="tline" type="range" min="0" max="159" value="0" style="width:min(520px,70vw)"> <span id="tlineOut" aria-hidden="true"></span></label></div>
@@ -199,6 +198,7 @@
 <script src="score_notes.js"></script>
 <script src="flow_field.js"></script>
 <script src="elnino_grid.js"></script>
+<script src="elnino_fine.js"></script>
 <script src="nino34_index.js"></script>
 <script src="source_hashes.js"></script>
 <script src="trace.js"></script>

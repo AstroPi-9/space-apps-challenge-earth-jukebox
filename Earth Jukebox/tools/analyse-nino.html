@@ -40,10 +40,11 @@ async function run() {
   log(`longitude shift: SST column c = video column (c + ${bestShift}) mod ${COLS}   (video left edge is at ${(-180 - bestShift * 2.25).toFixed(1)} degrees; error ${bestErr.toFixed(1)})`);
   // 2. every month
   const out = new Uint8Array(MONTHS * ROWS * COLS).fill(255), box = [];
+  const FC = 120, FR = 60, fine = new Uint8Array(MONTHS * FR * FC).fill(255);       // a finer 3-degree grid, for drawing the overlay smoothly
   const thr2 = 42 * 42, nino = [];
   for (let m = 0; m < MONTHS; m++) {
     await seek(Math.min(dur - 0.05, (m + 0.5) * SEC_PER_MONTH)); g.drawImage(v, 0, 0, W, H); const d = g.getImageData(0, 0, W, H).data;
-    const sum = new Float64Array(ROWS * COLS), cnt = new Float64Array(ROWS * COLS); let bs = 0, bn = 0;
+    const sum = new Float64Array(ROWS * COLS), cnt = new Float64Array(ROWS * COLS), fsum = new Float64Array(FR * FC), fcnt = new Float64Array(FR * FC); let bs = 0, bn = 0;
     for (let y = Y0; y < Y1; y++) {
       const row = Math.min(ROWS - 1, Math.floor((y - Y0) / (Y1 - Y0) * ROWS));
       for (let x = 0; x < W; x++) {
@@ -53,10 +54,12 @@ async function run() {
         if (best > thr2) continue;
         const col = ((Math.floor(x / W * COLS) - bestShift) % COLS + COLS) % COLS;        // video column -> SST column
         const idx = row * COLS + col; sum[idx] += lut[bi].a; cnt[idx]++;
+        { const lonF = ((-180 - bestShift * 2.25 + (x + 0.5) / W * 360 + 180) % 360 + 360) % 360, fi = Math.min(FR - 1, Math.floor((y - Y0) / (Y1 - Y0) * FR)) * FC + Math.min(FC - 1, Math.floor(lonF / 3)); fsum[fi] += lut[bi].a; fcnt[fi]++; }
         const lon = -180 - bestShift * 2.25 + x / W * 360, lat = 90 - (y - Y0) / (Y1 - Y0) * 180, lw = ((lon + 180) % 360 + 360) % 360 - 180;
         if (lw >= -170 && lw <= -120 && lat >= -5 && lat <= 5) { bs += lut[bi].a; bn++; }
       }
     }
+    for (let i = 0; i < FR * FC; i++) if (fcnt[i] >= 8) fine[m * FR * FC + i] = Math.max(0, Math.min(254, Math.round(fsum[i] / fcnt[i] * 10) + 100));
     for (let i = 0; i < ROWS * COLS; i++) if (cnt[i] >= 12) out[m * ROWS * COLS + i] = Math.max(0, Math.min(254, Math.round(sum[i] / cnt[i] * 10) + 100));
     box.push(bn ? bs / bn : null);
     if (m % 24 === 0) log(`month ${m}/${MONTHS}  ${1982 + Math.floor(m / 12)}-${String(m % 12 + 1).padStart(2, '0')}  Nino 3.4 box mean from the picture ${box[m] === null ? '-' : box[m].toFixed(2)}  (NOAA index ${window.NINO34.values[(1982 - 1948) * 12 + m]})`);
@@ -67,6 +70,9 @@ async function run() {
   log(`correlation of the picture's Nino 3.4 box with NOAA's index: r = ${(sxy / Math.sqrt(sxx * syy)).toFixed(3)} over ${xs.length} months`);
   let b64 = ''; for (let i = 0; i < out.length; i += 8192) b64 += String.fromCharCode.apply(null, out.subarray(i, i + 8192));
   const js = 'window.ELNINO = ' + JSON.stringify({ cols: COLS, rows: ROWS, months: MONTHS, start: 1982, shift: bestShift, note: 'uint8 per cell: (anomaly in degrees C x 10) + 100; 255 = no data', b64: btoa(b64) }) + ';';
+  let fb64 = ''; for (let i = 0; i < fine.length; i += 8192) fb64 += String.fromCharCode.apply(null, fine.subarray(i, i + 8192));
+  const fjs = 'window.ELNINO_FINE = ' + JSON.stringify({ cols: FC, rows: FR, months: MONTHS, start: 1982, note: 'uint8 per cell: (anomaly in degrees C x 10) + 100; 255 = no data (land, or covered by the NASA timeline inset); columns run from 180 W eastward, rows from 90 N southward', b64: btoa(fb64) }) + ';';
+  try { const r2 = await fetch('/save/elnino_fine.js', { method: 'POST', body: fjs }); log(r2.ok ? 'saved elnino_fine.js (' + (fjs.length / 1e6).toFixed(1) + ' MB)' : 'fine save failed: ' + r2.status); } catch (e) { log('could not save the fine grid: ' + e.message); }
   const dl = document.getElementById('dl'); dl.href = URL.createObjectURL(new Blob([js], { type: 'text/javascript' })); dl.download = 'elnino_grid.js'; dl.style.display = 'inline';
   try { const r = await fetch('/save/elnino_grid.js', { method: 'POST', body: js }); log(r.ok ? 'saved elnino_grid.js next to the app' : 'save failed: ' + r.status); } catch (e) { log('could not save automatically: ' + e.message); }
   log('done'); window.__done = { shift: bestShift };
