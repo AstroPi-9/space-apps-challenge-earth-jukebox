@@ -25,7 +25,8 @@
   const lock = on => { document.body.style.overflow = on ? 'hidden' : ''; };
   const page = () => view === 'sub' ? sub : home;
   const setBtn = $('jbSetBtn'), setPanel = $('jbSettings');
-  function settings(open) { if (setBtn.hidden && open) return; setPanel.hidden = !open; setBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+  const pageChanged = () => window.dispatchEvent(new Event('ej-page'));
+  function settings(open) { if (setBtn.hidden && open) return; const was = !setPanel.hidden; setPanel.hidden = !open; setBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); if (was !== open) pageChanged(); }
   function setTabVisible(on) { setBtn.hidden = !on; if (!on) settings(false); }                // the settings tab shows on the home and second pages only
   setBtn.addEventListener('click', () => { settings(setPanel.hidden); if (!setPanel.hidden) { const f = setPanel.querySelector('select,input,button'); if (f) f.focus({ preventScroll: true }); } });
   $('jbSetClose').addEventListener('click', () => { settings(false); setBtn.focus(); });
@@ -57,7 +58,7 @@
     $('dataBarNow').innerHTML = `<span class="code" aria-hidden="true">${info.code}</span>Now playing: ${info.name}`;
     app.inert = false; app.setAttribute('aria-hidden', 'false');
     setTabVisible(false); const doors = reduce() ? null : halves(false, source); source.hidden = true; source.inert = true; lock(false);
-    const done = () => { if (doors) doors.remove(); show('data'); $('backHome').focus({ preventScroll: true }); live(`The doors opened on ${info.name}. Press Play to hear it.`); window.dispatchEvent(new Event('resize')); };
+    const done = () => { if (doors) doors.remove(); show('data'); $('backHome').focus({ preventScroll: true }); live(`The doors opened on ${info.name}. Press Play to hear it.`); window.dispatchEvent(new Event('resize')); pageChanged(); };
     if (!doors) { done(); return; }
     requestAnimationFrame(() => requestAnimationFrame(() => doors.classList.add('open'))); setTimeout(done, 1650);
   }
@@ -65,7 +66,7 @@
     if (state !== 'data') return; state = 'busy'; stopEverything();
     home.scrollTop = 0; $('jbPrompt').textContent = message || 'Press a red button to choose a record.';
     const doors = reduce() ? null : halves(true, home); lock(true);
-    const done = () => { if (doors) doors.remove(); show('home'); window.scrollTo(0, 0); const first = home.querySelector('.rec'); if (first) first.focus({ preventScroll: true }); live((message || '') + ' The doors are closed. Choose a record.'); };
+    const done = () => { if (doors) doors.remove(); show('home'); window.scrollTo(0, 0); const first = home.querySelector('.rec'); if (first) first.focus({ preventScroll: true }); live((message || '') + ' The doors are closed. Choose a record.'); pageChanged(); };
     if (!doors) { done(); return; }
     void doors.offsetWidth; doors.classList.remove('notrans'); requestAnimationFrame(() => requestAnimationFrame(() => doors.classList.remove('open'))); setTimeout(done, 1650);
   }
@@ -80,11 +81,11 @@
       <div class="jb-foot"><span class="jb-prompt">Press a red button to choose a version.</span><button class="secondary" type="button" data-back="1">← All records</button></div>
     </div>`;
     $('jbSubInner').querySelectorAll('.rec').forEach(b => b.addEventListener('click', () => openRecord(b.dataset.track)));
-    $('jbSubInner').querySelector('[data-back]').addEventListener('click', () => { show('home'); const f = home.querySelector('.rec[data-group="' + key + '"]') || home.querySelector('.rec'); if (f) f.focus({ preventScroll: true }); live('Back to all records.'); });
+    $('jbSubInner').querySelector('[data-back]').addEventListener('click', () => { show('home'); const f = home.querySelector('.rec[data-group="' + key + '"]') || home.querySelector('.rec'); if (f) f.focus({ preventScroll: true }); live('Back to all records.'); pageChanged(); });
   }
   function openGroup(key) {
     if (state !== 'home') return; buildSub(key); show('sub'); sub.scrollTop = 0; sub.classList.remove('jb-fade'); void sub.offsetWidth; sub.classList.add('jb-fade');
-    const first = sub.querySelector('.rec'); if (first) first.focus({ preventScroll: true }); live(`${GROUPS[key].title}. Choose a version.`);
+    const first = sub.querySelector('.rec'); if (first) first.focus({ preventScroll: true }); live(`${GROUPS[key].title}. Choose a version.`); pageChanged();
   }
   home.querySelectorAll('.rec').forEach(b => b.addEventListener('click', () => { if (b.dataset.group) openGroup(b.dataset.group); else openRecord(b.dataset.track); }));
   $('backHome').addEventListener('click', () => closeRecord('Press a red button to choose a record.'));

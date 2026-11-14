@@ -212,6 +212,15 @@
   .jb-settings .ctl-card{margin:0 0 12px;padding:12px 14px}
   .jb-settings .toggle{padding:8px 10px}
   @media (max-width:560px){.wrap{margin:10px auto;padding:14px 12px 28px;border-radius:20px}.jb-settab{top:8px;right:8px}}
+
+  /* Hear Me: a prominent button on the home page, and a small bar while it is on */
+  .jb-foot-btns{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  button.hear-me{min-height:56px;padding:12px 30px;font-size:1.2rem;letter-spacing:.02em;border-radius:999px;border:3px solid #fff3c4;color:#2a1707;text-shadow:none;
+    background:linear-gradient(180deg,#fff0a8,#ffc83a 55%,#e59a12);box-shadow:0 0 0 3px #7a4a0c,0 0 22px 4px rgba(255,200,60,.75),0 8px 16px -4px rgba(0,0,0,.7);animation:hearglow 2.4s ease-in-out infinite}
+  button.hear-me.on{background:linear-gradient(180deg,#d8ffb0,#6ed13a 55%,#3d9a16);box-shadow:0 0 0 3px #1f5a0a,0 0 22px 4px rgba(120,220,60,.75),0 8px 16px -4px rgba(0,0,0,.7);animation:none}
+  @keyframes hearglow{50%{box-shadow:0 0 0 3px #7a4a0c,0 0 34px 10px rgba(255,200,60,.95),0 8px 16px -4px rgba(0,0,0,.7)}}
+  .hear-bar{position:fixed;left:14px;bottom:14px;z-index:130;display:flex;flex-wrap:wrap;gap:10px;padding:10px 12px;border-radius:16px;border:3px solid #d9b25a;background:linear-gradient(180deg,#4a2810,#2d170a);box-shadow:0 0 0 4px #5a3d0c,0 14px 30px -8px #000}
+  @media (prefers-reduced-motion:reduce){button.hear-me{animation:none}}
 </style>
 </head>
 <body>
@@ -240,7 +249,7 @@
       </div>
       <div class="jb-foot">
         <span id="jbPrompt">Press a red button to choose a record.</span>
-        <button id="jbHelp" type="button" class="secondary">? How it works</button>
+        <span class="jb-foot-btns"><button id="hearMe" class="hear-me" type="button" aria-pressed="false" aria-label="Hear Me: turn on a spoken summary of what is on the screen, for blind and low-vision people">🔊 Hear Me</button><button id="jbHelp" type="button" class="secondary">? How it works</button></span>
       </div>
       <p class="sub" style="margin:14px 0 0;color:#d9c08a;font-size:.85rem">Made for the NASA Space Apps Challenge 2026. An independent project, not an official NASA product. Pictures: NASA Scientific Visualization Studio.</p>
     </div>
@@ -277,6 +286,7 @@
           </div>
         </div>
 </section>
+<div id="hearBar" class="hear-bar" role="group" aria-label="Hear Me" hidden><button id="hearAgain" type="button">🔊 Hear this screen again (H)</button><button id="hearOff" type="button" class="secondary">Turn Hear Me off</button></div>
 <div id="jbLive" class="sr-only" role="status" aria-live="polite"></div>
 <a class="skip" href="#controls">Skip to controls</a>
 <div class="wrap">
@@ -432,5 +442,6 @@
 <script src="follow.js"></script>
 <script src="elnino.js"></script>
 <script src="jukebox.js"></script>
+<script src="hearme.js"></script>
 </body>
 </html>
