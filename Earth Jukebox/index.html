@@ -7,63 +7,108 @@
 <meta name="description" content="Hear NASA's aerosol visualization: dust, smoke, sea salt and sulfate turned into music.">
 <style>
   :root{
-    --bg:#0b0f14; --panel:#131a22; --line:#2a3644; --text:#eef3f8; --muted:#a9b6c4;
-    --carbon:#e8765a; --dust:#c79bf0; --salt:#8fc1c1; --sulfate:#58e03a; --accent:#7cc4ff;
+    --bg:#090d12; --panel:#111821; --panel2:#17212c; --line:#263240; --line2:#334355; --text:#eef3f8; --muted:#9fb0c1;
+    --carbon:#e8765a; --dust:#c79bf0; --salt:#8fc1c1; --sulfate:#58e03a; --accent:#7cc4ff; --gold:#ffd54a; --radius:16px;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
-  .wrap{max-width:1100px;margin:0 auto;padding:16px}
-  h1{font-size:1.7rem;margin:.2em 0 .1em} h2{font-size:1.1rem;margin:0 0 .5em}
+  [hidden]{display:none!important}
+  body{margin:0;color:var(--text);font:16px/1.55 system-ui,Segoe UI,Roboto,sans-serif;background:radial-gradient(1100px 420px at 50% -160px,#183550 0%,transparent 65%),var(--bg);background-attachment:fixed}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 18px 40px}
+  h1{font-size:2rem;line-height:1.15;margin:.1em 0 .15em;letter-spacing:-.01em}
+  h1 .gt{background:linear-gradient(90deg,#a9dcff,#d2b4ff 55%,#ffd9a8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  h2{font-size:1.1rem;margin:0 0 .6em;letter-spacing:.005em}
   .sub{color:var(--muted);margin:0 0 1rem}
   a{color:var(--accent)}
-  .skip{position:absolute;left:-999px} .skip:focus{left:8px;top:8px;background:#fff;color:#000;padding:8px;z-index:10}
-  :focus-visible{outline:3px solid #ffd54a;outline-offset:2px}
-  #stage{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:crosshair;background:#000;touch-action:manipulation}
+  .skip{position:absolute;left:-999px} .skip:focus{left:8px;top:8px;background:#fff;color:#000;padding:8px;z-index:10;border-radius:8px}
+  :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+  /* the map */
+  #stage{position:relative;border:1px solid var(--line2);border-radius:var(--radius);overflow:hidden;cursor:crosshair;background:#000;touch-action:manipulation;box-shadow:0 18px 40px -22px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.03)}
   #stage video{display:block;width:100%;height:auto;background:#000}
   #stage img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
   #playhead{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 10px 2px rgba(255,255,255,.7);left:0;pointer-events:none;display:none}
-  #cursor{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border:3px solid #ffd54a;border-radius:50%;pointer-events:none;display:none;box-shadow:0 0 0 2px #000}
-  .controls{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin:14px 0}
-  button{font:inherit;background:var(--accent);color:#04121e;border:0;border-radius:8px;padding:10px 20px;font-weight:600;cursor:pointer;min-height:44px}
-  button.secondary{background:var(--panel);color:var(--text);border:1px solid var(--line)}
-  label{display:inline-flex;align-items:center;gap:8px}
-  input[type=range]{width:150px}
-  select{font:inherit;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px;max-width:230px;min-height:36px}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin:14px 0}
+  #cursor{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border:3px solid var(--gold);border-radius:50%;pointer-events:none;display:none;box-shadow:0 0 0 2px #000}
+
+  /* buttons */
+  .controls{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center;margin:14px 0}
+  button{font:inherit;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,#98d6ff,#68b4f4);color:#04121e;border:0;border-radius:999px;padding:10px 22px;font-weight:650;cursor:pointer;min-height:44px;box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 8px 18px -10px rgba(70,160,255,.9);transition:transform .08s,filter .15s,background-color .15s}
+  button:hover{filter:brightness(1.07)} button:active{transform:translateY(1px)}
+  button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line2);box-shadow:none}
+  button.secondary:hover{background:#1e2b39;border-color:#46586c;filter:none}
+  button.tab{padding:9px 18px;font-weight:600}
+  button.secondary.tab[aria-pressed=true]{background:linear-gradient(180deg,#ffe27a,#ffc93a);color:#1a1400;border-color:#ffd54a;box-shadow:0 8px 18px -10px rgba(255,200,60,.9)}
+  #play{min-height:54px;padding:12px 30px;font-size:1.08rem}
+
+  /* switches: every checkbox becomes a toggle switch (no extra markup needed) */
+  input[type=checkbox]{-webkit-appearance:none;appearance:none;flex:none;width:44px;height:26px;margin:0;border-radius:13px;border:1px solid var(--line2);cursor:pointer;
+    background:#27323f radial-gradient(circle at 13px 13px,#cfd8e1 9.5px,transparent 10.5px) no-repeat;transition:background-color .18s,border-color .18s}
+  input[type=checkbox]:checked{background:var(--accent) radial-gradient(circle at 31px 13px,#fff 9.5px,transparent 10.5px) no-repeat;border-color:#5aa9ff}
+  input[type=checkbox]:disabled{opacity:.45;cursor:not-allowed}
+  .toggle{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);cursor:pointer;transition:border-color .18s,background-color .18s;line-height:1.3}
+  .toggle:hover{border-color:var(--line2)}
+  .toggle:has(input:checked){border-color:rgba(124,196,255,.5);background:linear-gradient(180deg,rgba(124,196,255,.10),rgba(124,196,255,.04))}
+  .toggle input{margin-top:1px}
+  .toggle .t{display:block;font-weight:600}
+  .toggle small{display:block;color:var(--muted);font-weight:400;font-size:.82rem;margin-top:2px}
+  .toggle.compact{padding:8px 12px;align-items:center}
+
+  /* sliders, selects, inputs */
+  label{display:inline-flex;align-items:center;gap:10px}
+  input[type=range]{accent-color:var(--accent);width:150px;height:28px;cursor:pointer}
+  select,input[type=number]{font:inherit;background:var(--panel2);color:var(--text);border:1px solid var(--line2);border-radius:10px;padding:7px 10px;min-height:40px}
+  select{max-width:100%}
+  .field{display:flex;flex-direction:column;align-items:stretch;gap:6px;font-size:.92rem;color:var(--muted)}
+  .field>span{display:flex;justify-content:space-between;gap:8px} .field b{color:var(--text);font-weight:600}
+  .field input[type=range]{width:100%} .field select{width:100%}
+
+  /* cards */
+  .panel{background:linear-gradient(180deg,var(--panel),#0f161e);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:16px 0}
+  .ctl-card{background:linear-gradient(180deg,var(--panel),#0f161e);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+  .ctl-card h3{margin:0 0 12px;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .ctl-card .stack{display:flex;flex-direction:column;gap:9px}
+  .ctl-card .row{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+  .ctl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin:14px 0}
+  .ctl-card.wide{grid-column:1/-1}
+  .sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px 22px;margin-top:14px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px} @media(max-width:760px){.grid{grid-template-columns:1fr}}
-  .voices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
-  .voice{border:1px solid var(--line);border-radius:8px;padding:10px;border-left-width:6px}
-  .voice .meter{height:8px;background:#26313d;border-radius:4px;margin-top:6px;overflow:hidden}
-  .voice .meter i{display:block;height:100%;width:0;background:currentColor}
-  .voice small{color:var(--muted);display:block}
-  #readout{font-size:1.05rem;min-height:3.2em}
-  table{border-collapse:collapse;width:100%} th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
-  details summary{cursor:pointer;font-weight:600}
-  .legend{max-width:520px;width:100%;height:auto;border-radius:8px}
-  .voice.demo-on{outline:2px solid #ffd54a;outline-offset:2px}
-  .hear{min-height:32px;padding:4px 12px;font-size:.9rem;margin-top:8px}
+
+  /* voices */
+  .voices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+  .voice{border:1px solid var(--line);border-radius:14px;padding:12px;border-left-width:6px;background:var(--panel2)}
+  .voice label{display:flex;gap:10px}
+  .voice .meter{height:8px;background:#26313d;border-radius:4px;margin-top:8px;overflow:hidden}
+  .voice .meter i{display:block;height:100%;width:0;background:currentColor;border-radius:4px}
+  .voice small{color:var(--muted);display:block;margin-top:4px}
+  .voice.demo-on{outline:2px solid var(--gold);outline-offset:2px}
+  .hear{min-height:34px;padding:4px 14px;font-size:.9rem;margin-top:10px}
   #demoStatus{min-height:1.5em;font-weight:600}
-  dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:20px 24px;max-width:560px}
-  dialog::backdrop{background:rgba(0,0,0,.7)}
-  dialog h2{margin-top:0} dialog li{margin:.3em 0} dialog label{display:block;margin:.5em 0}
-  #dataBody dl{margin:0} #dataBody dt{font-weight:600;margin-top:.8em} #dataBody dd{margin:.2em 0 0 0} #dataBody ul{margin:.2em 0;padding-left:1.2em}
+  #readout{font-size:1.05rem;min-height:3.2em}
+
+  table{border-collapse:collapse;width:100%} th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  details summary{cursor:pointer;font-weight:600}
+  .legend{max-width:520px;width:100%;height:auto;border-radius:10px}
+  dialog{background:var(--panel);color:var(--text);border:1px solid var(--line2);border-radius:18px;padding:22px 26px;max-width:580px;box-shadow:0 30px 80px -20px #000}
+  dialog::backdrop{background:rgba(3,6,10,.75);backdrop-filter:blur(3px)}
+  dialog h2{margin-top:0} dialog li{margin:.3em 0} dialog .toggle{margin:.5em 0}
+  #dataBody dl{margin:0} #dataBody dt{font-weight:600;margin-top:.9em} #dataBody dd{margin:.2em 0 0 0} #dataBody ul{margin:.2em 0;padding-left:1.2em}
   .head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
   .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  footer{color:var(--muted);font-size:.9rem;margin:24px 0}
+  footer{color:var(--muted);font-size:.9rem;margin:28px 0}
   .grad{height:22px;border-radius:6px;background:linear-gradient(90deg,#1f6bff,#18b8c8,#35d04a,#f0e030,#ff9a1f,#ff3b1f);margin:8px 0 4px;max-width:520px}
   .grad-l{display:flex;justify-content:space-between;max-width:520px;color:var(--muted);font-size:.9rem}
-  button.secondary.tab[aria-pressed=true]{background:#ffd54a;color:#1a1400;border-color:#ffd54a}
-  #sheetWrap{margin:8px 0}
-  #sheet{display:block;width:100%;height:230px;background:#0f151c;border:1px solid var(--line);border-radius:10px}
-  #sheetNow{margin:4px 0 0;min-height:1.5em;font-size:.95rem}
-  @media (prefers-reduced-motion:reduce){#playhead{box-shadow:none}}
+  #sheetWrap{margin:12px 0}
+  #sheet{display:block;width:100%;height:230px;background:#0d131a;border:1px solid var(--line2);border-radius:var(--radius)}
+  #sheetNow{margin:6px 0 0;min-height:1.5em;font-size:.95rem}
+  #traceStatus{margin:0;flex:1 1 260px;font-size:.88rem}
+  @media (max-width:560px){.wrap{padding:12px 12px 32px}h1{font-size:1.6rem}#play{width:100%}}
+  @media (prefers-reduced-motion:reduce){#playhead{box-shadow:none}*{transition:none!important}}
 </style>
 </head>
 <body>
 <a class="skip" href="#controls">Skip to controls</a>
 <div class="wrap">
   <header>
-    <div class="head-row"><h1>Earth Jukebox <span aria-hidden="true">🌍🎶</span></h1><button id="helpBtn" type="button" class="secondary" aria-haspopup="dialog">? Help</button></div>
+    <div class="head-row"><h1><span class="gt">Earth Jukebox</span> <span aria-hidden="true">🌍🎶</span></h1><button id="helpBtn" type="button" class="secondary" aria-haspopup="dialog">? Help</button></div>
     <p class="sub" id="trackIntro"></p>
   </header>
 
@@ -91,8 +136,8 @@
       <div class="controls">
         <label>Start longitude <input id="fLon" type="number" min="-180" max="180" value="-80" style="width:5.5em"></label>
         <label>latitude <input id="fLat" type="number" min="-80" max="80" value="26" style="width:5em"></label>
-        <label><input id="fPick" type="checkbox"> Click the map to choose the start</label>
-        <label><input id="fRev" type="checkbox"> Reverse direction</label>
+        <label class="toggle compact"><input id="fPick" type="checkbox" role="switch"><span class="t">Click the map to choose the start</span></label>
+        <label class="toggle compact"><input id="fRev" type="checkbox" role="switch"><span class="t">Reverse direction</span></label>
         <button id="fGo" type="button" aria-pressed="false">&#9654; Follow</button>
       </div>
       <p id="followStatus" class="sub" aria-live="polite">Pick a named current, or enter a start point and press Follow.</p>
@@ -101,9 +146,9 @@
       <h2>El Niño layer</h2>
       <p class="sub">An add-on for this map. It lays NASA's monthly sea surface temperature <strong>anomaly</strong> (how much warmer or cooler than normal, 1982 to 2017) over the average temperature map, and adds NOAA's Niño 3.4 index, the standard measure of El Niño. When you press Play, the sweep also plays the anomaly under the beam: bright glass notes where the water is warmer than normal and dull kalimba notes where it is cooler, with higher pitch meaning warmer than normal. The music turns sad where it is warmer than normal, and urgent where it is much warmer. Grey boxes on the map mark places where NASA's own timeline covers the movie, so there is no anomaly data. Land and near-normal water are left clear, so the temperature map (shown in grey while the layer is on) shows through.</p>
       <div class="controls">
-        <label><input id="elOn" type="checkbox"> Add the El Niño layer</label>
-        <label><input id="elSolo" type="checkbox"> Hide the temperature map under it</label>
-        <label>Layer strength <input id="elOpacity" type="range" min="10" max="100" value="90"></label>
+        <label class="toggle compact"><input id="elOn" type="checkbox" role="switch"><span class="t">Add the El Niño layer</span></label>
+        <label class="toggle compact"><input id="elSolo" type="checkbox" role="switch"><span class="t">Hide the temperature map under it</span></label>
+        <label class="field" style="min-width:200px"><span>Layer strength</span><input id="elOpacity" type="range" min="10" max="100" value="90"></label>
       </div>
       <div class="controls" id="elPresets" role="group" aria-label="Choose a month"></div>
       <div class="controls">
@@ -116,31 +161,55 @@
     <div id="tlineWrap" style="display:none;margin:6px 0"><label>Time in the year <input id="tline" type="range" min="0" max="159" value="0" style="width:min(520px,70vw)"> <span id="tlineOut" aria-hidden="true"></span></label></div>
     <p id="help" class="sub">Click or tap the map to hear that spot. With a keyboard: arrow keys move (Shift = bigger steps), Home/End jump to the west/east edge, Enter replays the spot, Space plays or pauses.</p>
 
-    <div class="controls" id="controls" role="group" aria-label="Playback controls">
-      <button id="play" type="button" aria-pressed="false">▶ Play the globe</button>
-      <button id="restart" type="button" class="secondary">⏮ Restart</button>
-      <button id="skip" type="button" class="secondary" hidden>⏭ Skip intro</button>
-      <button id="demoAll" type="button" class="secondary" aria-pressed="false">🎧 Hear the instruments</button>
-      <label>Volume <input id="vol" type="range" min="0" max="100" value="70"></label>
-      <label>Tour length <input id="dur" type="range" min="20" max="90" value="40" aria-describedby="durOut"> <span id="durOut">40 s</span></label>
-      <label><input id="narrate" type="checkbox"> Show descriptions while playing</label>
-      <label><input id="speak" type="checkbox"> Spoken narration</label>
-      <label>Spoken intro <select id="introLen" aria-label="Length of the spoken intro"><option value="short">Short</option><option value="full">Full</option></select></label>
-      <label>Sound source <select id="source" aria-label="Sound source"><option value="live">Live synthesis (default)</option><option value="samples">MuseScore instrument sounds playing the data</option><option value="score">MuseScore composition, 5 instruments</option></select></label>
-      <label><input id="showSheet" type="checkbox" checked> Show sheet music</label>
-      <label><input id="gam" type="checkbox" checked> Gamakas (pitch ornaments on the melody)</label>
-      <label><input id="harm" type="checkbox" checked> Harmonious mode (fewer notes, chord-based)</label>
-      <label><input id="emo" type="checkbox" checked> Regional scales and emotion</label>
-      <label><input id="music" type="checkbox"> Composed music underneath (fixed Mohanam, so it clashes with other scales)</label>
-      <label><input id="skipAnt" type="checkbox"> Skip the Antarctic drone</label>
-      <label>Voice <select id="voice" aria-label="Narration voice"></select></label>
+    <div id="controls" role="group" aria-label="Controls">
+      <div class="ctl-card wide" role="group" aria-label="Playback">
+        <h3>Playback</h3>
+        <div class="row">
+          <button id="play" type="button" aria-pressed="false">▶ Play the globe</button>
+          <button id="restart" type="button" class="secondary">⏮ Restart</button>
+          <button id="skip" type="button" class="secondary" hidden>⏭ Skip intro</button>
+          <button id="demoAll" type="button" class="secondary" aria-pressed="false">🎧 Hear the instruments</button>
+        </div>
+        <div class="sliders">
+          <label class="field"><span>Volume</span><input id="vol" type="range" min="0" max="100" value="70"></label>
+          <label class="field"><span>Tour length <b id="durOut">40 s</b></span><input id="dur" type="range" min="20" max="90" value="40" aria-describedby="durOut"></label>
+        </div>
+      </div>
+      <div class="ctl-grid">
+        <div class="ctl-card" role="group" aria-label="Sound">
+          <h3>Sound</h3>
+          <div class="stack">
+            <label class="field"><span>Sound source</span><select id="source" aria-label="Sound source"><option value="live">Live synthesis (default)</option><option value="samples">MuseScore instrument sounds playing the data</option><option value="score">MuseScore composition, 5 instruments</option></select></label>
+            <label class="toggle"><input id="harm" type="checkbox" role="switch" checked><span><span class="t">Harmonious mode</span><small>Fewer notes, one consonant chord at a time</small></span></label>
+            <label class="toggle"><input id="gam" type="checkbox" role="switch" checked><span><span class="t">Gamakas</span><small>Pitch ornaments on the melody; off gives steady notes</small></span></label>
+            <label class="toggle"><input id="emo" type="checkbox" role="switch" checked><span><span class="t">Regional scales and emotion</span><small>The scale follows the region; sad and urgent where the data is strong</small></span></label>
+            <label class="toggle"><input id="skipAnt" type="checkbox" role="switch"><span><span class="t">Skip the Antarctic drone</span><small>Leave the far south out of the deep hum</small></span></label>
+            <label class="toggle"><input id="music" type="checkbox" role="switch"><span><span class="t">Composed music underneath</span><small>Fixed pieces in Mohanam, so they clash with other scales</small></span></label>
+          </div>
+        </div>
+        <div class="ctl-card" role="group" aria-label="Display and narration">
+          <h3>Display and narration</h3>
+          <div class="stack">
+            <label class="toggle"><input id="showSheet" type="checkbox" role="switch" checked><span><span class="t">Show sheet music</span><small>A staff for every voice, scrolling past a fixed line</small></span></label>
+            <label class="toggle"><input id="narrate" type="checkbox" role="switch"><span><span class="t">Show descriptions while playing</span><small>Text about what the beam is passing over</small></span></label>
+            <label class="toggle"><input id="speak" type="checkbox" role="switch"><span><span class="t">Spoken narration</span><small>A voice describes the map, then the sweep plays once</small></span></label>
+            <div class="sliders" style="margin-top:2px">
+              <label class="field"><span>Spoken intro</span><select id="introLen" aria-label="Length of the spoken intro"><option value="short">Short</option><option value="full">Full</option></select></label>
+              <label class="field"><span>Voice</span><select id="voice" aria-label="Narration voice"></select></label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ctl-card wide" role="group" aria-label="Note trace">
+        <h3>Export the note trace</h3>
+        <div class="row">
+          <button id="traceCsv" type="button" class="secondary">⬇ CSV</button>
+          <button id="traceJson" type="button" class="secondary">⬇ JSON, with sources and method</button>
+          <span id="traceStatus" class="sub" aria-live="polite">Every note played is recorded with its column, longitude or month, the data under it, the scale and mood, and the source file's fingerprint. Play something, then export.</span>
+        </div>
+      </div>
     </div>
 
-    <div class="controls" role="group" aria-label="Note trace">
-      <button id="traceCsv" type="button" class="secondary">Export note trace (CSV)</button>
-      <button id="traceJson" type="button" class="secondary">Export note trace (JSON, with sources and method)</button>
-      <span id="traceStatus" class="sub" style="margin:0" aria-live="polite">Every note played is recorded with its column, longitude or month, the data under it, the scale and mood, and the source file's fingerprint. Play something, then export.</span>
-    </div>
     <p class="sub" id="speakHelp">With spoken narration on, pressing play first has a voice describe the image from west to east, then explain how to listen. Then the sweep plays once, with no talking over the music, and stops at the end. Clicking a spot also describes it aloud. If you use a screen reader, you may prefer to leave narration off and use the descriptions below.</p>
     <div class="panel" aria-labelledby="whereH">
       <h2 id="whereH">Where you are</h2>
@@ -183,8 +252,8 @@
     <li>Press <b>Hear the instruments</b> to learn what each voice means.</li>
     <li>Click or tap the picture to hear a single spot.</li>
   </ol>
-  <label><input type="checkbox" id="startSpeak"> Read a spoken guide aloud before each sweep</label>
-  <label><input type="checkbox" id="startSeen"> Do not show this again</label>
+  <label class="toggle compact"><input type="checkbox" role="switch" id="startSpeak"><span class="t">Read a spoken guide aloud before each sweep</span></label>
+  <label class="toggle compact"><input type="checkbox" role="switch" id="startSeen"><span class="t">Do not show this again</span></label>
   <p><button id="startGo" type="button">Begin</button> <button id="startDemo" type="button" class="secondary">Hear the instruments first</button></p>
 </dialog>
 <script src="grid.js"></script>
