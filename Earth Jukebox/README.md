@@ -68,9 +68,9 @@ On the Ocean currents track, a panel under the map lets you follow one current a
 - **Pitch is the water temperature** under the dot (warmer is higher), with the lead playing every other step. The stereo position is where the dot is on the map.
 - **The scale follows the region** the line passes through, as in the sweep. Water above about 22 °C turns the music sad, and above about 28 °C urgent.
 - **Swirl and fronts:** tangled flow lines, and sudden temperature changes along the line, add soft sparkles.
-- A status line says the position, temperature, scale and mood as it goes. The trace stops where the flow lines fade out (land, or no decoded colour), at the map's edge, or after 40 seconds.
+- A status line says the position, temperature, scale and mood as it goes. The sheet music under the map shows the notes being played, as in the sweep. The trace stops where the flow lines fade out (land, or no decoded colour), at the map's edge, or after 40 seconds.
 
-How it works and its limits: `tools/make-flow-field.ps1` measures the direction of the lines in each 16-pixel tile of the frame (`flow_field.js`). The tracing follows those directions. **A flow line has an orientation but no arrow**, so the picture alone cannot say which way the water flows. The named currents use their well-known direction; a start you choose heads east unless you tick *Reverse direction*. The path follows the drawn lines at 2.8-degree tile resolution, so it is a sketch of the current, not a measured track, and traces can wander across a basin. The temperature is decoded from line colour (see below). The sheet-music strip does not show this mode.
+How it works and its limits: `tools/make-flow-field.ps1` measures the direction of the lines in each 16-pixel tile of the frame (`flow_field.js`). The tracing follows those directions. **A flow line has an orientation but no arrow**, so the picture alone cannot say which way the water flows. The named currents use their well-known direction; a start you choose heads east unless you tick *Reverse direction*. The path follows the drawn lines at 2.8-degree tile resolution, so it is a sketch of the current, not a measured track, and traces can wander across a basin. The temperature is decoded from line colour (see below).
 
 ## Accessibility features
 

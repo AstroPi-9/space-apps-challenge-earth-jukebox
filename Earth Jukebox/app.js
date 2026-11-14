@@ -1115,10 +1115,14 @@ function silenceContinuous() {
   if (!A) return; const t = A.ctx.currentTime;
   [A.padGain, A.saltGain, A.droneGain, A.smPad && A.smPad.g, A.smDrone && A.smDrone.g].forEach(g => g && g.gain.setTargetAtTime(0, t, 0.15));
 }
+function hardStop() {                                  // silence everything at once: mute the output, then destroy the whole audio graph
+  clearTimeout(idleTimer);
+  if (A) { try { A.gate.gain.cancelScheduledValues(A.ctx.currentTime); A.gate.gain.setValueAtTime(0, A.ctx.currentTime); } catch (e) {} }
+  shutdownAudio();
+}
 function pause() {
-  playing = false; if (T.video) $('vid').pause(); stopSpeech(); clearInterval(timer); timer = null; silenceContinuous();
-  if (A) A.gate.gain.setTargetAtTime(0, A.ctx.currentTime, 0.03);   // cut scheduled notes and the reverb tail right away
-  sleepSoon(250);
+  playing = false; if (T.video) $('vid').pause(); stopSpeech(); clearInterval(timer); timer = null;
+  hardStop();                                                        // Pause means silence now: no fade, no ringing tail, no drone
   $('play').textContent = '▶ Play the globe'; $('play').setAttribute('aria-pressed', 'false');
 }
 function seek(col) { lastNarrCol = -1; pos = col; if (T.video) $('vid').currentTime = col / V.cols * T.grid.dur; queue = []; sweepEnded = false; if (playing) { nextCol = col; nextTime = A.ctx.currentTime + 0.05; } setHead(col); }
@@ -1374,6 +1378,7 @@ function demoLabel(text, k) {
 function stopDemo(quiet) {
   demoTok++; demoTimers.forEach(clearTimeout); demoTimers = []; demoRunning = false;
   document.querySelectorAll('.voice.demo-on').forEach(e => e.classList.remove('demo-on'));
+  if (!quiet) hardStop();                           // the Stop button: silence now
   silenceContinuous(); if (!quiet) $('demoStatus').textContent = ''; $('demoAll').textContent = '🎧 Hear the instruments'; $('demoAll').setAttribute('aria-pressed', 'false'); sleepSoon(300);
 }
 async function demoVoice(k, tok) {
@@ -1517,7 +1522,7 @@ async function renderOffline(i, seconds, solo) {
 window.EJ = { get A() { return A; }, get T() { return T; }, get playing() { return playing; }, scoreOn, INSTR,
   follow: {                                          // what the "Follow a current" feature (follow.js) needs from the sound engine
     wake, lead, pad, drone, pluck, chordFor, regionAt, SCALES, silence: silenceContinuous, pauseSweep: () => { if (playing) pause(); },
-    hold: on => { holdAudio = on; if (!on) sleepSoon(2500); },
+    hold: on => { holdAudio = on; }, hardStop,
     scale: () => SCALE, say: s => setReadout(s),
     setScaleAt(lon, lat, trb, urg) { const reg = regionAt(lon, lat), def = SCALES[reg] || SCALES.ocean, pick = trb ? def.sad : def.calm; SCALE = { deg: pick[1], name: pick[0], place: def.place, reg, thirds: !!def.thirds, trb }; EMO.troubled = trb; EMO.urgent = urg; EMO.concern = trb ? 0.7 : 0.2; return SCALE; },
     valueMidi(frac) { const L = LEADS[T.instruments.lead]; return scNote(L.root, Math.round(Math.max(0, Math.min(1, frac)) * scSpan(L.span))); },

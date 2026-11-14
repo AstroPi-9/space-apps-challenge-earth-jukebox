@@ -2,7 +2,7 @@
 // One strip under the map with a staff for every voice: drone, chords, high voice, lead and drums. Notes scroll from right to left
 // past a fixed "now" line. In live mode the notes are the ones the app actually schedules (the voices call noteLog); in MuseScore mode they
 // are the notes of the composition (score_notes.js). Loaded before app.js; it uses app.js's globals (A, T, playing, scoreOn ...) only at run time.
-const EJP = () => !!(window.EJ && window.EJ.playing), EJA = () => (window.EJ ? window.EJ.A : null), EJT = () => (window.EJ ? window.EJ.T : null), EJS = () => !!(window.EJ && window.EJ.scoreOn()), EJ_INSTR = () => (window.EJ && window.EJ.INSTR) || {};   // app.js keeps its state private; it publishes these through window.EJ
+const EJP = () => !!(window.EJ && (window.EJ.playing || window.EJ_following)), EJA = () => (window.EJ ? window.EJ.A : null), EJT = () => (window.EJ ? window.EJ.T : null), EJS = () => !!(window.EJ && window.EJ.scoreOn()), EJ_INSTR = () => (window.EJ && window.EJ.INSTR) || {};   // app.js keeps its state private; it publishes these through window.EJ
 const SHEET = { notes: [], ctx: null, clef: [], drumSlot: {}, key: '', lastText: '', lastTextAt: 0, hiddenByUser: false };
 const SH = { ROW: 46, LEFT: 124, G: 4.4, PPS: 78, AHEAD: 0.3, COLORS: ['#e8765a', '#c79bf0', '#8fc1c1', '#7be860', '#ffd54a'], NAMES: ['Drone', 'Chords', 'High voice', 'Lead', 'Drums'] };
 const SH_SPELL = [[0, ''], [1, 'b'], [1, ''], [2, 'n'], [2, ''], [3, ''], [4, 'b'], [4, ''], [5, 'b'], [5, ''], [6, 'n'], [6, '']];   // semitones above D -> [staff step in D major, accidental needed: b flat, n natural]
@@ -111,7 +111,7 @@ function sheetDraw() {
     for (let tt = Math.ceil((tFrom - base) / 2) * 2 + base; tt < tTo; tt += 2) { const x = nowX + (tt - now) * pps; c.beginPath(); c.moveTo(x + 0.5, 0); c.lineTo(x + 0.5, SH.ROW * 5); c.stroke(); } }
   list.sort((a, b) => a.t - b.t);
   for (const n of list) {
-    const x = nowX + (n.t - now) * pps; if (x < left - 10 || x > W + 10) continue;
+    const x = nowX + (n.t - now) * pps, tailEnd = x + (n.d > 0.6 ? n.d * pps : 0); if (tailEnd < left - 4 || x > W + 10) continue;     // long notes whose head has scrolled off still show their line
     const v = n.v, top = v * SH.ROW, y0 = top + (SH.ROW - 4 * G) / 2, yB = y0 + 4 * G, clef = score ? (v < 2 ? 'bass' : v === 4 ? 'perc' : 'treble') : shClef(v, list);
     let y;
     if (clef === 'perc') {
