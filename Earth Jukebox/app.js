@@ -344,6 +344,9 @@ Object.keys(PALETTE).forEach(id => { const tr = TRACKS.find(t => t.id === id); i
 // Per-track voice balance [drone, chords, high, lead, drums], set from offline renders (A-weighted levels, see PROCESS.md). Multipliers on the global TRIM.
 const TRIMS = { year: [4.64, 1.55, 1.33, 1.86, 1.9], aerosols: [5.0, 4.58, 4.74, 0.44, 3.58], sst: [2.86, 2.17, 0.75, 0.43, 3.64], sss: [5.0, 5.73, 1.38, 0.58, 4.27], density: [1.46, 1.34, 1.05, 1.5, 3.82], densityVideo: [2.39, 1.18, 1.1, 3.39, 5.13] };
 Object.keys(TRIMS).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trim = TRIMS[id]; });
+// The same balance for the MuseScore instrument sounds (source "samples"): each voice re-measured offline and scaled to the same A-weighted targets (see PROCESS.md).
+const TRIMS_S = { year: [1.34, 0.30, 0.93, 1.64, 1.9], aerosols: [2.6, 1.66, 2.12, 1.12, 3.58], sst: [2.35, 0.27, 0.31, 0.87, 3.64], sss: [1.33, 0.99, 0.68, 0.79, 4.27], density: [0.44, 0.27, 1.14, 1.34, 3.82], densityVideo: [0.74, 0.24, 1.68, 2.79, 5.13] };
+Object.keys(TRIMS_S).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trimS = TRIMS_S[id]; });
 const INTRO_HEAD = {
   aerosols: 'Hear a NASA aerosol map of Earth (August 19, 2025). A playhead sweeps the globe from west to east and turns what it finds into music.',
   ocean: "Hear the ocean surface on 19 June 2007, from NASA's ECCO2 model (SVS 3912). The flow lines are the currents and their colour is the temperature. A playhead sweeps from west to east.",
@@ -452,7 +455,7 @@ function computeEmotion() {                               // per column: how tro
 // ================= AUDIO ENGINE =================
 // Per-voice level trim: timpani and harp (bus 2) a little under the rest, land percussion (bus 4) much louder.
 const TRIM = [1, 1, 0.8, 1, 2.4];
-const busGain = k => TRIM[k] * ((T && T.trim) ? T.trim[k] : 1);            // global voice level times the per-track balance (T.trim)
+const busGain = k => TRIM[k] * ((T && T.trim) ? ((sampleOn() && T.trimS) ? T.trimS[k] : T.trim[k]) : 1);    // T.trimS: the balance used with the MuseScore instrument sounds
 let A = null;
 const meters = [];
 function initAudio(ctxIn) {
@@ -502,6 +505,7 @@ function initAudio(ctxIn) {
 // continuous-voice setters
 function pad(t, chord, gain, lp) {
   if (gain > 0.001) chord.slice(0, 3).forEach(m => noteLog(1, t, m, 0.5));          // sheet music
+  if (sampleOn() && SM.buf) { padSample(t, chord, gain, lp); return; }
   A.padOscs.forEach((o, i) => o.frequency.setTargetAtTime(mtof(chord[i]), t, 0.4));
   A.padGain.gain.setTargetAtTime(gain * A.padScale, t, 0.35); A.padLP.frequency.setTargetAtTime(lp * A.padMul * (EMO.troubled ? 0.7 : 1), t, 0.3);
 }
@@ -512,6 +516,7 @@ const MARIM = [50, 52, 54, 57, 59, 62, 64, 66, 69];  // D3 to A4
 let timpFreq = null;                                  // where the drum is currently tuned, so the pitch glides from one column to the next
 const latIdx = (row, rows, top) => Math.round((rows - 1 - row) / (rows - 1) * scSpan(top));          // north = high note
 function timpStrike(t, f, from, gain) {               // one soft mallet stroke on a tuned drum head
+  if (sampleOn() && SM.buf) { samplePlay('timpani', 69 + 12 * Math.log2(f / 440), t, 0.3, gain * 1.6, A.bus[2], { rel: 0.25, att: 0.004 }); return; }
   const { ctx, bus, nb } = A, g = ctx.createGain();
   g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
   [[1, 1, 0.7], [1.5, 0.45, 0.45], [2, 0.3, 0.3], [2.44, 0.14, 0.2]].forEach(([m, a, d]) => {    // timpani partials are not quite harmonic
@@ -525,6 +530,7 @@ function timpStrike(t, f, from, gain) {               // one soft mallet stroke 
   g.connect(bus[2]);
 }
 function barStrike(t, f, gain, ring, trem) {          // a struck wooden or metal bar: marimba (short, woody) or vibraphone (long, with a slow tremolo)
+  if (sampleOn() && SM.buf) { samplePlay(trem ? 'vibes' : 'marimba', 69 + 12 * Math.log2(f / 440), t, trem ? Math.min(ring, 0.9) : 0.35, gain * 1.6, A.bus[2], { rel: trem ? 0.4 : 0.2, att: 0.003 }); return; }
   const { ctx, bus, nb } = A, g = ctx.createGain();
   g.gain.setValueAtTime(gain * (trem ? 0.6 + 0.4 * Math.sin(2 * Math.PI * 5.5 * t) ** 2 : 1), t); g.gain.exponentialRampToValueAtTime(0.001, t + ring);
   (trem ? [[1, 1, 1], [4, 0.25, 0.5], [10, 0.08, 0.15]] : [[1, 1, 1], [4, 0.35, 0.18], [10, 0.1, 0.06]]).forEach(([m, a, d]) => {
@@ -552,6 +558,7 @@ const PLUCK = {                                       // partial = [multiple, st
 };
 function pluck(kind, t, midi, gain, pan) {            // a plucked or struck tine, string or glass bell
   noteLog(2, t, midi, 0.5);                           // sheet music
+  if (sampleOn() && SM.buf) { const pn = A.ctx.createStereoPanner ? A.ctx.createStereoPanner() : null; if (pn) { pn.pan.value = pan; pn.connect(A.bus[2]); } samplePlay(kind, midi, t, 0.8, gain * 1.5, pn || A.bus[2], { rel: 0.5, att: 0.004 }); return; }
   const { ctx, bus, nb } = A, K = PLUCK[kind], f = mtof(midi), g = ctx.createGain(), p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
   g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.003);
   K.parts.forEach(([m, a, d]) => {
@@ -605,6 +612,7 @@ function texNote(t, level, r, rows) {                 // click-to-explore: a sho
 }
 function drone(t, hz, gain) {
   if (gain > 0.001) { const m = Math.round(69 + 12 * Math.log2(hz / 440)); noteLog(0, t, m, 0.6); noteLog(0, t, m + Math.round(12 * Math.log2(A.droneRatio)), 0.6); }   // sheet music
+  if (sampleOn() && SM.buf) { droneSample(t, hz, gain); return; }
   A.d1.frequency.setTargetAtTime(hz, t, 0.2); A.d2.frequency.setTargetAtTime(hz * A.droneRatio, t, 0.2); A.droneGain.gain.setTargetAtTime(gain * 0.4 * A.droneScale, t, 0.4); }
 // one-shots
 // ---- Bassoon with Carnatic gamakas (no vibrato LFO: all pitch movement is a shaped ornament) ----
@@ -648,6 +656,13 @@ function lead(t, midi, gain, pan, durIn) {
   const dg = SCALE.deg, nd = dg.length, di = Math.max(0, dg.indexOf(mod(midi - 62, 12)));       // position of this note in the current scale
   const below = Math.max(1, dg[di] - (di ? dg[di - 1] : dg[nd - 1] - 12)), above = Math.max(1, (di < nd - 1 ? dg[di + 1] : dg[0] + 12) - dg[di]);   // semitone gaps to the neighbouring scale notes, for the gamaka
   const type = di === 0 ? (Math.random() < 0.3 ? 'jaru' : 'plain') : GAMAKA[di % 5];
+  if (sampleOn() && SM.buf) {                              // MuseScore instrument sound, with the same gamaka, played by the same data-driven notes
+    const so = { loop: true, att: 0.05, rel: 0.14 }; if (type !== 'plain') { const gc = gamakaCurve(type, below, above, dur); so.cents = gc.cents; so.gd = gc.gd; }
+    const pn = ctx.createStereoPanner ? ctx.createStereoPanner() : null; if (pn) { pn.pan.value = pan; pn.connect(bus[3]); }
+    samplePlay(name, midi, t, dur, gain * 1.1, pn || bus[3], so);
+    if (EMO.troubled && regionsOn() && !lead.sighing && dur > 1.0 && Math.random() < 0.45) { lead.sighing = true; lead(t + dur * 0.5, midi - below, gain * 0.5, pan, 0.8); lead.sighing = false; }
+    return;
+  }
   const out = ctx.createGain();                      // breath or bow envelope: attack, steady air, release
   out.gain.setValueAtTime(0, t); out.gain.linearRampToValueAtTime(gain * 1.5, t + L.att);
   out.gain.setTargetAtTime(gain * 1.1, t + L.att, L.tc); out.gain.setTargetAtTime(0, t + dur - 0.25, L.rel);
@@ -911,6 +926,7 @@ async function wake() {                              // un-mute and make sure th
   clearTimeout(idleTimer); initAudio(); applyPalette();
   A.gate.gain.cancelScheduledValues(A.ctx.currentTime); A.gate.gain.setTargetAtTime(1, A.ctx.currentTime, 0.01);
   if (A.ctx.state !== 'running') await A.ctx.resume();
+  if (sampleOn() && !SM.buf) { setReadout('Loading the MuseScore instrument sounds…'); try { await loadSamples(A.ctx); setReadout('MuseScore instrument sounds loaded.'); } catch (e) { setReadout('The instrument sounds could not be loaded, so the live synthesis is used.'); } }
 }
 function shutdownAudio() {                          // destroy the whole audio graph: nothing scheduled or ringing can survive, and a resume can never replay leftovers
   if (!A) return; const a = A; A = null;
@@ -997,7 +1013,7 @@ const SCORE = { buf: null, loop: 32, lead: 0.075, names: ['drone', 'pad', 'high'
 const scoreOn = () => $('source').value === 'score' && !!window.SCORE_B64;
 $('source').addEventListener('change', () => {                    // the source is chosen at the start of a sweep: stop, and say what will play next
   const s = scoreOn(); $('music').disabled = s; if (playing) pause();
-  setReadout(s ? 'Sound source: the MuseScore composition. Press play: its five instruments rise and fall with the data. The live voices are off.' : 'Sound source: live synthesis. Press play.');
+  setReadout(s ? 'Sound source: the MuseScore composition. Press play: its five instruments rise and fall with the data. The live voices are off.' : $('source').value === 'samples' ? 'Sound source: MuseScore instrument sounds playing the data. The first play loads the sounds, which takes a few seconds.' : 'Sound source: live synthesis. Press play.');
 });
 async function scoreBuffers(ctx) {
   if (SCORE.buf) return SCORE.buf;
@@ -1026,6 +1042,62 @@ async function startScore() {
   }
   a.score = { out, parts, t0 }; scoreFollow(Math.max(0, Math.floor(pos)));
 }
+// ================= SOUND SOURCE: MUSESCORE INSTRUMENT SOUNDS PLAYING THE DATA =================
+// The same live, data-driven notes as the default source (regional scales, sad and urgent moods, gamakas, latitude as pitch), but the
+// melodic and harmonic voices are real instrument recordings rendered with MuseScore 4 (samples_data.js) instead of synthesis:
+// lead = bassoon, clarinet, cello, flute, oboe or horn; chords = strings, choir, brass or organ; drone = cello, organ or tuba;
+// high voice = timpani, marimba, vibraphone, harp, celesta, kalimba or glockenspiel. The regional drums and the gong are still synthesised.
+const SM = { buf: null, loading: null, target: 0.2 };
+const sampleOn = () => $('source').value === 'samples' && !!window.SAMPLES;
+function loadSamples(ctx) {
+  if (SM.buf) return Promise.resolve(SM.buf);
+  if (SM.loading) return SM.loading;
+  return (SM.loading = (async () => {
+    const out = {};
+    await Promise.all(Object.keys(window.SAMPLES).map(async key => {
+      const S = window.SAMPLES[key], bin = atob(S.b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      const buf = await ctx.decodeAudioData(u.buffer), d = buf.getChannelData(0), sr = buf.sampleRate; let s = 0, n = 0;
+      S.notes.forEach((_, i) => { const a = Math.floor((i * S.slot + 0.1) * sr), b = Math.min(d.length, Math.floor((i * S.slot + Math.min(S.hold, 0.8)) * sr)); for (let k = a; k < b; k++) { s += d[k] * d[k]; n++; } });
+      out[key] = { buf, meta: S, norm: Math.min(12, SM.target / (Math.sqrt(s / Math.max(1, n)) || 1e-4)) };     // every instrument at the same loudness
+    }));
+    SM.buf = out; return out;
+  })().catch(e => { SM.loading = null; throw e; }));
+}
+function samplePlay(key, midi, t, dur, gain, dest, o) {   // one note of a MuseScore instrument, re-pitched from the nearest recorded note
+  const S = SM.buf && SM.buf[key]; if (!S) return null; const m = S.meta, ctx = A.ctx; o = o || {};
+  let tg = midi; while (tg < m.lo - 2) tg += 12; while (tg > m.lo + m.step * (m.notes.length - 1) + 2) tg -= 12;      // notes outside the instrument's range are folded by octaves
+  const idx = Math.max(0, Math.min(m.notes.length - 1, Math.round((tg - m.lo) / m.step))), rate = Math.pow(2, (tg - m.notes[idx]) / 12);
+  const src = ctx.createBufferSource(); src.buffer = S.buf; src.playbackRate.value = rate;
+  const off = idx * m.slot + 0.06, att = o.att || 0.015, rel = o.rel || 0.12, end = t + dur, g = ctx.createGain();
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain * S.norm, t + att); g.gain.setTargetAtTime(0, end, rel / 3);
+  let stopAt = end + rel * 3;
+  if (o.loop && dur > (m.hold - 0.3)) { src.loop = true; src.loopStart = off + 0.45; src.loopEnd = off + m.hold - 0.2; }     // held longer than the recording: repeat its steady middle
+  else stopAt = Math.min(stopAt, t + (m.hold - 0.05) / rate);
+  if (o.cents) src.detune.setValueCurveAtTime(o.cents, t, o.gd);
+  src.connect(g); g.connect(dest); src.start(t, off); src.stop(stopAt);
+  return { src, g };
+}
+function padSample(t, chord, gain, lp) {                  // chords: three sustained, looping notes; they change only when the chord does
+  const a = A, ctx = a.ctx, inst = { strings: 'strings', choir: 'choir', brass: 'brass', organ: 'organ', low: 'strings' }[T.instruments.pad] || 'strings';
+  if (!a.smPad) { const g = ctx.createGain(), f = ctx.createBiquadFilter(); g.gain.value = 0; f.type = 'lowpass'; f.frequency.value = 3000; f.connect(g); g.connect(a.bus[1]); a.smPad = { g, f, key: '', voices: [] }; }
+  const P = a.smPad, ck = inst + chord.join(',');
+  if (P.key !== ck && gain > 0.001) {
+    P.voices.forEach(v => { v.g.gain.cancelScheduledValues(t); v.g.gain.setTargetAtTime(0, t, 0.25); try { v.src.stop(t + 1.5); } catch (e) {} });
+    P.voices = chord.slice(0, 3).map(mm => samplePlay(inst, mm, t, 600, 1, P.f, { loop: true, att: 0.4, rel: 0.3 })).filter(Boolean); P.key = ck;
+  }
+  P.g.gain.setTargetAtTime(gain * a.padScale * 1.6, t, 0.35); P.f.frequency.setTargetAtTime(Math.max(900, lp * a.padMul * 3 * (EMO.troubled ? 0.7 : 1)), t, 0.3);
+}
+function droneSample(t, hz, gain) {                       // the drone: the tonic and its fifth (or octave), sustained and looping
+  const a = A, ctx = a.ctx, inst = { tanpura: 'cello', pedal: 'organ', didgeridoo: 'tuba' }[T.instruments.drone] || 'cello';
+  if (!a.smDrone) { const g = ctx.createGain(); g.gain.value = 0; g.connect(a.bus[0]); a.smDrone = { g, key: '', voices: [] }; }
+  const D = a.smDrone, m1 = 69 + 12 * Math.log2(hz / 440);
+  if (D.key !== inst && gain > 0.001) {
+    D.voices.forEach(v => { v.g.gain.cancelScheduledValues(t); v.g.gain.setTargetAtTime(0, t, 0.25); try { v.src.stop(t + 1.5); } catch (e) {} });
+    D.voices = [m1, m1 + 12 * Math.log2(a.droneRatio)].map(mm => samplePlay(inst, mm, t, 600, 1, D.g, { loop: true, att: 0.5, rel: 0.3 })).filter(Boolean); D.key = inst;
+  }
+  D.g.gain.setTargetAtTime(gain * 0.4 * a.droneScale * 3, t, 0.4);
+}
+
 function scoreFollow(c) {
   if (!A || !A.score || !A.score.parts) return; const t = A.ctx.currentTime, { tot } = colStats(c);
   A.score.parts.forEach((p, k) => {
@@ -1041,7 +1113,7 @@ function startVideo() {                                // start the movie at the
 }
 function silenceContinuous() {
   if (!A) return; const t = A.ctx.currentTime;
-  [A.padGain, A.saltGain, A.droneGain].forEach(g => g.gain.setTargetAtTime(0, t, 0.15));
+  [A.padGain, A.saltGain, A.droneGain, A.smPad && A.smPad.g, A.smDrone && A.smDrone.g].forEach(g => g && g.gain.setTargetAtTime(0, t, 0.15));
 }
 function pause() {
   playing = false; if (T.video) $('vid').pause(); stopSpeech(); clearInterval(timer); timer = null; silenceContinuous();
@@ -1424,7 +1496,7 @@ async function renderOffline(i, seconds, solo) {
   initAudio(ctx);
   A.bus.forEach((g, k) => { g.gain.value = (solo === undefined || solo === k) ? busGain(k) : 0; });
   const step = 0.25, n = Math.floor(seconds / step); gridOrigin = 0.05; timpFreq = null;
-  for (let c = 0; c < n; c++) { const cc = Math.floor(c * V.cols / n), { tot, cen } = colStats(cc); T.schedule(cc, 0.05 + c * step, step, tot, cen, V); }
+  for (let c = 0; c < n; c++) { const cc = Math.floor(c * V.cols / n), { tot, cen } = colStats(cc); setScaleFor(cc); T.schedule(cc, 0.05 + c * step, step, tot, cen, V); urgentFx(cc, 0.05 + c * step, step); }
   const buf = await ctx.startRendering(); A = keep;
   const d = buf.getChannelData(0), win = Math.round(sr * 0.5); let sum = 0, peak = 0, aSum = 0, aN = 0, nw = 0;
   for (let w = 0; w + win <= d.length; w += win) { let s2 = 0; for (let j = w; j < w + win; j++) { const x = d[j]; s2 += x * x; if (Math.abs(x) > peak) peak = Math.abs(x); } sum += s2; nw++; if (s2 / win > 1e-7) { aSum += s2 / win; aN++; } }
@@ -1442,6 +1514,6 @@ async function renderOffline(i, seconds, solo) {
 }
 
 window.EJ = { get A() { return A; }, get T() { return T; }, get playing() { return playing; }, scoreOn, INSTR };   // read-only view for the scrolling sheet music (sheet.js)
-if (location.search.includes("debug")) window.__jb = { TRACKS, musicBuffers, scoreBuffers, startMusic, setTrack, renderOffline, wake, colStats, get T() { return T; }, get V() { return V; }, get A() { return A; } };   // test hook, only with ?debug in the address
+if (location.search.includes("debug")) window.__jb = { loadSamples, SM, TRACKS, musicBuffers, scoreBuffers, startMusic, setTrack, renderOffline, wake, colStats, get T() { return T; }, get V() { return V; }, get A() { return A; } };   // test hook, only with ?debug in the address
 setTrack(tabIndex('year') >= 0 ? tabIndex('year') : 0);
 })();

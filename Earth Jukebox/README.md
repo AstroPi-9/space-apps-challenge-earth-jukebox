@@ -29,6 +29,8 @@ How the picture becomes sound:
 
 The five voices are generated live in the browser with the Web Audio API. Underneath them sits a **composed music layer**: for each track, two 16-second loops written for this project in Mohanam (a "bed" of chords and bass, sometimes with a harp, and a melody). They were rendered with MuseScore 4 (its bundled MS Basic sound font) and are stored as `music_data.js`. The bed stays steady and the melody comes forward where the data is strong. Untick **Composed music underneath** to hear only the live voices. `tools/make-music.ps1` rebuilds them.
 
+**Sound source: MuseScore instrument sounds playing the data.** The same live, data-driven notes as the default (regional scales, sad and urgent moods, gamakas, latitude as pitch), but the melodic and harmonic voices are real instrument recordings rendered with MuseScore 4 instead of synthesis: the lead (bassoon, clarinet, cello, flute, oboe or horn), the chords (strings, choir, brass or organ), the drone (cello, organ or tuba) and the high voice (timpani, marimba, vibraphone, harp, celesta, kalimba or glockenspiel). The regional drums and the gong are still synthesised, because MuseScore's sound font has no tabla, djembe and so on. Each instrument is a row of recorded notes (`samples_data.js`, 7.5 MB, rebuilt by `tools/make-samples.ps1`), re-pitched by at most 2.5 semitones, so the first Play loads them for a few seconds. Notes outside an instrument's recorded range are moved by octaves.
+
 **Sound source: MuseScore composition (5 instruments).** An alternative to the live synthesis, chosen from the *Sound source* menu. One composition made for MuseScore (`music_scores/EarthJukebox_5voice.mscz`, editable) has five instruments that are the five voices: drone (cello), chords (strings), high voice (harp), lead (clarinet) and drums. The same five stems play for every track, and the data modulates them: each instrument is louder where its kind of data is stronger, the three upper voices open their tone with the data, and the drums follow the data strength. The live voices are off in this mode, and the spoken text and legend still describe the live instruments. `tools/make-score.ps1` rebuilds the score and `score_data.js`; to use your own edits, export five mp3 stems (one instrument each) named `drone`, `pad`, `high`, `lead`, `drums`, and run it with `-StemDir`.
 
 ## Scales and emotion
@@ -56,7 +58,7 @@ The Locrian family, Slendro-like and Pelog-like scales are approximations chosen
 - **Troubled and sad:** strong data. The sad form of the scale, darker chords, and the lead sometimes adds a soft falling "sigh".
 - **Urgent:** the strongest data, or a sharp rise into strong data. A heartbeat on every beat and a tense, repeating figure (the tonic against the note a semitone above) are added.
 
-What "strong" means depends on the track (for example, lots of aerosol, or warm and swirling water), so it is a stand-in for "something is wrong", not a measure of harm. The text under the sheet music says the current scale and mood. The MuseScore composition options and the "composed music underneath" layer are **fixed pieces in Mohanam** and do not follow the data or the regions.
+What "strong" means depends on the track (for example, lots of aerosol, or warm and swirling water), so it is a stand-in for "something is wrong", not a measure of harm. The text under the sheet music says the current scale and mood. The "MuseScore instrument sounds" source follows the data, the regions and the mood. The "MuseScore composition, 5 instruments" source and the "composed music underneath" layer are **fixed pieces in Mohanam** and do not follow the data or the regions.
 
 ## Accessibility features
 
@@ -112,6 +114,7 @@ Each track's page section **Data and limits** gives its source, date, what the c
 |---|---|
 | `index.html`, `app.js` | The whole application. |
 | `music_data.js` | The composed music loops (12 mp3 files, base64), built by `tools/make-music.ps1` with MuseScore 4. The phrases were written by the AI assistant, not a human composer; the MS Basic sound font's licence has not been checked. |
+| `samples_data.js` | The MuseScore instrument sounds (18 instruments, base64 mp3), built by `tools/make-samples.ps1`. The sound font's licence has not been checked. |
 | `sheet.js`, `score_notes.js`, `score_data.js` | The scrolling sheet music; the notes of the MuseScore composition; the composition's five audio stems. |
 | `*_grid.js` | Precomputed sound grids for each track (`year_grid.js`, `grid.js` for aerosols, `sst_grid.js`, `sss_grid.js`, `density_grid.js`, `video_grid.js`, `ocean_grid.js`). |
 | `assets/` | Pictures, colour bars, the density video (`assets/video`) and 160 time-lapse frames (`assets/year`). |
