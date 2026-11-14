@@ -96,7 +96,13 @@ foreach ($tr in $tracks) {
   $parts = @(@{ name = 'Chords'; ch = 1; prog = $tr.bedProg; events = $ch }, @{ name = 'Bass'; ch = 2; prog = 42; events = $bs })
   if ($tr.arp) { $parts += @{ name = 'Arpeggio'; ch = 3; prog = $tr.arp; events = $ar } }
   WriteMidi "$Work\$($tr.id)_bed.mid" $parts
+  # one editable score per track (melody + bed together), for opening in MuseScore
+  $full = @(@{ name = 'Melody'; ch = 0; prog = $tr.tune; events = $ev }) + $parts
+  New-Item -ItemType Directory -Force "$Work\scores" | Out-Null
+  WriteMidi "$Work\scores\EarthJukebox_$($tr.id).mid" $full
 }
+$scoreDir = Join-Path $root 'music_scores'; New-Item -ItemType Directory -Force $scoreDir | Out-Null
+foreach ($f in (Get-ChildItem "$Work\scores\*.mid")) { & $MuseScore -o (Join-Path $scoreDir ($f.BaseName + '.mscz')) $f.FullName | Out-Null }
 
 # ---- render with MuseScore, then pack ---------------------------------------
 foreach ($f in (Get-ChildItem "$Work\*.mid")) {
