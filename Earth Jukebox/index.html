@@ -162,6 +162,56 @@
   .data-bar .code{display:inline-grid;place-items:center;min-width:2.2em;margin-right:8px;padding:0 .4em;border-radius:999px;background:radial-gradient(circle at 34% 26%,#ff8d7c,#c91b14 60%,#7e0b07);color:#fff1d6;font:700 .95rem Georgia,serif;font-style:normal}
   @media (max-width:560px){.jb-cabinet{padding:18px 14px 18px;border-radius:120px 120px 18px 18px/70px 70px 18px 18px}.rec .knob{width:70px;height:70px;font-size:1.25rem}.jb-card{padding:12px 14px}}
   @media (prefers-reduced-motion:reduce){#jbSub.jb-fade{animation:none}.jb-tube{animation:none}.jb-half{transition:none!important}}
+
+  /* ================= WOODEN DATA PAGES, SETTINGS TAB AND OLD FLICK SWITCHES ================= */
+  :root{
+    --bg:#1a0d04; --panel:#341b0c; --panel2:#44240f; --line:#7a5a22; --line2:#b08a3c; --text:#f7edd3; --muted:#dcc796; --accent:#e9c46a;
+    --sw-off:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 70'><defs><linearGradient id='p' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23f4dc8e'/><stop offset='1' stop-color='%23b58a2c'/></linearGradient><linearGradient id='l' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='%23fffaf0'/><stop offset='.55' stop-color='%23efe0b4'/><stop offset='1' stop-color='%23b9a263'/></linearGradient></defs><rect x='1' y='1' width='44' height='68' rx='8' fill='url(%23p)' stroke='%235a3d0c' stroke-width='1.6'/><circle cx='6' cy='6' r='2' fill='%237a5a1a'/><circle cx='40' cy='6' r='2' fill='%237a5a1a'/><circle cx='6' cy='64' r='2' fill='%237a5a1a'/><circle cx='40' cy='64' r='2' fill='%237a5a1a'/><text x='23' y='13.5' text-anchor='middle' font-family='Georgia,serif' font-size='7.5' font-weight='700' fill='%233a2608'>ON</text><rect x='14' y='17' width='18' height='38' rx='9' fill='%231f1005' stroke='%236b4a12'/><rect x='11' y='33' width='24' height='22' rx='8' fill='url(%23l)' stroke='%238a6a22'/><rect x='15' y='36' width='16' height='3' rx='1.5' fill='%23ffffff' opacity='.7'/><text x='23' y='65.5' text-anchor='middle' font-family='Georgia,serif' font-size='7.5' font-weight='700' fill='%233a2608'>OFF</text></svg>");
+    --sw-on:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 70'><defs><linearGradient id='p' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23f4dc8e'/><stop offset='1' stop-color='%23b58a2c'/></linearGradient><linearGradient id='l' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='%23fffaf0'/><stop offset='.55' stop-color='%23efe0b4'/><stop offset='1' stop-color='%23b9a263'/></linearGradient></defs><rect x='1' y='1' width='44' height='68' rx='8' fill='url(%23p)' stroke='%235a3d0c' stroke-width='1.6'/><circle cx='6' cy='6' r='2' fill='%237a5a1a'/><circle cx='40' cy='6' r='2' fill='%237a5a1a'/><circle cx='6' cy='64' r='2' fill='%237a5a1a'/><circle cx='40' cy='64' r='2' fill='%237a5a1a'/><text x='23' y='13.5' text-anchor='middle' font-family='Georgia,serif' font-size='7.5' font-weight='700' fill='%23fff3c4' stroke='%233a2608' stroke-width='.3'>ON</text><rect x='14' y='17' width='18' height='38' rx='9' fill='%231f1005' stroke='%236b4a12'/><rect x='11' y='17' width='24' height='22' rx='8' fill='url(%23l)' stroke='%238a6a22'/><rect x='15' y='20' width='16' height='3' rx='1.5' fill='%23ffffff' opacity='.7'/><circle cx='23' cy='31' r='2.2' fill='%23ffb43a' opacity='.9'/><text x='23' y='65.5' text-anchor='middle' font-family='Georgia,serif' font-size='7.5' font-weight='700' fill='%233a2608'>OFF</text></svg>");
+  }
+  /* old flick switch: up is on, down is off (every checkbox in the app) */
+  input[type=checkbox]{-webkit-appearance:none;appearance:none;flex:none;width:42px;height:64px;margin:0;border:0;border-radius:9px;cursor:pointer;
+    background:var(--sw-off) center/100% 100% no-repeat;transition:filter .15s}
+  input[type=checkbox]:checked{background:var(--sw-on) center/100% 100% no-repeat;border:0}
+  input[type=checkbox]:hover{filter:brightness(1.1)}
+  .toggle{align-items:center;background:rgba(0,0,0,.25);border:1px solid var(--line)}
+  .toggle:has(input:checked){border-color:#e9c46a;background:linear-gradient(180deg,rgba(233,196,106,.16),rgba(233,196,106,.05))}
+  .toggle.compact{padding:6px 12px}
+  .toggle .t{color:var(--text)}
+
+  body{background:var(--grain),repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 2px,transparent 2px 11px),repeating-linear-gradient(90deg,rgba(255,196,120,.05) 0 1px,transparent 1px 29px),linear-gradient(180deg,#5c3416,#33190b 55%,#220f05);background-color:#33190b;background-attachment:fixed}
+  .wrap{margin:22px auto;max-width:1140px;padding:22px 26px 38px;border-radius:28px;border:3px solid #d9b25a;background:linear-gradient(180deg,rgba(32,16,6,.80),rgba(20,10,4,.88));
+    box-shadow:0 0 0 6px #7a561b,0 0 0 9px #2a1707,0 34px 70px -12px rgba(0,0,0,.9),inset 0 0 60px rgba(0,0,0,.55)}
+  h1{font-family:Georgia,'Times New Roman',serif;letter-spacing:.04em}
+  h1 .gt{background:linear-gradient(180deg,#fff0b8,#e9c46a 60%,#b8862b);-webkit-background-clip:text;background-clip:text;color:transparent}
+  h2{font-family:Georgia,'Times New Roman',serif;color:#ffe9a6}
+  a{color:#ffd77a}
+  #stage{border:3px solid #d9b25a;box-shadow:0 0 0 5px #5a3d0c,0 20px 40px -18px #000}
+  #sheet{border:2px solid var(--line2)}
+  .panel,.ctl-card{background:linear-gradient(180deg,rgba(68,37,15,.92),rgba(44,23,9,.95));border:2px solid var(--line2);box-shadow:inset 0 0 0 3px rgba(0,0,0,.28),0 10px 20px -12px #000}
+  .ctl-card h3{color:#e9c46a}
+  button{background:linear-gradient(180deg,#ff8d7c,#d9231a 55%,#9c0f0b);color:#fff1d6;border:2px solid #d5d9de;box-shadow:0 3px 0 #4d0604,0 8px 14px -6px rgba(0,0,0,.75);text-shadow:0 1px 1px rgba(0,0,0,.5)}
+  button.secondary{background:linear-gradient(180deg,#f6e3a6,#d9b867);color:#3a2608;border:2px solid #8a6a22;box-shadow:0 3px 0 #5a3d0c,0 8px 14px -6px rgba(0,0,0,.7);text-shadow:none}
+  button.secondary:hover{background:linear-gradient(180deg,#fff0c0,#e4c577)}
+  select,input[type=number]{background:#2a1508;color:var(--text);border:2px solid var(--line2)}
+  input[type=range]{accent-color:#e0312a}
+  .voice{background:linear-gradient(180deg,rgba(68,37,15,.9),rgba(44,23,9,.95));border-color:var(--line)}
+  .voice .meter{background:#1f1005}
+  table th,table td{border-bottom-color:rgba(176,138,60,.35)}
+  dialog{background:linear-gradient(180deg,#4a2810,#2d170a);border:3px solid #d9b25a;box-shadow:0 0 0 5px #5a3d0c,0 30px 80px -20px #000}
+  .data-bar{border-color:#d9b25a}
+  .data-bar button{background:linear-gradient(180deg,#ff8d7c,#d11d15)}
+
+  /* settings tab (top right of the home and second pages) */
+  .jb-settab{position:fixed;top:12px;right:14px;z-index:120;min-height:38px;padding:6px 16px;font-size:.92rem}
+  .jb-settings{position:fixed;top:60px;right:14px;z-index:120;width:min(460px,calc(100vw - 28px));max-height:calc(100vh - 78px);overflow:auto;border-radius:18px;border:3px solid #d9b25a;padding:14px 16px;color:var(--cream1);
+    box-shadow:0 0 0 5px #5a3d0c,0 30px 60px -12px rgba(0,0,0,.9)}
+  .jb-set-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .jb-set-head h2{margin:0}
+  .jb-settings .sub{margin:4px 0 12px;font-size:.9rem}
+  .jb-settings .ctl-card{margin:0 0 12px;padding:12px 14px}
+  .jb-settings .toggle{padding:8px 10px}
+  @media (max-width:560px){.wrap{margin:10px auto;padding:14px 12px 28px;border-radius:20px}.jb-settab{top:8px;right:8px}}
 </style>
 </head>
 <body>
@@ -197,6 +247,36 @@
   </div>
 </div>
 <div id="jbSub" class="wood" role="region" aria-label="Choose a version" hidden><div id="jbSubInner" class="jb-inner"></div></div>
+<button id="jbSetBtn" class="jb-settab" type="button" aria-expanded="false" aria-controls="jbSettings">⚙ Settings</button>
+<section id="jbSettings" class="jb-settings wood" role="region" aria-label="Settings for every record" hidden>
+  <div class="jb-set-head"><h2>Settings</h2><button id="jbSetClose" class="secondary" type="button" aria-label="Close settings">✕ Close</button></div>
+  <p class="sub">These apply to every record. Settings for one record (such as the El Niño layer or Follow a current) are on that record's page.</p>
+
+        <div class="ctl-card" role="group" aria-label="Sound">
+          <h3>Sound</h3>
+          <div class="stack">
+            <label class="field"><span>Sound source</span><select id="source" aria-label="Sound source"><option value="live">Live synthesis (default)</option><option value="samples">MuseScore instrument sounds playing the data</option><option value="score">MuseScore composition, 5 instruments</option></select></label>
+            <label class="toggle"><input id="harm" type="checkbox" role="switch" checked><span><span class="t">Harmonious mode</span><small>Fewer notes, one consonant chord at a time</small></span></label>
+            <label class="toggle"><input id="gam" type="checkbox" role="switch" checked><span><span class="t">Gamakas</span><small>Pitch ornaments on the melody; off gives steady notes</small></span></label>
+            <label class="toggle"><input id="emo" type="checkbox" role="switch" checked><span><span class="t">Regional scales and emotion</span><small>The scale follows the region; sad and urgent where the data is strong</small></span></label>
+            
+            <label class="toggle"><input id="music" type="checkbox" role="switch"><span><span class="t">Composed music underneath</span><small>Fixed pieces in Mohanam, so they clash with other scales</small></span></label>
+          </div>
+        </div>
+        <div class="ctl-card" role="group" aria-label="Display and narration">
+          <h3>Display and narration</h3>
+          <div class="stack">
+            <label class="toggle"><input id="showSheet" type="checkbox" role="switch" checked><span><span class="t">Show sheet music</span><small>A staff for every voice, scrolling past a fixed line</small></span></label>
+            <label class="toggle"><input id="narrate" type="checkbox" role="switch"><span><span class="t">Show descriptions while playing</span><small>Text about what the beam is passing over</small></span></label>
+            <label class="toggle"><input id="speak" type="checkbox" role="switch"><span><span class="t">Spoken narration</span><small>A voice describes the map, then the sweep plays once</small></span></label>
+            <label class="toggle"><input id="autoClose" type="checkbox" role="switch" checked><span><span class="t">Return to the jukebox when a song ends</span><small>The doors close and you choose another record</small></span></label>
+            <div class="sliders" style="margin-top:2px">
+              <label class="field"><span>Spoken intro</span><select id="introLen" aria-label="Length of the spoken intro"><option value="short">Short</option><option value="full">Full</option></select></label>
+              <label class="field"><span>Voice</span><select id="voice" aria-label="Narration voice"></select></label>
+            </div>
+          </div>
+        </div>
+</section>
 <div id="jbLive" class="sr-only" role="status" aria-live="polite"></div>
 <a class="skip" href="#controls">Skip to controls</a>
 <div class="wrap">
@@ -268,31 +348,8 @@
           <label class="field"><span>Volume</span><input id="vol" type="range" min="0" max="100" value="70"></label>
           <label class="field"><span>Tour length <b id="durOut">40 s</b></span><input id="dur" type="range" min="20" max="90" value="40" aria-describedby="durOut"></label>
         </div>
-      </div>
-      <div class="ctl-grid">
-        <div class="ctl-card" role="group" aria-label="Sound">
-          <h3>Sound</h3>
-          <div class="stack">
-            <label class="field"><span>Sound source</span><select id="source" aria-label="Sound source"><option value="live">Live synthesis (default)</option><option value="samples">MuseScore instrument sounds playing the data</option><option value="score">MuseScore composition, 5 instruments</option></select></label>
-            <label class="toggle"><input id="harm" type="checkbox" role="switch" checked><span><span class="t">Harmonious mode</span><small>Fewer notes, one consonant chord at a time</small></span></label>
-            <label class="toggle"><input id="gam" type="checkbox" role="switch" checked><span><span class="t">Gamakas</span><small>Pitch ornaments on the melody; off gives steady notes</small></span></label>
-            <label class="toggle"><input id="emo" type="checkbox" role="switch" checked><span><span class="t">Regional scales and emotion</span><small>The scale follows the region; sad and urgent where the data is strong</small></span></label>
-            <label class="toggle"><input id="skipAnt" type="checkbox" role="switch"><span><span class="t">Skip the Antarctic drone</span><small>Leave the far south out of the deep hum</small></span></label>
-            <label class="toggle"><input id="music" type="checkbox" role="switch"><span><span class="t">Composed music underneath</span><small>Fixed pieces in Mohanam, so they clash with other scales</small></span></label>
-          </div>
-        </div>
-        <div class="ctl-card" role="group" aria-label="Display and narration">
-          <h3>Display and narration</h3>
-          <div class="stack">
-            <label class="toggle"><input id="showSheet" type="checkbox" role="switch" checked><span><span class="t">Show sheet music</span><small>A staff for every voice, scrolling past a fixed line</small></span></label>
-            <label class="toggle"><input id="narrate" type="checkbox" role="switch"><span><span class="t">Show descriptions while playing</span><small>Text about what the beam is passing over</small></span></label>
-            <label class="toggle"><input id="speak" type="checkbox" role="switch"><span><span class="t">Spoken narration</span><small>A voice describes the map, then the sweep plays once</small></span></label>
-            <label class="toggle"><input id="autoClose" type="checkbox" role="switch" checked><span><span class="t">Return to the jukebox when a song ends</span><small>The doors close and you choose another record</small></span></label>
-            <div class="sliders" style="margin-top:2px">
-              <label class="field"><span>Spoken intro</span><select id="introLen" aria-label="Length of the spoken intro"><option value="short">Short</option><option value="full">Full</option></select></label>
-              <label class="field"><span>Voice</span><select id="voice" aria-label="Narration voice"></select></label>
-            </div>
-          </div>
+        <div class="stack" style="margin-top:14px">
+          <label class="toggle"><input id="skipAnt" type="checkbox" role="switch"><span><span class="t">Skip the Antarctic drone</span><small>Leave the far south out of the deep hum</small></span></label>
         </div>
       </div>
       <div class="ctl-card wide" role="group" aria-label="Note trace">

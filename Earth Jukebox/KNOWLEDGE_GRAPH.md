@@ -38,7 +38,7 @@ graph LR
 ## 3. Code modules (all classic scripts; `app.js` is one IIFE)
 | File | Role |
 |---|---|
-| `index.html` | All markup and CSS (redesigned: control cards, toggle switches). Script order matters: data files, `source_hashes.js`, `trace.js`, `sheet.js`, `app.js`, `follow.js`, `elnino.js`. |
+| `index.html` | All markup and CSS (wooden jukebox theme on every page; old flick switches for every checkbox, drawn with SVG background images; the general settings live in the `#jbSettings` panel opened by the top-right `#jbSetBtn` tab on the home and second pages, and the data page keeps only record-specific settings). Script order matters: data files, `source_hashes.js`, `trace.js`, `sheet.js`, `app.js`, `follow.js`, `elnino.js`. |
 | `app.js` | Tracks and their data decoding text, scales and emotion, harmony, voices (synth), drums, scheduler, narration, demo, start dialog, sources. **Private scope: other files reach it only through `window.EJ`** (getters for `A`, `T`, `playing`; `traceContext()`, `follow.*` API, etc.). |
 | `sheet.js` | Scrolling sheet music. `noteLog(v,t,m,d,stroke,id)` is called by every voice; also forwards to the trace. |
 | `follow.js` | Follow a current: traces a path along flow lines (`flow_field.js`) and sonifies temperature. |

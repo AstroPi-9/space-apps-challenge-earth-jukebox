@@ -24,10 +24,16 @@
   const live = t => { const e = $('jbLive'); e.textContent = ''; setTimeout(() => { e.textContent = t; }, 60); };
   const lock = on => { document.body.style.overflow = on ? 'hidden' : ''; };
   const page = () => view === 'sub' ? sub : home;
+  const setBtn = $('jbSetBtn'), setPanel = $('jbSettings');
+  function settings(open) { if (setBtn.hidden && open) return; setPanel.hidden = !open; setBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+  function setTabVisible(on) { setBtn.hidden = !on; if (!on) settings(false); }                // the settings tab shows on the home and second pages only
+  setBtn.addEventListener('click', () => { settings(setPanel.hidden); if (!setPanel.hidden) { const f = setPanel.querySelector('select,input,button'); if (f) f.focus({ preventScroll: true }); } });
+  $('jbSetClose').addEventListener('click', () => { settings(false); setBtn.focus(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !setPanel.hidden) { settings(false); setBtn.focus(); } });
   function show(s) {                                                         // s: 'home' | 'sub' | 'data'
     const data = s === 'data'; state = data ? 'data' : 'home'; if (!data) view = s;
     home.hidden = data || s !== 'home'; home.inert = home.hidden; sub.hidden = data || s !== 'sub'; sub.inert = sub.hidden;
-    app.inert = !data; app.setAttribute('aria-hidden', data ? 'false' : 'true'); lock(!data);
+    app.inert = !data; app.setAttribute('aria-hidden', data ? 'false' : 'true'); lock(!data); setTabVisible(!data);
   }
   function halves(open, source) {                                            // two copies of a page, each showing one half, for the swing
     const wrap = document.createElement('div'); wrap.className = 'jb-doors' + (open ? ' open notrans' : ''); wrap.setAttribute('aria-hidden', 'true');
@@ -50,7 +56,7 @@
     window.scrollTo(0, 0); const info = NAMES[id] || { code: '', name: id };
     $('dataBarNow').innerHTML = `<span class="code" aria-hidden="true">${info.code}</span>Now playing: ${info.name}`;
     app.inert = false; app.setAttribute('aria-hidden', 'false');
-    const doors = reduce() ? null : halves(false, source); source.hidden = true; source.inert = true; lock(false);
+    setTabVisible(false); const doors = reduce() ? null : halves(false, source); source.hidden = true; source.inert = true; lock(false);
     const done = () => { if (doors) doors.remove(); show('data'); $('backHome').focus({ preventScroll: true }); live(`The doors opened on ${info.name}. Press Play to hear it.`); window.dispatchEvent(new Event('resize')); };
     if (!doors) { done(); return; }
     requestAnimationFrame(() => requestAnimationFrame(() => doors.classList.add('open'))); setTimeout(done, 1650);
@@ -94,6 +100,6 @@
   };
   document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(timer); });
 
-  if (skip) { home.hidden = true; home.inert = true; sub.hidden = true; sub.inert = true; app.inert = false; lock(false); state = 'data'; $('dataBarNow').textContent = 'Direct page (no jukebox home).'; }
+  if (skip) { home.hidden = true; home.inert = true; sub.hidden = true; sub.inert = true; app.inert = false; lock(false); state = 'data'; $('dataBarNow').textContent = 'Direct page (no jukebox home).'; setTabVisible(true); }
   else show('home');
 })();
