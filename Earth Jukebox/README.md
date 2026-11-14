@@ -130,6 +130,7 @@ These methods were chosen after reviewing the team's earlier project RAM AVATAR,
 - **Spoken guided tour** (off by default; tick "Spoken narration"). It describes the image, explains how to listen, plays the sweep once with no talking over it, and stops. There is a **short** (about 20 seconds) and a **full** version of the intro, and a Skip button.
 - **Hear the instruments:** plays each voice alone with its label, so the mapping can be learned and checked. Each voice also has its own "Hear" button.
 - **Scrolling sheet music:** under the map, one staff for every voice (drone, chords, high voice, lead, drums) scrolls past a fixed line, in the key of D major (Mohanam uses D, E, F♯, A, B). The notes are the ones the app is actually playing (or, in MuseScore mode, the composition's notes, fainter when their data is quiet). Rhythm is shown by note shape and position, not full engraving. A words-only line under it says what is sounding now. It can be hidden with *Show sheet music*.
+- **Gamakas on or off.** The *Gamakas* box turns the melody's pitch ornaments (shakes, slides and touches borrowed from Carnatic music) on or off; off gives steady notes. There is no vibrato oscillator in either case.
 - **Full keyboard use:** arrow keys explore the picture, Enter replays a spot, Space plays or pauses, Home and End jump to the edges.
 - **Text alternatives:** a full description of each picture, a live text readout of whatever you explore, and an optional description while playing.
 - **Per-voice mute** and a volume slider; an option to skip the Antarctic drone.

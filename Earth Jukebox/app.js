@@ -702,7 +702,7 @@ function lead(t, midi, gain, pan, durIn) {
   const { ctx, bus, nb } = A, name = T.instruments.lead, L = LEADS[name], f = mtof(midi), dur = durIn || 1.4;
   const dg = SCALE.deg, nd = dg.length, di = Math.max(0, dg.indexOf(mod(midi - 62, 12)));       // position of this note in the current scale
   const below = Math.max(1, dg[di] - (di ? dg[di - 1] : dg[nd - 1] - 12)), above = Math.max(1, (di < nd - 1 ? dg[di + 1] : dg[0] + 12) - dg[di]);   // semitone gaps to the neighbouring scale notes, for the gamaka
-  const type = di === 0 ? (Math.random() < 0.3 ? 'jaru' : 'plain') : GAMAKA[di % 5];
+  const type = ($('gam') && !$('gam').checked) ? 'plain' : di === 0 ? (Math.random() < 0.3 ? 'jaru' : 'plain') : GAMAKA[di % 5];      // the "Gamakas" box off = steady notes, no ornament
   if (sampleOn() && SM.buf) {                              // MuseScore instrument sound, with the same gamaka, played by the same data-driven notes
     const so = { loop: true, att: 0.05, rel: 0.14 }; if (type !== 'plain') { const gc = gamakaCurve(type, below, above, dur); so.cents = gc.cents; so.gd = gc.gd; }
     const pn = ctx.createStereoPanner ? ctx.createStereoPanner() : null; if (pn) { pn.pan.value = pan; pn.connect(bus[3]); }
