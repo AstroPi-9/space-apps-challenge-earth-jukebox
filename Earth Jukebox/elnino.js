@@ -17,7 +17,7 @@
   let D = null, month = 191, on = false, run = null, cache = {};
   const data = () => { if (!D) { const b = atob(E.b64); D = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) D[i] = b.charCodeAt(i); } return D; };
   const anom = (m, r, c) => { const v = data()[(m * ROWS + r) * COLS + c]; return v === 255 ? null : (v - 100) / 10; };
-  const onSST = () => window.EJ && window.EJ.T && window.EJ.T.id === 'sst';
+  const onSST = () => window.EJ && window.EJ.T && window.EJ.T.id === 'sstEl';
 
   // ---- numbers for the sweep: the anomaly under one column of the beam ----
   function colStats(c) {

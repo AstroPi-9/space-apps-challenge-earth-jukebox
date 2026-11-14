@@ -4,7 +4,7 @@
 
 Built for the NASA Space Apps Challenge 2026 challenge *The Earth Information Jukebox*. It is an independent project and is **not an official NASA product**.
 
-**The jukebox.** The page opens on a wooden jukebox with a short summary and seven large red buttons (A1 to D1), one for each record. Pressing a button picks that record, and the home page swings open like double doors to show its page (picture, sound settings, sheet music and any extras). When a song ends, or when you press **Back to the jukebox**, the doors close and you choose another record. The *Return to the jukebox when a song ends* switch (in Display and narration) turns the automatic closing off. With reduced-motion settings the doors do not animate. Add `?nohome` to the address to skip the home page.
+**The jukebox.** Sea temperature, salinity and density each open a second wooden page first, where you choose between versions (the still map, the turning globe, and for temperature the El Niño page). The page opens on a wooden jukebox with a short summary and seven large red buttons (A1 to D1), one for each record. Pressing a button picks that record, and the home page swings open like double doors to show its page (picture, sound settings, sheet music and any extras). When a song ends, or when you press **Back to the jukebox**, the doors close and you choose another record. The *Return to the jukebox when a song ends* switch (in Display and narration) turns the automatic closing off. With reduced-motion settings the doors do not animate. Add `?nohome` to the address to skip the home page.
 
 Open `index.html` in a modern browser (developed and tested in a Chromium-based browser; Firefox and Safari are untested). There is nothing to install and no server is needed. Press **Play** to hear one sweep, or **Hear the instruments** to learn what each voice means.
 
@@ -19,8 +19,7 @@ Each track takes a NASA visualization, reads the colours in it as data, and play
 | **Year of the ocean** (starts here) | NASA SVS 3912: ocean currents and sea surface temperature, 25 March 2007 to 3 March 2008 | Runs through time. You see the time-lapse and hear each hemisphere warm and cool as the seasons turn. |
 | **Ocean currents** | NASA SVS 3912: one frame (19 June 2007) | Sweeps the globe west to east, **or** use *Follow a current* (below). |
 | **Aerosols** | NASA SVS 5669: smoke, dust, sea salt and sulfate, 19 August 2025 | Sweeps the globe from west to east. |
-| **Sea temperature**, **Salinity**, **Density** | NASA SVS 3652: average ocean surface maps | Sweeps the globe from west to east. |
-| **Density (video)** | NASA SVS 3652: the Earth turning once in 60 seconds | Follows the line down the middle of the turning globe, in step with the video. |
+| **Sea temperature**, **Salinity**, **Density** (three records, each with a second page to choose a version) | NASA SVS 3652 | **Still map:** the provided average ocean surface map; a beam sweeps from west to east. **Turning globe:** the provided movie of the Earth turning once in 60 seconds; the sound follows the line down the middle of the globe, in step with the video. Sea temperature also has **El Niño through the years** (see below). The still map is a long-term average, not one year. |
 
 How the picture becomes sound:
 
@@ -84,7 +83,7 @@ On the Ocean currents track, a panel under the map lets you follow one current a
 
 How it works and its limits: `tools/make-flow-field.ps1` measures the direction of the lines in each 16-pixel tile of the frame (`flow_field.js`). The tracing follows those directions. **A flow line has an orientation but no arrow**, so the picture alone cannot say which way the water flows. The named currents use their well-known direction; a start you choose heads east unless you tick *Reverse direction*. The path follows the drawn lines at 2.8-degree tile resolution, so it is a sketch of the current, not a measured track, and traces can wander across a basin. The temperature is decoded from line colour (see below).
 
-## El Niño layer (an add-on for the Sea temperature track)
+## El Niño layer (the third version of the Sea temperature record)
 
 The sea temperature map is a long-term average, so it cannot show warming or El Niño. This add-on brings in two real time series so the music can respond to **change from normal** (an anomaly):
 
@@ -168,7 +167,7 @@ Each track's page section **Data and limits** gives its source, date, what the c
 - The **sound mapping is an artistic translation**. Pitch, instruments, scale and drums do not measure anything in the ocean or atmosphere.
 - The Year track covers **one year**. It shows the seasons, not a climate trend.
 - NASA's salinity and density colour bars are not evenly spaced, so "thirds" are thirds of the colour scale.
-- The Density (video) track assumes the globe starts at 90° W and turns 6° a second (read off the frames by eye); the globe is tilted and shaded, so latitudes are approximate. Agreement with the flat density map is modest (about 63% of cells agree on ocean or land).
+- The turning-globe versions (temperature, salinity and density) assume the globe starts at 90° W and turns 6° a second (read off the frames by eye); the globe is tilted and shaded, so latitudes are approximate. Agreement with the flat density map is modest (about 63% of cells agree on ocean or land).
 - The named hotspots and their stories use hand-drawn boxes and facts written during development. They need a citation check.
 - The aerosol land and haze separation is by colour, so dense haze over land is partly missed.
 - Region borders for the drums are approximate (cells are about 2° by 10°).

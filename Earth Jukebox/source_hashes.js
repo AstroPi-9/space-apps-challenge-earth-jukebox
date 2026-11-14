@@ -15,6 +15,10 @@ window.SOURCE_HASHES = {
   "assets/sst_cbar.png": "ac3f14f5310eeb275b631c5e26e607f3f31fc77a0b506f3162862e7f6d18412a",
   "assets/video/density.mp4": "2af831cc0e69609734064b6558f55ca67e76d77ac65e52080d65b9df472cfbc8",
   "assets/video/density.webm": "e10bda2ef522023cdc9c8f7b1ed7df648e8c98f175872927583267dd785f6d4f",
+  "assets/video/sss.mp4": "0f727e89b49ab0e9cca0441f3f7106885393a85eefab75a4a46939bb3a51c934",
+  "assets/video/sss.webm": "6be707246252453738722779d5bdd98fa0d8872ed57bc057bb947a3156ba6780",
+  "assets/video/sst.mp4": "e3c8e824490ca927696be540d24871000d9a106bf0a7873ae36585a42968a1f8",
+  "assets/video/sst.webm": "a7d641c30c86cae65342b584d4034b224ac12e564695aedaa650d7173554ba60",
   "assets/year/f000.jpg": "d757f23915c6271deec62cc1d8c4de8e7da5c1edc6c421c06f141ee5460e2b50",
   "assets/year/f001.jpg": "6ae277290dd89fad028921cb5e9d9d836660a0f3af915d09414f47403564236d",
   "assets/year/f002.jpg": "13995f92a614f74732f1a8af04f7094137e2a3a58bc8d2a4b596c07a06586e6e",
@@ -183,7 +187,9 @@ window.SOURCE_HASHES = {
   "nino34_index.js": "22e9cc97349ac37bc6788e6afab657a590a88167e69b1d5a3f27f6ef065478a9",
   "ocean_grid.js": "4a9e2856dee55055dd75ea79128a3c14986d0ea4d6d854c0fe6359d43f54be3d",
   "sss_grid.js": "5ced8bd364fe4c7646eedd7d74b75871a01cb45b0ab9579a923e98e57987d5a2",
+  "sss_video_grid.js": "5ac6e5b0ebda108a6b86091912aeb7aedfa48f240257062fd9b9f8ab2ee447e7",
   "sst_grid.js": "cfdf97d4a3ad3b0126342f0c2ddbbcda119236b305a30989321ff356759940a3",
+  "sst_video_grid.js": "f5339bc760aca6d396757663ab48f07652a170669ebeaa0de16e82fa89481a57",
   "video_grid.js": "74081b189ed6df340bbff7790a8fa0596382cba23777665057d139edd72141b5",
   "year_grid.js": "10da73969c59072cd4e272b19c85f981a591d08fa032528bccfb7cd2eb5bda41"
 };

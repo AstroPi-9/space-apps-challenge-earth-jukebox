@@ -43,7 +43,7 @@ graph LR
 | `sheet.js` | Scrolling sheet music. `noteLog(v,t,m,d,stroke,id)` is called by every voice; also forwards to the trace. |
 | `follow.js` | Follow a current: traces a path along flow lines (`flow_field.js`) and sonifies temperature. |
 | `elnino.js` | El Niño layer: overlay from `elnino_fine.js`, anomaly voices in the sweep, "Play the years". |
-| `jukebox.js` | The jukebox home page and doors: `#jukebox` overlay (wood, red buttons) covers the app; choosing a record clicks the hidden track tab, then two cloned halves of the home page swing open; `EJ_songEnded()` (called at the end of a sweep, followed current or years) closes the doors after 3.5 s if the switch is on. `?nohome`, `?debug` and `?nostart` skip the home page. The welcome dialog no longer opens by itself. The app is `inert` while the home page is showing. |
+| `jukebox.js` | The jukebox home page, second pages (`GROUPS`: the versions of sst, sss and density) and doors: `#jukebox` overlay (wood, red buttons) covers the app; choosing a record clicks the hidden track tab, then two cloned halves of the home page swing open; `EJ_songEnded()` (called at the end of a sweep, followed current or years) closes the doors after 3.5 s if the switch is on. `?nohome`, `?debug` and `?nostart` skip the home page. The welcome dialog no longer opens by itself. The app is `inert` while the home page is showing. |
 | `trace.js` | Records every scheduled note, exports CSV/JSON with source SHA-256s. |
 | `*_grid.js`, `elnino_*.js`, `nino34_index.js`, `flow_field.js` | Precomputed data (`window.*_GRID` etc.), 160 columns by 18 latitude rows for sweeps. |
 | `music_data.js` / `score_data.js`, `score_notes.js` / `samples_data.js` | MuseScore-rendered audio (base64 mp3): fixed loops / 5 stems and their notes / 18 instruments. |
@@ -52,7 +52,7 @@ graph LR
 | `music_scores/*.mscz` | Editable MuseScore scores (one per track, plus `EarthJukebox_5voice.mscz`). |
 
 ## 4. Tracks (tabs, in order)
-`year` (default, first; SVS 3912, 160 of 2,001 frames, time sweep, one drum per latitude zone) · `ocean` ("Ocean currents": one frame, **also hosts Follow a current**) · `aerosols` · `sst` (**hosts the El Niño layer**) · `sss` · `density` · `densityVideo` (assumes the globe starts at 90° W and turns 6°/s).
+Ten track ids, six home-page records. `year` (A1; SVS 3912, 160 of 2,001 frames, time sweep) · `ocean` (A2; one frame, **hosts Follow a current**) · `aerosols` (B1) · **B2 Sea temperature:** `sst` (clean still map, SVS 3652), `sstVideo` (turning globe), `sstEl` (the same map with the **El Niño layer**; `elnino.js` shows its panel only when the id is `sstEl`) · **C1 Salinity:** `sss`, `sssVideo` · **C2 Density:** `density`, `densityVideo`. The three video tracks follow one pattern (`globeVideoTrack` in `app.js`; grids `video_grid.js`, `sst_video_grid.js`, `sss_video_grid.js` made by `tools/analyse-video.html?kind=density|sst|sss`; movies in `assets/video/`) and assume the globe starts at 90° W and turns 6°/s. Id-keyed tables (PALETTE, PALETTE_TEXT, TRIMS, TRIMS_S, DATA_INFO, INTRO_HEAD) must get entries for any new track id. The "still" sea temperature is the provided SVS 3652 average map: **no image of a specific year (such as 2026) was provided**.
 Sweeps run west to east (time on the Year track), play once and stop. Latitude is pitch in sweeps. Click or arrow keys explore a spot.
 
 ## 5. Sound design (what each part is)

@@ -1,25 +1,26 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Analyse density video</title>
+<html lang="en"><head><meta charset="utf-8"><title>Analyse a rotating-globe video</title>
 <style>body{font:14px system-ui;background:#111;color:#eee;padding:16px} pre{white-space:pre-wrap}</style></head>
 <body>
-<h1>Analyse the density video</h1>
-<p>Reads the rotating-globe video frame by frame, samples a strip down the centre of the globe (the beam), turns the colours into the same sound-grid format the app uses, and saves <code>video_grid.js</code>.
+<h1>Analyse a rotating-globe video (SVS 3652)</h1>
+<p>Reads the rotating-globe video frame by frame, samples a strip down the centre of the globe (the beam), turns the colours into the same sound-grid format the app uses, and saves <code>video_grid.js</code> (density), <code>sst_video_grid.js</code> or <code>sss_video_grid.js</code>. Choose with <code>?kind=density</code>, <code>?kind=sst</code> or <code>?kind=sss</code>; add <code>&amp;run=1</code> to start at once.
 Needs to be served over http (run <code>tools\serve.ps1</code>), because browsers will not let a page read pixels of a video opened from a file.</p>
 <button id="go">Run analysis</button> <a id="dl" style="display:none;color:#7cc4ff">Download video_grid.js</a>
 <pre id="log"></pre>
-<script src="../density_grid.js"></script>
 <script>
-const COLS = 160, ROWS = 18, SRC = '../assets/video/density.webm';
+const KIND = (location.search.match(/kind=(sst|sss|density)/) || [0, 'density'])[1];
+const CFG = { density: { src: 'density', cbar: 'ssd', invert: true, v: 'DENSITY_VIDEO_GRID', out: 'video_grid.js' }, sst: { src: 'sst', cbar: 'sst', invert: false, v: 'SST_VIDEO_GRID', out: 'sst_video_grid.js' }, sss: { src: 'sss', cbar: 'sss', invert: false, v: 'SSS_VIDEO_GRID', out: 'sss_video_grid.js' } }[KIND];
+const COLS = 160, ROWS = 18, SRC = '../assets/video/' + CFG.src + '.webm';
 const log = m => { document.getElementById('log').textContent += m + '\n'; };
 const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
 async function getLut() {                       // same colour bar the density map uses; inverted so dense = low end (as in the app's grid)
-  const img = await load('../assets/ssd_cbar.png'), c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const img = await load('../assets/' + CFG.cbar + '_cbar.png'), c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
   const g = c.getContext('2d'); g.drawImage(img, 0, 0); const d = g.getImageData(34, 44, 253, 1).data, lut = [];
   for (let i = 0; i < 253; i++) lut.push([d[i * 4], d[i * 4 + 1], d[i * 4 + 2]]);
   return lut;
 }
 async function run() {
-  const lut = await getLut(), map = window.DENSITY_GRID;
+  const lut = await getLut();
   const v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.src = SRC;
   await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error('video failed to load')); });
   const dur = v.duration, W = 960, H = 540, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
@@ -42,7 +43,7 @@ async function run() {
         if (tex > 30) continue;
         let best = 1e9, bi = 0; for (let j = 0; j < 253; j++) { const dr = R - lut[j][0], dg = G - lut[j][1], db = B - lut[j][2], dd = dr * dr + dg * dg + db * db; if (dd < best) { best = dd; bi = j; } }
         if (best > THR2) continue;
-        const t = 1 - bi / 252;                                       // inverted: dense = low
+        const t = CFG.invert ? 1 - bi / 252 : bi / 252;              // density is inverted (dense = low); temperature and salinity are not
         val[row]++; st[row] += t; st2[row] += t * t; b3[t < 0.3333 ? 0 : t < 0.6667 ? 1 : 2][row]++;
       }
     }
@@ -61,9 +62,9 @@ async function run() {
   const tops = [0, 1, 2, 3].map(k => { const a = flat(k).slice().sort((x, y) => x - y); return Math.max(1e-6, a[Math.floor(a.length * 0.97)]); });
   const data = [], land = [], mean = [], cov = [];
   for (let rr = 0; rr < ROWS; rr++) for (let c = 0; c < COLS; c++) { const cl = cells[c][rr]; for (let k = 0; k < 4; k++) data.push(Math.round(Math.min(1, (k === 3 ? cl.front : cl.b[k]) / tops[k]) * 255)); land.push(Math.round((1 - cl.cov) * 255)); mean.push(cl.ok ? Math.round(cl.mean * 255) : 0); cov.push(Math.round(cl.cov * 255)); }
-  const out = 'window.DENSITY_VIDEO_GRID = ' + JSON.stringify({ cols: COLS, rows: ROWS, data, land, mean, cov, dur, lon0, rate }) + ';';
-  const dl = document.getElementById('dl'); dl.href = URL.createObjectURL(new Blob([out], { type: 'text/javascript' })); dl.download = 'video_grid.js'; dl.style.display = 'inline';
-  try { const r = await fetch('/save/video_grid.js', { method: 'POST', body: out }); log(r.ok ? 'saved video_grid.js next to the app' : 'save failed: ' + r.status); } catch (e) { log('could not save automatically: ' + e.message); }
+  const out = 'window.' + CFG.v + ' = ' + JSON.stringify({ cols: COLS, rows: ROWS, data, land, mean, cov, dur, lon0, rate }) + ';';
+  const dl = document.getElementById('dl'); dl.href = URL.createObjectURL(new Blob([out], { type: 'text/javascript' })); dl.download = CFG.out; dl.style.display = 'inline';
+  try { const r = await fetch('/save/' + CFG.out, { method: 'POST', body: out }); log(r.ok ? 'saved ' + CFG.out + ' next to the app' : 'save failed: ' + r.status); } catch (e) { log('could not save automatically: ' + e.message); }
   log('done'); window.__done = { lon0, rate, dur };
 }
 document.getElementById('go').onclick = () => run().catch(e => log('ERROR ' + e.message));

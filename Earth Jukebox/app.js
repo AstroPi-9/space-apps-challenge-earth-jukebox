@@ -303,6 +303,27 @@ if (window.DENSITY_VIDEO_GRID) TRACKS.push(Object.assign({}, TRACKS.find(t => t.
 }));
 
 
+// ---- Temperature and salinity as turning-globe videos too (the same SVS 3652 movies, read the same way as the density one), and a separate El Nino page. ----
+function globeVideoTrack(baseId, id, name, gridName, file, noun, colourLine, altColours) {
+  const g = window[gridName], base = TRACKS.find(t => t.id === baseId); if (!g || !base) return;
+  TRACKS.push(Object.assign({}, base, {
+    species: base.species.map(s => ({ ...s })),
+    id, name, emoji: '🎞️', grid: g, video: 'assets/video/' + file + '.webm', image: null, fixedDur: 60, startLon: -90,
+    lonFn: c => { const l = g.lon0 + g.rate * (c + 0.5) * g.dur / g.cols; return ((l + 180) % 360 + 360) % 360 - 180; },
+    intro: `Watch the Earth turn once in a minute, coloured by the ${noun} of the ocean surface (NASA SVS 3652), and hear the strip of ocean running down the middle of the globe. The video and the sound stay in step.`,
+    alt: `A video of the Earth turning once, seen from space, with the ocean coloured by surface ${noun}: ${altColours}, and the land shown as a satellite photo. The globe starts facing the Americas, then turns eastward through the Atlantic, Africa, Asia and the Pacific, and comes back to the Americas.`,
+    speech: {
+      open: [`Welcome to the Earth Jukebox. This is a video of the Earth turning once, about every minute, with the ocean coloured by the average ${noun} of its surface.`, colourLine, "First, here is what you will see as the globe turns, starting over the Americas."],
+      listen: ["Now, how to listen. The beam is the line running down the middle of the globe. As the Earth turns, the sound follows whatever passes through that line, so it travels from the Americas eastward through the Atlantic, Africa, Asia and the Pacific.", ...base.speech.listen.slice(1, -1), "The video will now play once, as the globe turns a full circle, and then stop."],
+    },
+    how: [['Video time', 'The globe turns once in 60 seconds. The sound follows the strip of ocean running down the middle of the globe, so it travels from the Americas eastward and around again.'], ...base.how.slice(1).map(r => r[0].startsWith('Top') ? ['Top → bottom (latitude)', 'Pitch. North is high, south is low. This is approximate, because the globe is tilted. Notes snap to a scale that changes with the region the sweep is over, in its hopeful or sad form (the tonic is always D).'] : r)],
+  }));
+}
+globeVideoTrack('sst', 'sstVideo', 'Sea temperature (turning globe)', 'SST_VIDEO_GRID', 'sst', 'temperature', 'Dark blue is near freezing, then cyan, green and yellow, and red is the warmest water. The land is shown as a satellite photo.', 'dark blue for near-freezing water, through cyan and yellow, to red for the warmest water');
+globeVideoTrack('sss', 'sssVideo', 'Salinity (turning globe)', 'SSS_VIDEO_GRID', 'sss', 'salinity', 'Dark teal is the freshest water, then green and yellow, and white is the saltiest. The land is shown as a satellite photo.', 'dark teal for the freshest water, through green and yellow, to white for the saltiest water');
+{ const sst = TRACKS.find(t => t.id === 'sst'); TRACKS.push(Object.assign({}, sst, { species: sst.species.map(s => ({ ...s })), id: 'sstEl', name: 'Sea temperature and El Niño', emoji: '🌡️' })); }   // the same map and sound, with the El Nino layer panel (elnino.js)
+
+
 // ================= INSTRUMENT PALETTES =================
 // Every kind of data gets its own set of instruments, so the tracks sound different as well as look different:
 //   drone (voice 0), pad (voice 1, chords), high (voice 2: strong / light instrument), lead (voice 3: melody with gamakas).
@@ -340,12 +361,15 @@ const PALETTE_TEXT = {
   densityVideo: { names: ['Dense, heavy water', 'Medium-density water', 'Light water', 'Sharp density fronts'], how: [2, 3, 4, 5] },
   year:     { names: ['Cold water', 'Mild water', 'Warm water', 'Swirling, tangled currents'], how: [2, 3, 4, 5] },
 };
+PALETTE.sstVideo = PALETTE.sstEl = PALETTE.sst; PALETTE.sssVideo = PALETTE.sss; PALETTE_TEXT.sstVideo = PALETTE_TEXT.sstEl = PALETTE_TEXT.sst; PALETTE_TEXT.sssVideo = PALETTE_TEXT.sss;
 Object.keys(PALETTE).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.instruments = PALETTE[id]; });
 // Per-track voice balance [drone, chords, high, lead, drums], set from offline renders (A-weighted levels, see PROCESS.md). Multipliers on the global TRIM.
 const TRIMS = { ocean: [4.64, 1.55, 1.33, 1.86, 1.9], year: [4.64, 1.55, 1.33, 1.86, 1.9], aerosols: [5.0, 4.58, 4.74, 0.44, 3.58], sst: [2.86, 2.17, 0.75, 0.43, 3.64], sss: [5.0, 5.73, 1.38, 0.58, 4.27], density: [1.46, 1.34, 1.05, 1.5, 3.82], densityVideo: [2.39, 1.18, 1.1, 3.39, 5.13] };
+TRIMS.sstVideo = TRIMS.sstEl = TRIMS.sst; TRIMS.sssVideo = TRIMS.sss;
 Object.keys(TRIMS).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trim = TRIMS[id]; });
 // The same balance for the MuseScore instrument sounds (source "samples"): each voice re-measured offline and scaled to the same A-weighted targets (see PROCESS.md).
 const TRIMS_S = { ocean: [1.34, 0.30, 0.93, 1.64, 1.9], year: [1.34, 0.30, 0.93, 1.64, 1.9], aerosols: [2.6, 1.66, 2.12, 1.12, 3.58], sst: [2.35, 0.27, 0.31, 0.87, 3.64], sss: [1.33, 0.99, 0.68, 0.79, 4.27], density: [0.44, 0.27, 1.14, 1.34, 3.82], densityVideo: [0.74, 0.24, 1.68, 2.79, 5.13] };
+TRIMS_S.sstVideo = TRIMS_S.sstEl = TRIMS_S.sst; TRIMS_S.sssVideo = TRIMS_S.sss;
 Object.keys(TRIMS_S).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trimS = TRIMS_S[id]; });
 const INTRO_HEAD = {
   aerosols: 'Hear a NASA aerosol map of Earth (August 19, 2025). A playhead sweeps the globe from west to east and turns what it finds into music.',
@@ -356,6 +380,9 @@ const INTRO_HEAD = {
   year: 'Hear a year of the ocean, March 2007 to March 2008 (NASA SVS 3912, from the ECCO2 model). The flow lines are the currents and their colour is the temperature. The sweep runs through time, and the pitch is latitude.',
   densityVideo: 'Watch the Earth turn once in a minute, coloured by the density of the ocean surface (NASA SVS 3652), and hear the strip of ocean running down the middle of the globe. The video and the sound stay in step.',
 };
+INTRO_HEAD.sstEl = 'Hear the average temperature of the ocean surface (NASA SVS 3652), with an El Niño layer: how much warmer or cooler than normal it was in a chosen month. A playhead sweeps from west to east.';
+INTRO_HEAD.sstVideo = 'Watch the Earth turn once in a minute, coloured by the temperature of the ocean surface (NASA SVS 3652), and hear the strip of ocean running down the middle of the globe. The video and the sound stay in step.';
+INTRO_HEAD.sssVideo = 'Watch the Earth turn once in a minute, coloured by the salinity of the ocean surface (NASA SVS 3652), and hear the strip of ocean running down the middle of the globe. The video and the sound stay in step.';
 function applyPaletteText(tr) {                       // rewrite the instrument wording of a track from its palette, so the text always matches the sound
   const P = tr.instruments, X = PALETTE_TEXT[tr.id]; if (!P || !X) return;
   const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
@@ -1413,13 +1440,21 @@ DATA_INFO.year.checks = [
   'Seasonal cycle (tools/seasonal-cycle.py): a one-year harmonic fitted to the decoded temperature of each 10-degree latitude band. The northern mid-latitudes (60 to 30 N) are warmest in late August to early September and the southern ones (30 to 60 S) in late February to early March. The seasonal swing is largest at 30 to 50 degrees (amplitude about 4.5 to 4.8 °C) and small in the tropics (under 1 °C). The northern and southern mid-latitude series are strongly opposite (correlation -0.95).',
   'This is one partial year (342 days), temperature is decoded from flow-line colour in 10-degree bands, and no independent measurement was used, so it checks the behaviour of the decode, not its accuracy. The polar band (90 to 80 N) is too sparse to fit and should be ignored.',
 ];
-DATA_INFO.sst.checks = [
+DATA_INFO.sstEl = Object.assign({}, DATA_INFO.sst, { source: DATA_INFO.sst.source + ' With the El Niño layer: NASA SVS 4695 (monthly sea surface temperature anomaly maps, 1982 to 2017) and the NOAA PSL Niño 3.4 index.', url: 'https://svs.gsfc.nasa.gov/4695/', checks: [
   'El Niño layer, EOF / principal component analysis of the 432 decoded monthly anomaly maps (tools/validate-elnino.py): the first mode explains 15.7% of the variance, its time series follows NOAA\'s Niño 3.4 index with correlation +0.91, and its pattern peaks in the eastern equatorial Pacific (about 5° S, 120° W). Separately, the decoded Niño 3.4 box correlates 0.96 with the index. So the decoded maps carry the real El Niño signal.',
   'Not shown by those checks: that the values are exact. The picture\'s anomalies run a few tenths of a degree larger than NOAA\'s index, probably because of different baselines, which has not been checked. About 39% of cells (land, ice and the corner covered by NASA\'s inset) have no data.',
   'NOAA\'s index over 1948 to 2026: the strongest peak in the El Niño band is at 3.6 years, and 61% of the variance lies in the 2 to 8 year band, as expected for El Niño.',
   'Naive baselines for next month\'s index: repeating this month gives an average error of 0.18 °C, against 0.65 °C for the long-term mean (correlation from one month to the next: 0.94). This app makes no predictions; any future prediction would have to beat these.',
   '"Urgent" in Play the years: the index is at or above +1.5 °C, or it is already in the El Niño range and has risen fast and steadily: in the latest quarter at least as fast as its usual quarter-to-quarter change (a robust, median-based measure from the whole 1948 to 2026 record), and at least three-quarters as fast in the quarter before. This is descriptive, not a forecast.',
-];
+] });
+const globeInfo = (base, noun, bar) => ({
+  source: `NASA SVS 3652: the sea surface ${noun} movie, a globe turning once in 60 seconds.`, url: 'https://svs.gsfc.nasa.gov/3652/',
+  date: `Based on the same average ${noun} field as the map, so it has no single date.`, colour: bar,
+  decode: [`Each video frame is read along a strip down the middle of the globe (tools/analyse-video.html?kind=${base}), split into 18 bands from top to bottom, and matched to the ${noun} colour bar like the map.`, 'The sound follows that strip as the globe turns, so the sweep goes eastward from the Americas and around again.'],
+  caveats: ['The globe is tilted and shaded, so latitudes are approximate and colours shift near the edge.', 'The longitude at each moment is assumed to start at 90° W and turn 6° a second, as for the density movie (read off the frames by eye).', 'Agreement with the flat map was not measured for this movie.'],
+});
+DATA_INFO.sstVideo = globeInfo('sst', 'temperature', 'The same temperature colour bar as the map: dark blue is near freezing, red is the warmest water.');
+DATA_INFO.sssVideo = globeInfo('sss', 'salinity', 'The same salinity colour bar as the map: dark teal is fresh, white is the saltiest.');
 function renderData() {
   const d = DATA_INFO[T.id], el = $('dataBody'); if (!d) { el.innerHTML = ''; return; }
   const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;'), li = a => '<ul>' + a.map(x => `<li>${esc(x)}</li>`).join('') + '</ul>';
@@ -1543,7 +1578,7 @@ function setTrack(i) {
   document.querySelectorAll('#tracks button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.track === T.id)));
   setReadout(`Track: ${T.name}. Press play, or click the map.`);
 }
-const TAB_ORDER = ['year', 'ocean', 'aerosols', 'sst', 'sss', 'density', 'densityVideo'];        // the single-frame "Ocean currents" track is hidden: the Year track covers the same data and adds time
+const TAB_ORDER = ['year', 'ocean', 'aerosols', 'sst', 'sstEl', 'sstVideo', 'sss', 'sssVideo', 'density', 'densityVideo'];        // the single-frame "Ocean currents" track is hidden: the Year track covers the same data and adds time
 const tabIndex = id => TRACKS.findIndex(t => t.id === id);
 TAB_ORDER.forEach(id => {
   const i = tabIndex(id); if (i < 0) return; const t = TRACKS[i];

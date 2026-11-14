@@ -109,8 +109,10 @@
     --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='700' height='420'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.008 .28' numOctaves='3' seed='11'/><feColorMatrix values='0 0 0 0 .13  0 0 0 0 .06  0 0 0 0 .02  0 0 0 .75 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
   .wood{background:var(--grain),repeating-linear-gradient(90deg,rgba(0,0,0,.20) 0 2px,transparent 2px 11px),repeating-linear-gradient(90deg,rgba(255,196,120,.05) 0 1px,transparent 1px 29px),linear-gradient(180deg,var(--wood1),var(--wood2) 55%,var(--wood3));background-color:var(--wood2)}
-  #jukebox{position:fixed;inset:0;z-index:100;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;color:var(--cream1)}
-  #jukebox::-webkit-scrollbar{display:none}
+  #jukebox,#jbSub{position:fixed;inset:0;z-index:100;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;color:var(--cream1)}
+  #jukebox::-webkit-scrollbar,#jbSub::-webkit-scrollbar{display:none}
+  #jbSub.jb-fade{animation:jbfade .45s ease-out}
+  @keyframes jbfade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
   .jb-inner{min-height:100%;padding:22px 16px 34px;display:flex;justify-content:center;align-items:flex-start}
   .jb-cabinet{width:min(1000px,100%);position:relative;border-radius:260px 260px 22px 22px/130px 130px 22px 22px;padding:26px 30px 24px;
     background:var(--grain),linear-gradient(180deg,#7a4721,#4b2911 60%,#341b0c);background-color:#4b2911;
@@ -159,7 +161,7 @@
   #dataBarNow{font:italic 1.1rem Georgia,serif;color:#ffe9a6;flex:1;min-width:200px}
   .data-bar .code{display:inline-grid;place-items:center;min-width:2.2em;margin-right:8px;padding:0 .4em;border-radius:999px;background:radial-gradient(circle at 34% 26%,#ff8d7c,#c91b14 60%,#7e0b07);color:#fff1d6;font:700 .95rem Georgia,serif;font-style:normal}
   @media (max-width:560px){.jb-cabinet{padding:18px 14px 18px;border-radius:120px 120px 18px 18px/70px 70px 18px 18px}.rec .knob{width:70px;height:70px;font-size:1.25rem}.jb-card{padding:12px 14px}}
-  @media (prefers-reduced-motion:reduce){.jb-tube{animation:none}.jb-half{transition:none!important}}
+  @media (prefers-reduced-motion:reduce){#jbSub.jb-fade{animation:none}.jb-tube{animation:none}.jb-half{transition:none!important}}
 </style>
 </head>
 <body>
@@ -173,7 +175,7 @@
       </div>
       <section class="jb-card" aria-labelledby="jbSummaryH">
         <h2 id="jbSummaryH">What is going on</h2>
-        <p>Seven records, each one a NASA picture of Earth's oceans or atmosphere. The jukebox reads the colours as data and plays them live, while the picture stays on screen: a beam sweeps across the world and every kind of data has its own instrument. Choose a record, and the doors will open.</p>
+        <p>Six records, each one a NASA picture of Earth's oceans or atmosphere; some open a second page where you choose between the still map and a turning globe. The jukebox reads the colours as data and plays them live, while the picture stays on screen: a beam sweeps across the world and every kind of data has its own instrument. Choose a record, and the doors will open.</p>
         <ul class="jb-badges">
           <li>Pitch is latitude</li><li>Each kind of data has an instrument</li><li>Drums follow the region</li><li>Sad and urgent where the data is strong</li>
         </ul>
@@ -182,10 +184,9 @@
         <button class="rec" type="button" data-track="year" data-code="A1" aria-label="A1. Year of the ocean. A year of ocean currents and temperature, March 2007 to March 2008. Hear the seasons turn."><span class="knob" aria-hidden="true">A1</span><span class="card"><span class="ttl">📅 Year of the ocean</span><span class="dsc">A year of currents and temperature, March 2007 to March 2008. Hear the seasons turn.</span></span></button>
         <button class="rec" type="button" data-track="ocean" data-code="A2" aria-label="A2. Ocean currents. One frame of NASA's ocean currents. Follow a current and hear its temperature."><span class="knob" aria-hidden="true">A2</span><span class="card"><span class="ttl">🌊 Ocean currents</span><span class="dsc">One frame of NASA's ocean currents. Follow a current and hear its temperature.</span></span></button>
         <button class="rec" type="button" data-track="aerosols" data-code="B1" aria-label="B1. Aerosols. Smoke, dust, sea salt and sulfate over the whole world on 19 August 2025."><span class="knob" aria-hidden="true">B1</span><span class="card"><span class="ttl">🌫️ Aerosols</span><span class="dsc">Smoke, dust, sea salt and sulfate over the whole world on 19 August 2025.</span></span></button>
-        <button class="rec" type="button" data-track="sst" data-code="B2" aria-label="B2. Sea temperature. Average sea surface temperature, with an El Niño layer from 1982 to today."><span class="knob" aria-hidden="true">B2</span><span class="card"><span class="ttl">🌡️ Sea temperature</span><span class="dsc">Average sea surface temperature, with an El Niño layer from 1982 to today.</span></span></button>
-        <button class="rec" type="button" data-track="sss" data-code="C1" aria-label="C1. Salinity. Average sea surface salinity: fresher and saltier water around the world."><span class="knob" aria-hidden="true">C1</span><span class="card"><span class="ttl">🧂 Salinity</span><span class="dsc">Average sea surface salinity: fresher and saltier water around the world.</span></span></button>
-        <button class="rec" type="button" data-track="density" data-code="C2" aria-label="C2. Density. Average sea surface density, from heavy cold water to light warm water."><span class="knob" aria-hidden="true">C2</span><span class="card"><span class="ttl">⚖️ Density</span><span class="dsc">Average sea surface density, from heavy cold water to light warm water.</span></span></button>
-        <button class="rec" type="button" data-track="densityVideo" data-code="D1" aria-label="D1. Density on a turning globe. The density map as a globe turning once; the sound follows the beam."><span class="knob" aria-hidden="true">D1</span><span class="card"><span class="ttl">🎞️ Density, turning globe</span><span class="dsc">The density map as a globe turning once; the sound follows the beam.</span></span></button>
+        <button class="rec" type="button" data-group="sst" data-code="B2" aria-label="B2. Sea temperature. Opens a page where you choose the still map, the turning globe, or El Niño through the years."><span class="knob" aria-hidden="true">B2</span><span class="card"><span class="ttl">🌡️ Sea temperature</span><span class="dsc">Still map, turning globe, or El Niño through the years.</span></span></button>
+        <button class="rec" type="button" data-group="sss" data-code="C1" aria-label="C1. Salinity. Opens a page where you choose the still map or the turning globe."><span class="knob" aria-hidden="true">C1</span><span class="card"><span class="ttl">🧂 Salinity</span><span class="dsc">Still map or turning globe: fresher and saltier water around the world.</span></span></button>
+        <button class="rec" type="button" data-group="density" data-code="C2" aria-label="C2. Density. Opens a page where you choose the still map or the turning globe."><span class="knob" aria-hidden="true">C2</span><span class="card"><span class="ttl">⚖️ Density</span><span class="dsc">Still map or turning globe: heavy cold water to light warm water.</span></span></button>
       </div>
       <div class="jb-foot">
         <span id="jbPrompt">Press a red button to choose a record.</span>
@@ -195,6 +196,7 @@
     </div>
   </div>
 </div>
+<div id="jbSub" class="wood" role="region" aria-label="Choose a version" hidden><div id="jbSubInner" class="jb-inner"></div></div>
 <div id="jbLive" class="sr-only" role="status" aria-live="polite"></div>
 <a class="skip" href="#controls">Skip to controls</a>
 <div class="wrap">
@@ -355,6 +357,8 @@
 <script src="sss_grid.js"></script>
 <script src="density_grid.js"></script>
 <script src="video_grid.js"></script>
+<script src="sst_video_grid.js"></script>
+<script src="sss_video_grid.js"></script>
 <script src="year_grid.js"></script>
 <script src="music_data.js"></script>
 <script src="score_data.js"></script>

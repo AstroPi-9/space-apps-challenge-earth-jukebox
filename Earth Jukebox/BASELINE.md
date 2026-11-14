@@ -7,7 +7,7 @@ This marks the project as it stood after the interface redesign and the knowledg
 - **Size:** app folder about 63 MB (assets about 31 MB including 160 Year frames and the El Nino movie); JavaScript total about 21.9 MB, of which audio and data files are the bulk (samples 7.5, fixed loops 4.7, stems 3.6, El Nino fine grid 4.0, coarse grid 1.6). Code: app.js 1,616 lines, plus sheet.js, follow.js, elnino.js, trace.js.
 
 ## What is in it
-Seven tracks (Year of the ocean, Ocean currents, Aerosols, Sea temperature, Salinity, Density, Density video); live synthesis with regional scales, sad and urgent moods, harmonious mode and an optional gamaka switch; MuseScore instrument sounds and a fixed 5-instrument composition as alternative sources; scrolling sheet music; Follow a current; the El Nino layer with Play the years; note trace export; spoken guide and instrument demo; validation scripts and results in `analysis/`; the redesigned interface.
+Seven tracks at the baseline (Year of the ocean, Ocean currents, Aerosols, Sea temperature, Salinity, Density, Density video); later versions have ten (see KNOWLEDGE_GRAPH.md); live synthesis with regional scales, sad and urgent moods, harmonious mode and an optional gamaka switch; MuseScore instrument sounds and a fixed 5-instrument composition as alternative sources; scrolling sheet music; Follow a current; the El Nino layer with Play the years; note trace export; spoken guide and instrument demo; validation scripts and results in `analysis/`; the redesigned interface.
 
 ## Verified at this point (by me, in a browser pane)
 - All scripts parse and the page loads without errors in code; play, pause, stop (instant silence), follow, years and trace export all ran.
