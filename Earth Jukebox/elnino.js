@@ -122,7 +122,7 @@
       if (m !== month) { month = m; cache = {}; $('elMonth').value = m; $('elMonthOut').textContent = label(m); }
       draw(); const q = Math.floor(month / 3);
       if (q !== lastQ) { lastQ = q; const v = q3(q); $('elStatus').textContent = v === null ? '' : `${label(month)}: Niño 3.4 index ${sgn(v)} °C (three-month mean), ${state(v)}.` + (qinfo[q] && qinfo[q].z >= 1 ? ` Rising ${qinfo[q].z.toFixed(1)} times faster than its usual quarter-to-quarter change${qinfo[q].rapid ? ': a rapid onset' : ''}.` : '') + (month >= MONTHS ? ' No map after 2017: index only.' : ''); }
-      if (el > nQ * QS + 1.2) { const vs = [0, 1, 2].map(k => idxAt(MAXM - k)).filter(v => v !== null); stopYears(`That is the whole record, to ${label(MAXM)}. The latest index values are ${vs.map(sgn).join(', ')} °C (the newest first).`); return; }
+      if (el > nQ * QS + 1.2) { const vs = [0, 1, 2].map(k => idxAt(MAXM - k)).filter(v => v !== null); stopYears(`That is the whole record, to ${label(MAXM)}. The latest index values are ${vs.map(sgn).join(', ')} °C (the newest first).`); if (window.EJ_songEnded) window.EJ_songEnded('years'); return; }
       run.raf = requestAnimationFrame(tick);
     };
     run.raf = requestAnimationFrame(tick);

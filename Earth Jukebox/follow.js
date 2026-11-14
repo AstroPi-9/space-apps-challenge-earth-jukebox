@@ -98,7 +98,7 @@
       const idx = Math.floor((ctx.currentTime - t0) / STEP); draw(Math.max(-1, Math.min(P.length - 1, idx)));
       if (idx >= 0 && idx < P.length && idx !== lastText && idx % 4 === 0) { lastText = idx; const p = P[idx], sc = a ? window.EJ.follow.scale() : null;
         setStatus(`${label || 'Current'}: ${fmtLat(p.lat)}, ${fmtLon(p.lon)}. Water about ${Math.round(p.t)} °C. Scale: ${sc ? sc.name + ', for ' + sc.place : ''}. Mood: ${p.t > 28 ? 'urgent, very warm water' : p.t > 22.4 ? 'sad, warm water' : 'calm, cool or mild water'}.`); }
-      if (idx >= P.length + 4) { const m = Math.round(Math.min(...P.map(q => q.t))) + ' to ' + Math.round(Math.max(...P.map(q => q.t))); stop(`The line ended at ${fmtLat(P[P.length - 1].lat)}, ${fmtLon(P[P.length - 1].lon)}, where it reached ${path.stop}. Along it the water ranged from about ${m} °C.`); return; }
+      if (idx >= P.length + 4) { const m = Math.round(Math.min(...P.map(q => q.t))) + ' to ' + Math.round(Math.max(...P.map(q => q.t))); stop(`The line ended at ${fmtLat(P[P.length - 1].lat)}, ${fmtLon(P[P.length - 1].lon)}, where it reached ${path.stop}. Along it the water ranged from about ${m} °C.`); if (window.EJ_songEnded) window.EJ_songEnded('follow'); return; }
       run.raf = requestAnimationFrame(tick);
     };
     run.raf = requestAnimationFrame(tick);

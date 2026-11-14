@@ -43,6 +43,7 @@ graph LR
 | `sheet.js` | Scrolling sheet music. `noteLog(v,t,m,d,stroke,id)` is called by every voice; also forwards to the trace. |
 | `follow.js` | Follow a current: traces a path along flow lines (`flow_field.js`) and sonifies temperature. |
 | `elnino.js` | El Niño layer: overlay from `elnino_fine.js`, anomaly voices in the sweep, "Play the years". |
+| `jukebox.js` | The jukebox home page and doors: `#jukebox` overlay (wood, red buttons) covers the app; choosing a record clicks the hidden track tab, then two cloned halves of the home page swing open; `EJ_songEnded()` (called at the end of a sweep, followed current or years) closes the doors after 3.5 s if the switch is on. `?nohome`, `?debug` and `?nostart` skip the home page. The welcome dialog no longer opens by itself. The app is `inert` while the home page is showing. |
 | `trace.js` | Records every scheduled note, exports CSV/JSON with source SHA-256s. |
 | `*_grid.js`, `elnino_*.js`, `nino34_index.js`, `flow_field.js` | Precomputed data (`window.*_GRID` etc.), 160 columns by 18 latitude rows for sweeps. |
 | `music_data.js` / `score_data.js`, `score_notes.js` / `samples_data.js` | MuseScore-rendered audio (base64 mp3): fixed loops / 5 stems and their notes / 18 instruments. |

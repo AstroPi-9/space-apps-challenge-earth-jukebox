@@ -102,9 +102,100 @@
   #traceStatus{margin:0;flex:1 1 260px;font-size:.88rem}
   @media (max-width:560px){.wrap{padding:12px 12px 32px}h1{font-size:1.6rem}#play{width:100%}}
   @media (prefers-reduced-motion:reduce){#playhead{box-shadow:none}*{transition:none!important}}
+
+  /* ================= THE JUKEBOX (home page and doors) ================= */
+  :root{
+    --wood1:#6e3f1d; --wood2:#4a2810; --wood3:#2d170a; --gold:#e9c46a; --gold2:#b8862b; --cream1:#f7edd3; --cream2:#e8d6a8; --ink:#3a2a14; --red1:#ff8d7c; --red2:#e0231b; --red3:#8f0d09;
+    --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='700' height='420'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.008 .28' numOctaves='3' seed='11'/><feColorMatrix values='0 0 0 0 .13  0 0 0 0 .06  0 0 0 0 .02  0 0 0 .75 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  .wood{background:var(--grain),repeating-linear-gradient(90deg,rgba(0,0,0,.20) 0 2px,transparent 2px 11px),repeating-linear-gradient(90deg,rgba(255,196,120,.05) 0 1px,transparent 1px 29px),linear-gradient(180deg,var(--wood1),var(--wood2) 55%,var(--wood3));background-color:var(--wood2)}
+  #jukebox{position:fixed;inset:0;z-index:100;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;color:var(--cream1)}
+  #jukebox::-webkit-scrollbar{display:none}
+  .jb-inner{min-height:100%;padding:22px 16px 34px;display:flex;justify-content:center;align-items:flex-start}
+  .jb-cabinet{width:min(1000px,100%);position:relative;border-radius:260px 260px 22px 22px/130px 130px 22px 22px;padding:26px 30px 24px;
+    background:var(--grain),linear-gradient(180deg,#7a4721,#4b2911 60%,#341b0c);background-color:#4b2911;
+    box-shadow:0 0 0 4px #d9b25a,0 0 0 9px #7a561b,0 0 0 12px #2a1707,0 30px 60px -10px rgba(0,0,0,.8),inset 0 0 40px rgba(0,0,0,.55)}
+  .jb-top{text-align:center;padding:14px 0 6px;position:relative}
+  .jb-tube{height:12px;margin:0 auto 12px;width:min(520px,72%);border-radius:8px;background:linear-gradient(90deg,#ff4b3a,#ffb43a,#ffe95a,#57e06a,#44c4ff,#a66bff,#ff4b3a);background-size:200% 100%;box-shadow:0 0 12px #ffb43a,0 0 26px rgba(255,120,60,.6);animation:jbtube 6s linear infinite}
+  @keyframes jbtube{to{background-position:200% 0}}
+  .jb-title{margin:0;font:400 clamp(2.2rem,7vw,4.2rem)/1 Georgia,'Times New Roman',serif;letter-spacing:.06em;text-transform:uppercase;color:#ffe9a6;text-shadow:0 2px 0 #9a6a14,0 4px 0 #5a3a08,0 0 22px rgba(255,200,90,.65)}
+  .jb-tag{margin:8px 0 0;font:italic 1.05rem Georgia,serif;color:#f1d9a1;letter-spacing:.04em}
+  .jb-card{background:linear-gradient(180deg,var(--cream1),var(--cream2));color:var(--ink);border:2px solid #b08a3c;border-radius:10px;padding:16px 20px;margin:18px 0 20px;box-shadow:inset 0 0 0 4px rgba(255,255,255,.35),0 6px 14px rgba(0,0,0,.5);font-family:Georgia,'Times New Roman',serif}
+  .jb-card h2{margin:0 0 6px;font:700 1.05rem Georgia,serif;letter-spacing:.14em;text-transform:uppercase;color:#7a1a12}
+  .jb-card p{margin:0 0 10px;line-height:1.5}
+  .jb-badges{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
+  .jb-badges li{background:#7a1a12;color:#ffeccb;border-radius:999px;padding:3px 12px;font:600 .82rem system-ui,sans-serif}
+  .jb-records{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px 22px}
+  button.rec{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:16px;cursor:pointer;padding:6px;border-radius:14px;color:inherit}
+  button.rec:focus-visible{outline:3px solid #ffe27a;outline-offset:3px}
+  .rec .knob{flex:none;width:92px;height:92px;border-radius:50%;display:grid;place-items:center;font:700 1.6rem Georgia,serif;color:#fff1d6;text-shadow:0 2px 2px rgba(0,0,0,.65);
+    background:radial-gradient(circle at 34% 26%,var(--red1) 0,var(--red2) 36%,var(--red3) 74%,#4d0604 100%);
+    box-shadow:0 0 0 5px #d5d9de,0 0 0 8px #7d8289,0 8px 0 8px #3d0503,0 14px 20px 6px rgba(0,0,0,.65),inset 0 -8px 12px rgba(0,0,0,.4),inset 0 8px 12px rgba(255,255,255,.35);transition:transform .08s,box-shadow .08s,filter .15s}
+  .rec:hover .knob{filter:brightness(1.14)}
+  .rec:active .knob{transform:translateY(7px);box-shadow:0 0 0 5px #d5d9de,0 0 0 8px #7d8289,0 1px 0 8px #3d0503,0 5px 10px 6px rgba(0,0,0,.65),inset 0 -8px 12px rgba(0,0,0,.4),inset 0 8px 12px rgba(255,255,255,.35)}
+  .rec .card{flex:1;min-width:0;align-self:stretch;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(180deg,var(--cream1),var(--cream2));color:var(--ink);border:2px solid #b08a3c;border-radius:6px;padding:9px 14px;box-shadow:inset 0 0 0 3px rgba(255,255,255,.35),0 4px 8px rgba(0,0,0,.5);font-family:Georgia,'Times New Roman',serif;transition:transform .12s}
+  .rec:hover .card{transform:translateX(3px)}
+  .rec .ttl{display:block;font-weight:700;font-size:1.12rem;color:#5b140d}
+  .rec .dsc{display:block;font-size:.88rem;line-height:1.35;margin-top:2px}
+  .jb-foot{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;margin-top:24px;padding-top:16px;border-top:2px solid rgba(233,196,106,.35)}
+  #jbPrompt{font:italic 1.05rem Georgia,serif;color:#ffe9a6}
+  .jb-foot .toggle{background:rgba(0,0,0,.25);border-color:rgba(233,196,106,.35);color:var(--cream1)} .jb-foot .toggle small{color:#d9c08a}
+  .jb-foot button.secondary{background:rgba(0,0,0,.3);border-color:rgba(233,196,106,.45);color:#ffe9a6}
+
+  /* the doors: two halves of the home page, swinging open or shut */
+  .jb-doors{position:fixed;inset:0;z-index:150;perspective:2200px;overflow:hidden;pointer-events:none}
+  .jb-half{position:absolute;top:0;bottom:0;width:50%;overflow:hidden;backface-visibility:hidden;transition:transform 1.5s cubic-bezier(.62,.04,.28,1),box-shadow 1.5s}
+  .jb-half.l{left:0;transform-origin:0 50%;box-shadow:inset -10px 0 14px -8px rgba(0,0,0,.6),6px 0 24px rgba(0,0,0,.5)}
+  .jb-half.r{right:0;transform-origin:100% 50%;box-shadow:inset 10px 0 14px -8px rgba(0,0,0,.6),-6px 0 24px rgba(0,0,0,.5)}
+  .jb-face{position:absolute;top:0;width:100vw;height:100vh;overflow:hidden;color:var(--cream1)}
+  .jb-half.l .jb-face{left:0} .jb-half.r .jb-face{left:-50vw}
+  .jb-doors.open .jb-half.l{transform:rotateY(-108deg)} .jb-doors.open .jb-half.r{transform:rotateY(108deg)}
+  .jb-doors.notrans .jb-half{transition:none}
+
+  /* the data page: a wooden bar to get back to the jukebox */
+  #tracks{display:none}
+  .data-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin:0 0 16px;padding:10px 14px;border-radius:14px;border:2px solid #b08a3c;background:var(--grain),linear-gradient(180deg,#6b3d1c,#3a1f0d);background-color:#4a2810;box-shadow:0 8px 20px -10px #000,inset 0 0 0 3px rgba(0,0,0,.25)}
+  .data-bar button{background:linear-gradient(180deg,#ff8d7c,#d11d15);color:#fff1d6;border:2px solid #d5d9de;box-shadow:0 3px 0 #4d0604,0 6px 12px rgba(0,0,0,.5)}
+  #dataBarNow{font:italic 1.1rem Georgia,serif;color:#ffe9a6;flex:1;min-width:200px}
+  .data-bar .code{display:inline-grid;place-items:center;min-width:2.2em;margin-right:8px;padding:0 .4em;border-radius:999px;background:radial-gradient(circle at 34% 26%,#ff8d7c,#c91b14 60%,#7e0b07);color:#fff1d6;font:700 .95rem Georgia,serif;font-style:normal}
+  @media (max-width:560px){.jb-cabinet{padding:18px 14px 18px;border-radius:120px 120px 18px 18px/70px 70px 18px 18px}.rec .knob{width:70px;height:70px;font-size:1.25rem}.jb-card{padding:12px 14px}}
+  @media (prefers-reduced-motion:reduce){.jb-tube{animation:none}.jb-half{transition:none!important}}
 </style>
 </head>
 <body>
+<div id="jukebox" class="wood" role="region" aria-label="Earth Jukebox home: choose a record">
+  <div id="jbInner" class="jb-inner">
+    <div class="jb-cabinet">
+      <div class="jb-top">
+        <div class="jb-tube" aria-hidden="true"></div>
+        <p class="jb-title" role="heading" aria-level="1">Earth Jukebox</p>
+        <p class="jb-tag">NASA pictures of Earth, played as live music</p>
+      </div>
+      <section class="jb-card" aria-labelledby="jbSummaryH">
+        <h2 id="jbSummaryH">What is going on</h2>
+        <p>Seven records, each one a NASA picture of Earth's oceans or atmosphere. The jukebox reads the colours as data and plays them live, while the picture stays on screen: a beam sweeps across the world and every kind of data has its own instrument. Choose a record, and the doors will open.</p>
+        <ul class="jb-badges">
+          <li>Pitch is latitude</li><li>Each kind of data has an instrument</li><li>Drums follow the region</li><li>Sad and urgent where the data is strong</li>
+        </ul>
+      </section>
+      <div class="jb-records" role="group" aria-label="Records">
+        <button class="rec" type="button" data-track="year" data-code="A1" aria-label="A1. Year of the ocean. A year of ocean currents and temperature, March 2007 to March 2008. Hear the seasons turn."><span class="knob" aria-hidden="true">A1</span><span class="card"><span class="ttl">📅 Year of the ocean</span><span class="dsc">A year of currents and temperature, March 2007 to March 2008. Hear the seasons turn.</span></span></button>
+        <button class="rec" type="button" data-track="ocean" data-code="A2" aria-label="A2. Ocean currents. One frame of NASA's ocean currents. Follow a current and hear its temperature."><span class="knob" aria-hidden="true">A2</span><span class="card"><span class="ttl">🌊 Ocean currents</span><span class="dsc">One frame of NASA's ocean currents. Follow a current and hear its temperature.</span></span></button>
+        <button class="rec" type="button" data-track="aerosols" data-code="B1" aria-label="B1. Aerosols. Smoke, dust, sea salt and sulfate over the whole world on 19 August 2025."><span class="knob" aria-hidden="true">B1</span><span class="card"><span class="ttl">🌫️ Aerosols</span><span class="dsc">Smoke, dust, sea salt and sulfate over the whole world on 19 August 2025.</span></span></button>
+        <button class="rec" type="button" data-track="sst" data-code="B2" aria-label="B2. Sea temperature. Average sea surface temperature, with an El Niño layer from 1982 to today."><span class="knob" aria-hidden="true">B2</span><span class="card"><span class="ttl">🌡️ Sea temperature</span><span class="dsc">Average sea surface temperature, with an El Niño layer from 1982 to today.</span></span></button>
+        <button class="rec" type="button" data-track="sss" data-code="C1" aria-label="C1. Salinity. Average sea surface salinity: fresher and saltier water around the world."><span class="knob" aria-hidden="true">C1</span><span class="card"><span class="ttl">🧂 Salinity</span><span class="dsc">Average sea surface salinity: fresher and saltier water around the world.</span></span></button>
+        <button class="rec" type="button" data-track="density" data-code="C2" aria-label="C2. Density. Average sea surface density, from heavy cold water to light warm water."><span class="knob" aria-hidden="true">C2</span><span class="card"><span class="ttl">⚖️ Density</span><span class="dsc">Average sea surface density, from heavy cold water to light warm water.</span></span></button>
+        <button class="rec" type="button" data-track="densityVideo" data-code="D1" aria-label="D1. Density on a turning globe. The density map as a globe turning once; the sound follows the beam."><span class="knob" aria-hidden="true">D1</span><span class="card"><span class="ttl">🎞️ Density, turning globe</span><span class="dsc">The density map as a globe turning once; the sound follows the beam.</span></span></button>
+      </div>
+      <div class="jb-foot">
+        <span id="jbPrompt">Press a red button to choose a record.</span>
+        <button id="jbHelp" type="button" class="secondary">? How it works</button>
+      </div>
+      <p class="sub" style="margin:14px 0 0;color:#d9c08a;font-size:.85rem">Made for the NASA Space Apps Challenge 2026. An independent project, not an official NASA product. Pictures: NASA Scientific Visualization Studio.</p>
+    </div>
+  </div>
+</div>
+<div id="jbLive" class="sr-only" role="status" aria-live="polite"></div>
 <a class="skip" href="#controls">Skip to controls</a>
 <div class="wrap">
   <header>
@@ -113,6 +204,7 @@
   </header>
 
   <main>
+    <div id="dataBar" class="data-bar" role="group" aria-label="Jukebox"><button id="backHome" type="button">↩ Back to the jukebox</button><span id="dataBarNow" aria-live="polite"></span></div>
     <div class="controls" id="tracks" role="group" aria-label="Choose a track"></div>
     <div id="stage" tabindex="0" role="group"
          aria-label="Aerosol map of Earth. Use arrow keys to explore, Enter to hear a spot, Space to play or pause."
@@ -193,6 +285,7 @@
             <label class="toggle"><input id="showSheet" type="checkbox" role="switch" checked><span><span class="t">Show sheet music</span><small>A staff for every voice, scrolling past a fixed line</small></span></label>
             <label class="toggle"><input id="narrate" type="checkbox" role="switch"><span><span class="t">Show descriptions while playing</span><small>Text about what the beam is passing over</small></span></label>
             <label class="toggle"><input id="speak" type="checkbox" role="switch"><span><span class="t">Spoken narration</span><small>A voice describes the map, then the sweep plays once</small></span></label>
+            <label class="toggle"><input id="autoClose" type="checkbox" role="switch" checked><span><span class="t">Return to the jukebox when a song ends</span><small>The doors close and you choose another record</small></span></label>
             <div class="sliders" style="margin-top:2px">
               <label class="field"><span>Spoken intro</span><select id="introLen" aria-label="Length of the spoken intro"><option value="short">Short</option><option value="full">Full</option></select></label>
               <label class="field"><span>Voice</span><select id="voice" aria-label="Narration voice"></select></label>
@@ -277,5 +370,6 @@
 <script src="app.js"></script>
 <script src="follow.js"></script>
 <script src="elnino.js"></script>
+<script src="jukebox.js"></script>
 </body>
 </html>

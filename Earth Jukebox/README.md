@@ -4,6 +4,8 @@
 
 Built for the NASA Space Apps Challenge 2026 challenge *The Earth Information Jukebox*. It is an independent project and is **not an official NASA product**.
 
+**The jukebox.** The page opens on a wooden jukebox with a short summary and seven large red buttons (A1 to D1), one for each record. Pressing a button picks that record, and the home page swings open like double doors to show its page (picture, sound settings, sheet music and any extras). When a song ends, or when you press **Back to the jukebox**, the doors close and you choose another record. The *Return to the jukebox when a song ends* switch (in Display and narration) turns the automatic closing off. With reduced-motion settings the doors do not animate. Add `?nohome` to the address to skip the home page.
+
 Open `index.html` in a modern browser (developed and tested in a Chromium-based browser; Firefox and Safari are untested). There is nothing to install and no server is needed. Press **Play** to hear one sweep, or **Hear the instruments** to learn what each voice means.
 
 ---

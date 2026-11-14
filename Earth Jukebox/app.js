@@ -1306,6 +1306,7 @@ function finishSweep() {                             // the sweep reached the ea
   pos = 0; lastNarrCol = -1; setHead(V.cols);
   setReadout('The sweep has reached the end. Press play to hear it again, or click the map to explore.');
   speak('The sweep has reached the end.');
+  if (window.EJ_songEnded) window.EJ_songEnded('sweep');
 }
 function fillVoices() {
   if (!SPEECH) return; const sel = $('voice'), keep = sel.value, vs = speechSynthesis.getVoices();
@@ -1503,7 +1504,7 @@ $('startGo').addEventListener('click', () => closeStart(false));
 $('startDemo').addEventListener('click', () => closeStart(true));
 $('helpBtn').addEventListener('click', openStart);
 let seen = false; try { seen = localStorage.getItem('ej_seen') === '1'; } catch (e) {}
-if (!seen && !/[?&](debug|nostart)/.test(location.search)) openStart();
+// the jukebox home page (jukebox.js) replaces the welcome dialog; the Help buttons still open it
 
 // ================= UI WIRING =================
 function buildVoices() {
@@ -1604,7 +1605,7 @@ window.EJ = { get A() { return A; }, get T() { return T; }, get playing() { retu
   dataInfo: () => DATA_INFO[T.id] || null, commonLimit: COMMON_LIMIT, sourceName: id => (INSTR[id] ? INSTR[id].name : id),
   follow: {                                          // what the "Follow a current" feature (follow.js) needs from the sound engine
     wake, lead, pad, drone, pluck, chordFor, regionAt, SCALES, silence: silenceContinuous, pauseSweep: () => { if (playing) pause(); },
-    hold: on => { holdAudio = on; }, hardStop, setBar: n => { curBar = n; },
+    hold: on => { holdAudio = on; }, hardStop, stopAll: () => { cancelGuide(); stopSpeech(); if (playing) pause(); stopDemo(true); hardStop(); }, setBar: n => { curBar = n; },
     scale: () => SCALE, say: s => setReadout(s),
     setScaleAt(lon, lat, trb, urg) { const h = holdFor(regionAt(lon, lat), trb), reg = h[0], trbH = h[1], def = SCALES[reg] || SCALES.ocean, pick = trbH ? def.sad : def.calm; SCALE = { deg: pick[1], name: pick[0], place: def.place, reg, thirds: !!def.thirds, trb: trbH }; EMO.troubled = trbH; EMO.urgent = urg; EMO.concern = trb ? 0.7 : 0.2; return SCALE; },
     valueMidi(frac) { const L = LEADS[T.instruments.lead]; return scNote(L.root, Math.round(Math.max(0, Math.min(1, frac)) * scSpan(L.span))); },
