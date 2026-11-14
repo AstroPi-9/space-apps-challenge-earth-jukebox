@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Analyse density video</title>
+<style>body{font:14px system-ui;background:#111;color:#eee;padding:16px} pre{white-space:pre-wrap}</style></head>
+<body>
+<h1>Analyse the density video</h1>
+<p>Reads the rotating-globe video frame by frame, samples a strip down the centre of the globe (the beam), turns the colours into the same sound-grid format the app uses, and saves <code>video_grid.js</code>.
+Needs to be served over http (run <code>tools\serve.ps1</code>), because browsers will not let a page read pixels of a video opened from a file.</p>
+<button id="go">Run analysis</button> <a id="dl" style="display:none;color:#7cc4ff">Download video_grid.js</a>
+<pre id="log"></pre>
+<script src="../density_grid.js"></script>
+<script>
+const COLS = 160, ROWS = 18, SRC = '../assets/video/density.webm';
+const log = m => { document.getElementById('log').textContent += m + '\n'; };
+const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+async function getLut() {                       // same colour bar the density map uses; inverted so dense = low end (as in the app's grid)
+  const img = await load('../assets/ssd_cbar.png'), c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0); const d = g.getImageData(34, 44, 253, 1).data, lut = [];
+  for (let i = 0; i < 253; i++) lut.push([d[i * 4], d[i * 4 + 1], d[i * 4 + 2]]);
+  return lut;
+}
+async function run() {
+  const lut = await getLut(), map = window.DENSITY_GRID;
+  const v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.src = SRC;
+  await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error('video failed to load')); });
+  const dur = v.duration, W = 960, H = 540, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d', { willReadFrequently: true });
+  log(`video ${v.videoWidth}x${v.videoHeight}, ${dur.toFixed(1)} s`);
+  const THR2 = 40 * 40, cells = [];                                  // lighting on the globe shifts colours, so the tolerance is wider than for the flat map
+  const profiles = [];
+  for (let i = 0; i < COLS; i++) {
+    v.currentTime = (i + 0.5) * dur / COLS; await new Promise(r => { v.onseeked = r; setTimeout(r, 4000); });
+    g.drawImage(v, 0, 0, W, H); const d = g.getImageData(0, 0, W, H).data;
+    let minX = W, maxX = 0, minY = H, maxY = 0;                      // find the globe: everything not black
+    for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) { const k = (y * W + x) * 4; if (Math.max(d[k], d[k + 1], d[k + 2]) > 45) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; } }
+    const cx = Math.round((minX + maxX) / 2), r = (maxY - minY) / 2, half = Math.max(2, Math.round(r * 0.05));
+    const band = [[], [], []], tot = new Array(ROWS).fill(0), val = new Array(ROWS).fill(0), st = new Array(ROWS).fill(0), st2 = new Array(ROWS).fill(0), b3 = [new Array(ROWS).fill(0), new Array(ROWS).fill(0), new Array(ROWS).fill(0)];
+    for (let y = minY; y < maxY - 1; y++) {
+      const row = Math.min(ROWS - 1, Math.floor((y - minY) / (maxY - minY) * ROWS));
+      for (let x = cx - half; x <= cx + half; x++) {
+        tot[row]++; const k = (y * W + x) * 4, R = d[k], G = d[k + 1], B = d[k + 2];
+        const tex = Math.abs(R - d[k + 4]) + Math.abs(G - d[k + 5]) + Math.abs(B - d[k + 6]) + Math.abs(R - d[k + W * 4]) + Math.abs(G - d[k + W * 4 + 1]) + Math.abs(B - d[k + W * 4 + 2]);
+        if (tex > 30) continue;
+        let best = 1e9, bi = 0; for (let j = 0; j < 253; j++) { const dr = R - lut[j][0], dg = G - lut[j][1], db = B - lut[j][2], dd = dr * dr + dg * dg + db * db; if (dd < best) { best = dd; bi = j; } }
+        if (best > THR2) continue;
+        const t = 1 - bi / 252;                                       // inverted: dense = low
+        val[row]++; st[row] += t; st2[row] += t * t; b3[t < 0.3333 ? 0 : t < 0.6667 ? 1 : 2][row]++;
+      }
+    }
+    const cell = []; for (let rr = 0; rr < ROWS; rr++) {
+      const n = tot[rr] || 1, m = val[rr] > 6 ? st[rr] / val[rr] : 0;
+      cell.push({ b: [b3[0][rr] / n, b3[1][rr] / n, b3[2][rr] / n], front: val[rr] > 6 ? Math.sqrt(Math.max(0, st2[rr] / val[rr] - m * m)) * (val[rr] / n) : 0, cov: val[rr] / n, mean: m, ok: val[rr] > 6 });
+    }
+    cells.push(cell);
+    if (i % 20 === 0) log(`step ${i}/${COLS}  t=${((i + 0.5) * dur / COLS).toFixed(1)} s  globe centre x=${cx} r=${r.toFixed(0)}`);
+  }
+  // The globe turns once in 60 s. Matching land/ocean profiles was too noisy to measure the longitude, so I read it off the frames by eye:
+  // the Americas face us at t=0 (about 90 W), Africa at 15 s, South-East Asia at 30 s, the Pacific at 45 s. That is about 6 degrees of longitude per second.
+  const lon0 = -90, rate = 360 / dur;
+  // pack in the app's grid format; each channel normalised by its 97th percentile
+  const flat = k => cells.flatMap(col => col.map(c => k === 3 ? c.front : c.b[k]));
+  const tops = [0, 1, 2, 3].map(k => { const a = flat(k).slice().sort((x, y) => x - y); return Math.max(1e-6, a[Math.floor(a.length * 0.97)]); });
+  const data = [], land = [], mean = [], cov = [];
+  for (let rr = 0; rr < ROWS; rr++) for (let c = 0; c < COLS; c++) { const cl = cells[c][rr]; for (let k = 0; k < 4; k++) data.push(Math.round(Math.min(1, (k === 3 ? cl.front : cl.b[k]) / tops[k]) * 255)); land.push(Math.round((1 - cl.cov) * 255)); mean.push(cl.ok ? Math.round(cl.mean * 255) : 0); cov.push(Math.round(cl.cov * 255)); }
+  const out = 'window.DENSITY_VIDEO_GRID = ' + JSON.stringify({ cols: COLS, rows: ROWS, data, land, mean, cov, dur, lon0, rate }) + ';';
+  const dl = document.getElementById('dl'); dl.href = URL.createObjectURL(new Blob([out], { type: 'text/javascript' })); dl.download = 'video_grid.js'; dl.style.display = 'inline';
+  try { const r = await fetch('/save/video_grid.js', { method: 'POST', body: out }); log(r.ok ? 'saved video_grid.js next to the app' : 'save failed: ' + r.status); } catch (e) { log('could not save automatically: ' + e.message); }
+  log('done'); window.__done = { lon0, rate, dur };
+}
+document.getElementById('go').onclick = () => run().catch(e => log('ERROR ' + e.message));
+if (location.search.includes('run=1')) document.getElementById('go').click();
+</script>
+</body></html>

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Earth Jukebox – Aerosols</title>
+<meta name="description" content="Hear NASA's aerosol visualization: dust, smoke, sea salt and sulfate turned into music.">
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#131a22; --line:#2a3644; --text:#eef3f8; --muted:#a9b6c4;
+    --carbon:#e8765a; --dust:#c79bf0; --salt:#8fc1c1; --sulfate:#58e03a; --accent:#7cc4ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  h1{font-size:1.7rem;margin:.2em 0 .1em} h2{font-size:1.1rem;margin:0 0 .5em}
+  .sub{color:var(--muted);margin:0 0 1rem}
+  a{color:var(--accent)}
+  .skip{position:absolute;left:-999px} .skip:focus{left:8px;top:8px;background:#fff;color:#000;padding:8px;z-index:10}
+  :focus-visible{outline:3px solid #ffd54a;outline-offset:2px}
+  #stage{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:crosshair;background:#000;touch-action:manipulation}
+  #stage video{display:block;width:100%;height:auto;background:#000}
+  #stage img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+  #playhead{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 10px 2px rgba(255,255,255,.7);left:0;pointer-events:none;display:none}
+  #cursor{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border:3px solid #ffd54a;border-radius:50%;pointer-events:none;display:none;box-shadow:0 0 0 2px #000}
+  .controls{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin:14px 0}
+  button{font:inherit;background:var(--accent);color:#04121e;border:0;border-radius:8px;padding:10px 20px;font-weight:600;cursor:pointer;min-height:44px}
+  button.secondary{background:var(--panel);color:var(--text);border:1px solid var(--line)}
+  label{display:inline-flex;align-items:center;gap:8px}
+  input[type=range]{width:150px}
+  select{font:inherit;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px;max-width:230px;min-height:36px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin:14px 0}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px} @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .voices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+  .voice{border:1px solid var(--line);border-radius:8px;padding:10px;border-left-width:6px}
+  .voice .meter{height:8px;background:#26313d;border-radius:4px;margin-top:6px;overflow:hidden}
+  .voice .meter i{display:block;height:100%;width:0;background:currentColor}
+  .voice small{color:var(--muted);display:block}
+  #readout{font-size:1.05rem;min-height:3.2em}
+  table{border-collapse:collapse;width:100%} th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  details summary{cursor:pointer;font-weight:600}
+  .legend{max-width:520px;width:100%;height:auto;border-radius:8px}
+  .voice.demo-on{outline:2px solid #ffd54a;outline-offset:2px}
+  .hear{min-height:32px;padding:4px 12px;font-size:.9rem;margin-top:8px}
+  #demoStatus{min-height:1.5em;font-weight:600}
+  dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:20px 24px;max-width:560px}
+  dialog::backdrop{background:rgba(0,0,0,.7)}
+  dialog h2{margin-top:0} dialog li{margin:.3em 0} dialog label{display:block;margin:.5em 0}
+  #dataBody dl{margin:0} #dataBody dt{font-weight:600;margin-top:.8em} #dataBody dd{margin:.2em 0 0 0} #dataBody ul{margin:.2em 0;padding-left:1.2em}
+  .head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  footer{color:var(--muted);font-size:.9rem;margin:24px 0}
+  .grad{height:22px;border-radius:6px;background:linear-gradient(90deg,#1f6bff,#18b8c8,#35d04a,#f0e030,#ff9a1f,#ff3b1f);margin:8px 0 4px;max-width:520px}
+  .grad-l{display:flex;justify-content:space-between;max-width:520px;color:var(--muted);font-size:.9rem}
+  button.secondary.tab[aria-pressed=true]{background:#ffd54a;color:#1a1400;border-color:#ffd54a}
+  @media (prefers-reduced-motion:reduce){#playhead{box-shadow:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#controls">Skip to controls</a>
+<div class="wrap">
+  <header>
+    <div class="head-row"><h1>Earth Jukebox <span aria-hidden="true">🌍🎶</span></h1><button id="helpBtn" type="button" class="secondary" aria-haspopup="dialog">? Help</button></div>
+    <p class="sub" id="trackIntro"></p>
+  </header>
+
+  <main>
+    <div class="controls" id="tracks" role="group" aria-label="Choose a track"></div>
+    <div id="stage" tabindex="0" role="group"
+         aria-label="Aerosol map of Earth. Use arrow keys to explore, Enter to hear a spot, Space to play or pause."
+         aria-describedby="help">
+      <img id="map" src="assets/aerosols.png" alt="">
+      <video id="vid" muted playsinline preload="auto" role="img" style="display:none"></video>
+      <div id="playhead"></div>
+      <div id="cursor"></div>
+    </div>
+    <p id="vcap" class="sub" style="display:none"></p>
+    <div id="tlineWrap" style="display:none;margin:6px 0"><label>Time in the year <input id="tline" type="range" min="0" max="159" value="0" style="width:min(520px,70vw)"> <span id="tlineOut" aria-hidden="true"></span></label></div>
+    <p id="help" class="sub">Click or tap the map to hear that spot. With a keyboard: arrow keys move (Shift = bigger steps), Home/End jump to the west/east edge, Enter replays the spot, Space plays or pauses.</p>
+
+    <div class="controls" id="controls" role="group" aria-label="Playback controls">
+      <button id="play" type="button" aria-pressed="false">▶ Play the globe</button>
+      <button id="restart" type="button" class="secondary">⏮ Restart</button>
+      <button id="skip" type="button" class="secondary" hidden>⏭ Skip intro</button>
+      <button id="demoAll" type="button" class="secondary" aria-pressed="false">🎧 Hear the instruments</button>
+      <label>Volume <input id="vol" type="range" min="0" max="100" value="70"></label>
+      <label>Tour length <input id="dur" type="range" min="20" max="90" value="40" aria-describedby="durOut"> <span id="durOut">40 s</span></label>
+      <label><input id="narrate" type="checkbox"> Show descriptions while playing</label>
+      <label><input id="speak" type="checkbox"> Spoken narration</label>
+      <label>Spoken intro <select id="introLen" aria-label="Length of the spoken intro"><option value="short">Short</option><option value="full">Full</option></select></label>
+      <label><input id="skipAnt" type="checkbox"> Skip the Antarctic drone</label>
+      <label>Voice <select id="voice" aria-label="Narration voice"></select></label>
+    </div>
+
+    <p class="sub" id="speakHelp">With spoken narration on, pressing play first has a voice describe the image from west to east, then explain how to listen. Then the sweep plays once, with no talking over the music, and stops at the end. Clicking a spot also describes it aloud. If you use a screen reader, you may prefer to leave narration off and use the descriptions below.</p>
+    <div class="panel" aria-labelledby="whereH">
+      <h2 id="whereH">Where you are</h2>
+      <div id="readout" role="status" aria-live="polite">Press play, or click the map.</div>
+    </div>
+
+    <section class="panel" aria-labelledby="voicesH">
+      <h2 id="voicesH">The voices</h2>
+      <p id="demoStatus" role="status" aria-live="polite"></p>
+      <div class="voices" id="voices"></div>
+    </section>
+
+    <section class="panel"><details id="dataDetails"><summary>Data and limits</summary><div id="dataBody"></div></details></section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>Colour key</h2>
+        <div id="legend"></div>
+      </div>
+      <div class="panel">
+        <h2>Why it sounds like this</h2>
+        <details open>
+          <summary>How the map becomes music</summary>
+          <table id="how"></table>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Aerosols: NASA Scientific Visualization Studio, <a href="https://svs.gsfc.nasa.gov/5669/">svs.gsfc.nasa.gov/5669</a>. Ocean currents: NASA's ECCO2 ocean-model visualization.
+    Sound generated live in your browser with the Web Audio API. A first version made for the NASA Space Apps "Earth Jukebox" challenge. Region labels are approximate.
+  </footer>
+</div>
+<dialog id="start" aria-labelledby="startH">
+  <h2 id="startH">Welcome to the Earth Jukebox</h2>
+  <p>This turns NASA pictures of Earth's oceans and atmosphere into music. Pitch is the latitude, each kind of data has its own instrument, and the drums play faster where the data is stronger.</p>
+  <ol>
+    <li>Press <b>Play</b> to hear one sweep.</li>
+    <li>Press <b>Hear the instruments</b> to learn what each voice means.</li>
+    <li>Click or tap the picture to hear a single spot.</li>
+  </ol>
+  <label><input type="checkbox" id="startSpeak"> Read a spoken guide aloud before each sweep</label>
+  <label><input type="checkbox" id="startSeen"> Do not show this again</label>
+  <p><button id="startGo" type="button">Begin</button> <button id="startDemo" type="button" class="secondary">Hear the instruments first</button></p>
+</dialog>
+<script src="grid.js"></script>
+<script src="ocean_grid.js"></script>
+<script src="sst_grid.js"></script>
+<script src="sss_grid.js"></script>
+<script src="density_grid.js"></script>
+<script src="video_grid.js"></script>
+<script src="year_grid.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

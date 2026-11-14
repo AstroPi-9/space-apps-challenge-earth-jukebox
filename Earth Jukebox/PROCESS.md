@@ -1,0 +1,77 @@
+# Process: why the Earth Jukebox is built the way it is
+
+This document records the design choices, the reasons for them, the mistakes that were found and fixed, and what has and has not been tested. It was written with an AI coding assistant (Claude Code), which also helped make the choices; see the AI disclosure in `README.md`.
+
+## The brief and the approach
+
+The challenge asks for an "Earth Jukebox": NASA Earth Information Center style visual frames paired with dynamic, explainable sonification, with accessibility as a core theme and a balance between data and musicality.
+
+The approach was:
+
+1. **Read the picture as data, then play the data**, instead of trying to "play the pixels". A raw pixel-to-sound mapping is noise; reading the colour bar first gives a meaningful value per place.
+2. **Generate everything live in the browser** (Web Audio). No recordings, so nothing is fixed and any new grid can be played.
+3. **Keep the picture and a text description always available**, so the sound is never the only way in.
+
+## Design choices and reasons
+
+| Choice | Reason |
+|---|---|
+| Left to right is time; the sweep plays once and stops | A sweep gives a clear start and end, which is easier to follow than a loop, and it matches how a map is read. It also avoids the confusion of a sound that never ends. |
+| Pitch is latitude (north high) | It is the most intuitive axis, and keeping it constant across tracks means the listener learns it once. |
+| One scale: the Carnatic raga Mohanam, Sa = D | A five-note scale never produces clashing notes, so any data pattern sounds consonant. The author's own tradition gave the choice a purpose beyond convenience. |
+| Gamakas instead of vibrato | Gamakas (shakes, slides, touches) are the Carnatic way of ornamenting notes. They are shaped pitch curves per scale degree, and there is no vibrato oscillator anywhere. |
+| A different instrument set for each data type | Tracks should sound different, not just look different. Year: French horn, strings, tanpura-like hum, marimba and kalimba. Aerosols: clarinet, strings, tanpura, gong and kalimba. Sea temperature: flute, brass, didgeridoo-like drone, vibraphone and celesta. Salinity: oboe, organ, tanpura, marimba and glass bells. Density: bassoon, low strings, pedal tone, timpani and harp. |
+| The "high" voice is a quiet roll where the data is strong and a melody where it is light | An earlier version used a rushing noise wash, which was annoying. A tuned timpani roll or marimba roll in strong areas and a harp or kalimba melody in light areas is pleasant, pitched and quiet. |
+| Regional drums, faster where the data is stronger, in four steps only | It adds rhythm and a sense of place. Restricting the speed to crotchets, quavers, semiquavers and (rarely) demisemiquavers keeps it musical. Rank-based thresholds are used because the real values bunch together. |
+| A fixed 120 bpm pulse | All speeds stay locked to one grid, so changes of speed sound intentional. |
+| Precomputed grids of 160 by 18 | Small enough to ship, fast enough to play live, and the pictures can be analysed once instead of in the browser. It also lets the app work opened straight from a folder. |
+| Decode values from NASA's colour bar | It makes the values quantitative (for example a temperature) and removes guesswork. Land photo pixels drop out because they do not match the bar. |
+| Spoken guided tour: describe, then explain, then play once and stop | An earlier version narrated during the sweep, and the speech drifted away from the music. Doing the talking before the sweep keeps both clear. It is off by default and has a short and a full version. |
+| "Hear the instruments" | The mapping is the hardest thing to understand. Playing each voice alone with its label teaches it, and it makes each sound testable. |
+| A **Data and limits** panel for each track | Explainability: where the data came from, how it was decoded, and what not to conclude. |
+| Pause tears the audio down completely | Leftover scheduled notes used to play after pausing (see below). |
+
+## Mix tuning
+
+The author cannot hear the result while building it, so the balance was set by measurement:
+
+1. Each track was rendered offline (20 seconds sampled across the whole sweep, through the real audio chain), once with all voices and once with each voice alone.
+2. Levels were measured **A-weighted**, because plain levels mislead: very low notes carry a lot of energy but are barely audible on ordinary speakers.
+3. The first measurement showed the lead melody 15 to 25 dB louder than the drone, chords and high voice, so most supporting voices were effectively inaudible.
+4. Each track was given its own balance (the `TRIMS` table in `app.js`) aiming for, in A-weighted dB: lead about -22, drums about -27, chords about -29, high voice about -31 and drone about -34. Boosts of the drone are capped, because lifting a 70 Hz tone a long way costs headroom and adds little audible level.
+5. A limiter was added to the output so drum peaks cannot clip, and the master level was raised to use the headroom.
+6. The final check: with all voices, the A-weighted level of every track is within about 2 dB of the others (about -21 to -23 dB) and the peaks are between about -3 and -5 dBFS. Supporting voices now sit about 5 to 10 dB under the melody.
+
+This makes the mix measurably balanced and consistent; it does not make it pleasant. A listening pass is still needed.
+
+## Mistakes found and fixed
+
+- **The ocean colours were misread as current speed.** The first Ocean currents track treated blue to red as slow to fast. NASA's documentation (and the team's earlier analysis) says the colour is **sea surface temperature** and the lines show the currents. The track was rebuilt: temperature decoded from the colour bar, and "swirl" measured from the geometry of the flow lines. Every claim about "fast currents" was removed. That track is now hidden, because the Year track covers the same data and adds time.
+- **Audio kept playing after pause.** First, only the sounds were faded. Then the audio clock was suspended, but notes already scheduled came back on resume. Finally the whole audio graph is destroyed on pause, which cannot leave anything behind.
+- **Narration did not play.** It was off by default and reset on reload; a test stub had been left in a preview page. It now defaults to off by design, remembers the setting, and shows a clear message if the browser cannot speak.
+- **A noisy "whoosh" voice** was replaced by pitched instruments (above).
+- **The video track's longitude** could not be measured automatically (matching land and ocean profiles was too noisy), so a steady 6° a second from 90° W is assumed, and this is stated as a limit.
+
+## How it was checked
+
+- The sound code was run for every column of every track, and for clicks across each grid, with no errors.
+- The instrument demo, the short and full spoken intros, the track order, the start screen, the Data and limits panel and the per-voice Hear buttons were exercised in a browser.
+- The temperature decoding gives physically sensible values (about 29 °C at the equator, about 1 °C near the poles), and the Year track shows the expected seasons, with the northern and southern mid-latitudes out of phase.
+- Playback, pause and the end of the sweep were tested in a browser pane.
+
+## What has NOT been checked
+
+- **Nobody has listened to the finished mix with fresh ears.** The balance was set by measurement (see Mix tuning), but whether five voices at once is too much, and whether it is pleasant, are untested. A listening pass is the most important remaining task.
+- Screen reader use, colour contrast, phone layout, Safari and Firefox behaviour of speech and audio.
+- Any test with blind or low-vision listeners.
+- The facts in the narration and hotspot stories against sources.
+- Whether the SVS visualizations count as Earth Information Center frames for the challenge.
+- Longer or more varied data (the Year track samples 160 of 2,001 frames and covers one year).
+
+## Ideas not built yet
+
+- Let the user drop in their own picture and colour bar.
+- Show which part of the picture produced each note (traceability), an idea borrowed from the team's earlier project.
+- Export each track as an audio file, for a recorded demo and for people who cannot run it live.
+- A "simple mode" with fewer voices.
+- A multi-year view once more of the dataset is added.
