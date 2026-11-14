@@ -87,7 +87,7 @@ const TRACKS = [
   // NASA SVS 3912 (ECCO2): the flow lines are the CURRENTS and their COLOUR is sea-surface temperature (0 to 32 C, see the colour bar). The frame is 19 June 2007.
   Object.assign({
     id: 'ocean', name: 'Ocean currents', emoji: '🌊', grid: window.OCEAN_GRID, image: 'assets/ocean.jpg',
-    intro: '',
+    intro: 'One frame of the NASA ocean currents (19 June 2007). The lines are the currents and their colour is the water temperature. Press play to sweep across the world, or use "Follow a current" under the map to pick a current and hear the water temperature as the sound travels along its flow lines.',
     alt: 'Global map of the ocean surface drawn as thousands of glowing flow lines on a dark background, with grey continents. The lines follow the currents, and their colour shows sea surface temperature: blue is near freezing, green is mild, yellow and orange are warm, and red is about thirty degrees Celsius. The warmest red water fills the tropical western Pacific and the Indian Ocean, with warm ribbons along the Gulf Stream and the Kuroshio off Japan. Cold blue water circles Antarctica. Swirling eddies show up as tangled coils and rings, for example in the south Atlantic off southern Africa.',
     species: [
       { name: 'Cold water',        color: '#5b8dff', sound: '', what: 'cold water' },
@@ -342,10 +342,10 @@ const PALETTE_TEXT = {
 };
 Object.keys(PALETTE).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.instruments = PALETTE[id]; });
 // Per-track voice balance [drone, chords, high, lead, drums], set from offline renders (A-weighted levels, see PROCESS.md). Multipliers on the global TRIM.
-const TRIMS = { year: [4.64, 1.55, 1.33, 1.86, 1.9], aerosols: [5.0, 4.58, 4.74, 0.44, 3.58], sst: [2.86, 2.17, 0.75, 0.43, 3.64], sss: [5.0, 5.73, 1.38, 0.58, 4.27], density: [1.46, 1.34, 1.05, 1.5, 3.82], densityVideo: [2.39, 1.18, 1.1, 3.39, 5.13] };
+const TRIMS = { ocean: [4.64, 1.55, 1.33, 1.86, 1.9], year: [4.64, 1.55, 1.33, 1.86, 1.9], aerosols: [5.0, 4.58, 4.74, 0.44, 3.58], sst: [2.86, 2.17, 0.75, 0.43, 3.64], sss: [5.0, 5.73, 1.38, 0.58, 4.27], density: [1.46, 1.34, 1.05, 1.5, 3.82], densityVideo: [2.39, 1.18, 1.1, 3.39, 5.13] };
 Object.keys(TRIMS).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trim = TRIMS[id]; });
 // The same balance for the MuseScore instrument sounds (source "samples"): each voice re-measured offline and scaled to the same A-weighted targets (see PROCESS.md).
-const TRIMS_S = { year: [1.34, 0.30, 0.93, 1.64, 1.9], aerosols: [2.6, 1.66, 2.12, 1.12, 3.58], sst: [2.35, 0.27, 0.31, 0.87, 3.64], sss: [1.33, 0.99, 0.68, 0.79, 4.27], density: [0.44, 0.27, 1.14, 1.34, 3.82], densityVideo: [0.74, 0.24, 1.68, 2.79, 5.13] };
+const TRIMS_S = { ocean: [1.34, 0.30, 0.93, 1.64, 1.9], year: [1.34, 0.30, 0.93, 1.64, 1.9], aerosols: [2.6, 1.66, 2.12, 1.12, 3.58], sst: [2.35, 0.27, 0.31, 0.87, 3.64], sss: [1.33, 0.99, 0.68, 0.79, 4.27], density: [0.44, 0.27, 1.14, 1.34, 3.82], densityVideo: [0.74, 0.24, 1.68, 2.79, 5.13] };
 Object.keys(TRIMS_S).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trimS = TRIMS_S[id]; });
 const INTRO_HEAD = {
   aerosols: 'Hear a NASA aerosol map of Earth (August 19, 2025). A playhead sweeps the globe from west to east and turns what it finds into music.',
@@ -921,7 +921,7 @@ function scheduler() {
     nextCol++; nextTime += step;
   }
 }
-let idleTimer = null, starting = false;
+let idleTimer = null, starting = false, holdAudio = false;      // holdAudio: the "Follow a current" feature is playing, so do not shut the audio down
 async function wake() {                              // un-mute and make sure the audio clock is running
   clearTimeout(idleTimer); initAudio(); applyPalette();
   A.gate.gain.cancelScheduledValues(A.ctx.currentTime); A.gate.gain.setTargetAtTime(1, A.ctx.currentTime, 0.01);
@@ -936,13 +936,13 @@ function shutdownAudio() {                          // destroy the whole audio g
 function sleepSoon(ms) {                             // mute right away, then tear the audio down so nothing can keep sounding
   clearTimeout(idleTimer);
   idleTimer = setTimeout(() => {
-    if (!A || playing || starting || guiding) return;
+    if (!A || playing || starting || guiding || holdAudio) return;
     A.gate.gain.setTargetAtTime(0, A.ctx.currentTime, 0.02);
-    idleTimer = setTimeout(() => { if (!playing && !starting && !guiding) shutdownAudio(); }, 150);
+    idleTimer = setTimeout(() => { if (!playing && !starting && !guiding && !holdAudio) shutdownAudio(); }, 150);
   }, ms);
 }
 async function play() {
-  if (playing || starting) return; starting = true;
+  if (playing || starting) return; if (window.EJ_followStop) window.EJ_followStop(); starting = true;
   try { await wake(); } finally { starting = false; }
   if (SPEECH && $('speak').checked && pos < 1.5) { const ok = await runGuide(); if (!ok) return; }   // spoken overview + listening guide first
   clearInterval(timer); playing = true; sweepEnded = false; timpFreq = null; nextTime = A.ctx.currentTime + 0.1; gridOrigin = nextTime; nextCol = Math.floor(pos); if (nextCol >= V.cols) nextCol = 0; queue = [];
@@ -1453,6 +1453,7 @@ function buildVoices() {
   if (A) A.bus.forEach((g, k) => g.gain.setTargetAtTime(meters[k] && !meters[k].cb.checked ? 0 : busGain(k), A.ctx.currentTime, 0.05));
 }
 function setTrack(i) {
+  if (window.EJ_followStop) window.EJ_followStop();
   if (playing) pause(); stopSpeech(); lastNarrCol = -1;
   T = TRACKS[i]; V = mkView(T.grid); computeRegions(); computeDrumModel(); computeEmotion(); lastInstr = null; pos = 0; cur = null; queue = []; lastSpoken = '';
   const vid = $('vid');
@@ -1471,7 +1472,7 @@ function setTrack(i) {
   document.querySelectorAll('#tracks button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.track === T.id)));
   setReadout(`Track: ${T.name}. Press play, or click the map.`);
 }
-const TAB_ORDER = ['year', 'aerosols', 'sst', 'sss', 'density', 'densityVideo'];        // the single-frame "Ocean currents" track is hidden: the Year track covers the same data and adds time
+const TAB_ORDER = ['year', 'ocean', 'aerosols', 'sst', 'sss', 'density', 'densityVideo'];        // the single-frame "Ocean currents" track is hidden: the Year track covers the same data and adds time
 const tabIndex = id => TRACKS.findIndex(t => t.id === id);
 TAB_ORDER.forEach(id => {
   const i = tabIndex(id); if (i < 0) return; const t = TRACKS[i];
@@ -1513,7 +1514,16 @@ async function renderOffline(i, seconds, solo) {
   return { aw: +aw.toFixed(1), rms: +db(Math.sqrt(sum / (nw * win))).toFixed(1), active: aN ? +db(Math.sqrt(aSum / aN)).toFixed(1) : -120, peak: +db(peak).toFixed(1), activeShare: +(aN / nw).toFixed(2) };
 }
 
-window.EJ = { get A() { return A; }, get T() { return T; }, get playing() { return playing; }, scoreOn, INSTR };   // read-only view for the scrolling sheet music (sheet.js)
+window.EJ = { get A() { return A; }, get T() { return T; }, get playing() { return playing; }, scoreOn, INSTR,
+  follow: {                                          // what the "Follow a current" feature (follow.js) needs from the sound engine
+    wake, lead, pad, drone, pluck, chordFor, regionAt, SCALES, silence: silenceContinuous, pauseSweep: () => { if (playing) pause(); },
+    hold: on => { holdAudio = on; if (!on) sleepSoon(2500); },
+    scale: () => SCALE, say: s => setReadout(s),
+    setScaleAt(lon, lat, trb, urg) { const reg = regionAt(lon, lat), def = SCALES[reg] || SCALES.ocean, pick = trb ? def.sad : def.calm; SCALE = { deg: pick[1], name: pick[0], place: def.place, reg, thirds: !!def.thirds, trb }; EMO.troubled = trb; EMO.urgent = urg; EMO.concern = trb ? 0.7 : 0.2; return SCALE; },
+    valueMidi(frac) { const L = LEADS[T.instruments.lead]; return scNote(L.root, Math.round(Math.max(0, Math.min(1, frac)) * scSpan(L.span))); },
+    urgentAt(t, step, t0) { gridOrigin = t0; urgentFx(0, t, step); },
+    droneHz: () => T.droneHz, lightKind: () => T.instruments.light,
+  } };   // read-only view for the scrolling sheet music (sheet.js)
 if (location.search.includes("debug")) window.__jb = { loadSamples, SM, TRACKS, musicBuffers, scoreBuffers, startMusic, setTrack, renderOffline, wake, colStats, get T() { return T; }, get V() { return V; }, get A() { return A; } };   // test hook, only with ?debug in the address
 setTrack(tabIndex('year') >= 0 ? tabIndex('year') : 0);
 })();

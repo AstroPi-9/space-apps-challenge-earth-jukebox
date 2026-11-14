@@ -15,6 +15,7 @@ Each track takes a NASA visualization, reads the colours in it as data, and play
 | Track | Data | What the sweep does |
 |---|---|---|
 | **Year of the ocean** (starts here) | NASA SVS 3912: ocean currents and sea surface temperature, 25 March 2007 to 3 March 2008 | Runs through time. You see the time-lapse and hear each hemisphere warm and cool as the seasons turn. |
+| **Ocean currents** | NASA SVS 3912: one frame (19 June 2007) | Sweeps the globe west to east, **or** use *Follow a current* (below). |
 | **Aerosols** | NASA SVS 5669: smoke, dust, sea salt and sulfate, 19 August 2025 | Sweeps the globe from west to east. |
 | **Sea temperature**, **Salinity**, **Density** | NASA SVS 3652: average ocean surface maps | Sweeps the globe from west to east. |
 | **Density (video)** | NASA SVS 3652: the Earth turning once in 60 seconds | Follows the line down the middle of the turning globe, in step with the video. |
@@ -59,6 +60,17 @@ The Locrian family, Slendro-like and Pelog-like scales are approximations chosen
 - **Urgent:** the strongest data, or a sharp rise into strong data. A heartbeat on every beat and a tense, repeating figure (the tonic against the note a semitone above) are added.
 
 What "strong" means depends on the track (for example, lots of aerosol, or warm and swirling water), so it is a stand-in for "something is wrong", not a measure of harm. The text under the sheet music says the current scale and mood. The "MuseScore instrument sounds" source follows the data, the regions and the mood. The "MuseScore composition, 5 instruments" source and the "composed music underneath" layer are **fixed pieces in Mohanam** and do not follow the data or the regions.
+
+## Follow a current (an alternative to the sweep)
+
+On the Ocean currents track, a panel under the map lets you follow one current along the picture's own flow lines instead of sweeping every column. Choose a named current (Gulf Stream, Kuroshio, Agulhas, Antarctic Circumpolar, Humboldt), type a start longitude and latitude, or tick *Click the map to choose the start* and click. The line is traced on the map and a dot travels along it while the sound goes with it:
+
+- **Pitch is the water temperature** under the dot (warmer is higher), with the lead playing every other step. The stereo position is where the dot is on the map.
+- **The scale follows the region** the line passes through, as in the sweep. Water above about 22 °C turns the music sad, and above about 28 °C urgent.
+- **Swirl and fronts:** tangled flow lines, and sudden temperature changes along the line, add soft sparkles.
+- A status line says the position, temperature, scale and mood as it goes. The trace stops where the flow lines fade out (land, or no decoded colour), at the map's edge, or after 40 seconds.
+
+How it works and its limits: `tools/make-flow-field.ps1` measures the direction of the lines in each 16-pixel tile of the frame (`flow_field.js`). The tracing follows those directions. **A flow line has an orientation but no arrow**, so the picture alone cannot say which way the water flows. The named currents use their well-known direction; a start you choose heads east unless you tick *Reverse direction*. The path follows the drawn lines at 2.8-degree tile resolution, so it is a sketch of the current, not a measured track, and traces can wander across a basin. The temperature is decoded from line colour (see below). The sheet-music strip does not show this mode.
 
 ## Accessibility features
 
