@@ -102,6 +102,17 @@ if (-not $StemDir) {
   $drums = @{ name = 'Drums'; ch = 9; prog = 0; events = $ev }
 
   $all = @($drone, $pad, $high, $lead, $drums)
+  # the notes themselves, for the scrolling sheet music in the app: [start beat, length in beats, MIDI pitch]
+  $noteJson = for ($i = 0; $i -lt 5; $i++) {
+    $open = @{}; $out = New-Object System.Collections.Generic.List[string]
+    foreach ($e in ($all[$i].events | Sort-Object { $_.t })) {
+      $hi = $e.b[0] -band 0xF0; $p = [int]$e.b[1]
+      if ($hi -eq 0x90 -and $e.b[2] -gt 0) { $open["$p/$($e.t)"] = $e.t; $open["last$p"] = $e.t }
+      elseif ($hi -eq 0x80) { $on = $open["last$p"]; $out.Add(('[{0},{1},{2}]' -f ([math]::Round($on / $PPQ, 3)), ([math]::Round(($e.t - $on + 10) / $PPQ, 3)), $p)) }
+    }
+    '  "' + $names[$i] + '": [' + ($out -join ',') + ']'
+  }
+  [IO.File]::WriteAllText((Join-Path $root 'score_notes.js'), "// Notes of the MuseScore composition (beat, length in beats, MIDI pitch), for the scrolling sheet music. Built by tools/make-score.ps1.`nwindow.SCORE_NOTES = {`n" + ($noteJson -join ",`n") + "`n};`n")
   $scoreDir = Join-Path $root 'music_scores'; New-Item -ItemType Directory -Force $scoreDir | Out-Null
   WriteMidi "$Work\EarthJukebox_5voice.mid" $all
   & $MuseScore -o (Join-Path $scoreDir 'EarthJukebox_5voice.mscz') "$Work\EarthJukebox_5voice.mid" | Out-Null

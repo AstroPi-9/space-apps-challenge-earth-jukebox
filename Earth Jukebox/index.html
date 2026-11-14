@@ -53,6 +53,9 @@
   .grad{height:22px;border-radius:6px;background:linear-gradient(90deg,#1f6bff,#18b8c8,#35d04a,#f0e030,#ff9a1f,#ff3b1f);margin:8px 0 4px;max-width:520px}
   .grad-l{display:flex;justify-content:space-between;max-width:520px;color:var(--muted);font-size:.9rem}
   button.secondary.tab[aria-pressed=true]{background:#ffd54a;color:#1a1400;border-color:#ffd54a}
+  #sheetWrap{margin:8px 0}
+  #sheet{display:block;width:100%;height:230px;background:#0f151c;border:1px solid var(--line);border-radius:10px}
+  #sheetNow{margin:4px 0 0;min-height:1.5em;font-size:.95rem}
   @media (prefers-reduced-motion:reduce){#playhead{box-shadow:none}}
 </style>
 </head>
@@ -74,6 +77,10 @@
       <div id="playhead"></div>
       <div id="cursor"></div>
     </div>
+    <section id="sheetWrap" aria-label="Scrolling sheet music: one staff for each voice">
+      <canvas id="sheet" aria-hidden="true"></canvas>
+      <p id="sheetNow" class="sub" aria-live="polite">Sheet music: every voice has its own staff. Notes scroll from right to left past the white line. Press play. A words-only version of what is playing appears here.</p>
+    </section>
     <p id="vcap" class="sub" style="display:none"></p>
     <div id="tlineWrap" style="display:none;margin:6px 0"><label>Time in the year <input id="tline" type="range" min="0" max="159" value="0" style="width:min(520px,70vw)"> <span id="tlineOut" aria-hidden="true"></span></label></div>
     <p id="help" class="sub">Click or tap the map to hear that spot. With a keyboard: arrow keys move (Shift = bigger steps), Home/End jump to the west/east edge, Enter replays the spot, Space plays or pauses.</p>
@@ -89,6 +96,7 @@
       <label><input id="speak" type="checkbox"> Spoken narration</label>
       <label>Spoken intro <select id="introLen" aria-label="Length of the spoken intro"><option value="short">Short</option><option value="full">Full</option></select></label>
       <label>Sound source <select id="source" aria-label="Sound source"><option value="live">Live synthesis (default)</option><option value="score">MuseScore composition, 5 instruments</option></select></label>
+      <label><input id="showSheet" type="checkbox" checked> Show sheet music</label>
       <label><input id="music" type="checkbox" checked> Composed music underneath</label>
       <label><input id="skipAnt" type="checkbox"> Skip the Antarctic drone</label>
       <label>Voice <select id="voice" aria-label="Narration voice"></select></label>
@@ -149,6 +157,8 @@
 <script src="year_grid.js"></script>
 <script src="music_data.js"></script>
 <script src="score_data.js"></script>
+<script src="score_notes.js"></script>
+<script src="sheet.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

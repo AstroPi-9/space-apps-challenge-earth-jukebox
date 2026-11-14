@@ -35,6 +35,7 @@ The five voices are generated live in the browser with the Web Audio API. Undern
 
 - **Spoken guided tour** (off by default; tick "Spoken narration"). It describes the image, explains how to listen, plays the sweep once with no talking over it, and stops. There is a **short** (about 20 seconds) and a **full** version of the intro, and a Skip button.
 - **Hear the instruments:** plays each voice alone with its label, so the mapping can be learned and checked. Each voice also has its own "Hear" button.
+- **Scrolling sheet music:** under the map, one staff for every voice (drone, chords, high voice, lead, drums) scrolls past a fixed line, in the key of D major (Mohanam uses D, E, F♯, A, B). The notes are the ones the app is actually playing (or, in MuseScore mode, the composition's notes, fainter when their data is quiet). Rhythm is shown by note shape and position, not full engraving. A words-only line under it says what is sounding now. It can be hidden with *Show sheet music*.
 - **Full keyboard use:** arrow keys explore the picture, Enter replays a spot, Space plays or pauses, Home and End jump to the edges.
 - **Text alternatives:** a full description of each picture, a live text readout of whatever you explore, and an optional description while playing.
 - **Per-voice mute** and a volume slider; an option to skip the Antarctic drone.
@@ -84,6 +85,7 @@ Each track's page section **Data and limits** gives its source, date, what the c
 |---|---|
 | `index.html`, `app.js` | The whole application. |
 | `music_data.js` | The composed music loops (12 mp3 files, base64), built by `tools/make-music.ps1` with MuseScore 4. The phrases were written by the AI assistant, not a human composer; the MS Basic sound font's licence has not been checked. |
+| `sheet.js`, `score_notes.js`, `score_data.js` | The scrolling sheet music; the notes of the MuseScore composition; the composition's five audio stems. |
 | `*_grid.js` | Precomputed sound grids for each track (`year_grid.js`, `grid.js` for aerosols, `sst_grid.js`, `sss_grid.js`, `density_grid.js`, `video_grid.js`, `ocean_grid.js`). |
 | `assets/` | Pictures, colour bars, the density video (`assets/video`) and 160 time-lapse frames (`assets/year`). |
 | `tools/` | Scripts that rebuild the grids from the source images (see below). |

@@ -443,6 +443,7 @@ function initAudio(ctxIn) {
 }
 // continuous-voice setters
 function pad(t, chord, gain, lp) {
+  if (gain > 0.001) chord.slice(0, 3).forEach(m => noteLog(1, t, m, 0.5));          // sheet music
   A.padOscs.forEach((o, i) => o.frequency.setTargetAtTime(mtof(chord[i]), t, 0.4));
   A.padGain.gain.setTargetAtTime(gain * A.padScale, t, 0.35); A.padLP.frequency.setTargetAtTime(lp * A.padMul, t, 0.3);
 }
@@ -492,6 +493,7 @@ const PLUCK = {                                       // partial = [multiple, st
   glass:   { parts: [[1, 1, 2.4], [2.7, 0.45, 1.1], [5.2, 0.18, 0.5]], reg: 74, click: 0 },
 };
 function pluck(kind, t, midi, gain, pan) {            // a plucked or struck tine, string or glass bell
+  noteLog(2, t, midi, 0.5);                           // sheet music
   const { ctx, bus, nb } = A, K = PLUCK[kind], f = mtof(midi), g = ctx.createGain(), p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
   g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.003);
   K.parts.forEach(([m, a, d]) => {
@@ -513,6 +515,7 @@ function lightArp(c, t, step, level, cenRow, rows) {  // a gentle rising arpeggi
 }
 function strongPlay(c, t, step, level, cenRow, rows) {
   const kind = T.instruments.strong;
+  if (kind !== 'gong' || c % 3 === 0) noteLog(2, t, kind === 'marimba' ? MARIM[latIdx(cenRow, rows, 8)] : kind === 'vibes' ? pluckMidi('harp', latIdx(cenRow, rows, 8)) : kind === 'gong' ? TIMP[latIdx(cenRow, rows, 8)] + 12 : TIMP[latIdx(cenRow, rows, 8)], step);   // sheet music
   if (kind === 'timpani') {                           // quiet roll, tuned to the latitude and gliding between columns
     const f = mtof(TIMP[latIdx(cenRow, rows, 8)]), n = Math.max(2, Math.round(step / 0.075)), from0 = timpFreq || f;
     for (let i = 0; i < n; i++) timpStrike(t + i * step / n, f, i === 0 ? from0 : f, (0.05 + 0.07 * level) * (0.85 + Math.random() * 0.3));
@@ -542,7 +545,9 @@ function texNote(t, level, r, rows) {                 // click-to-explore: a sho
     pluck(P.light, t, pluckMidi(P.light, b), 0.05 + 0.1 * level, 0); pluck(P.light, t + 0.18, pluckMidi(P.light, Math.min(11, b + 2)), 0.04 + 0.08 * level, 0);
   }
 }
-function drone(t, hz, gain) { A.d1.frequency.setTargetAtTime(hz, t, 0.2); A.d2.frequency.setTargetAtTime(hz * A.droneRatio, t, 0.2); A.droneGain.gain.setTargetAtTime(gain * 0.4 * A.droneScale, t, 0.4); }
+function drone(t, hz, gain) {
+  if (gain > 0.001) { const m = Math.round(69 + 12 * Math.log2(hz / 440)); noteLog(0, t, m, 0.6); noteLog(0, t, m + Math.round(12 * Math.log2(A.droneRatio)), 0.6); }   // sheet music
+  A.d1.frequency.setTargetAtTime(hz, t, 0.2); A.d2.frequency.setTargetAtTime(hz * A.droneRatio, t, 0.2); A.droneGain.gain.setTargetAtTime(gain * 0.4 * A.droneScale, t, 0.4); }
 // one-shots
 // ---- Bassoon with Carnatic gamakas (no vibrato LFO: all pitch movement is a shaped ornament) ----
 // semitone gap to the neighbouring Mohanam note below / above, by scale degree [Sa Ri Ga Pa Dha]
@@ -580,6 +585,7 @@ function getWave(name, h, ctx) {
   return (waveCache[name] = ctx.createPeriodicWave(real, imag));
 }
 function lead(t, midi, gain, pan, durIn) {
+  noteLog(3, t, midi, durIn || 1.4);                  // sheet music
   const { ctx, bus, nb } = A, name = T.instruments.lead, L = LEADS[name], f = mtof(midi), dur = durIn || 1.4;
   const deg = Math.max(0, MOHANAM.indexOf((((midi - 62) % 12) + 12) % 12));
   const type = deg === 0 ? (Math.random() < 0.3 ? 'jaru' : 'plain') : GAMAKA[deg];
@@ -723,7 +729,7 @@ function strike(t, g, comps) {
     }
   });
 }
-function hit(id, stroke, t, g) { const I = INSTR[id]; if (I && stroke) strike(t, g, STROKES[I.kit][stroke]); }
+function hit(id, stroke, t, g) { noteLog(4, t, 0, 0.12, stroke, id); const I = INSTR[id]; if (I && stroke) strike(t, g, STROKES[I.kit][stroke]); }
 
 // Data-driven rhythm. The stronger the data in the sweep beam, the faster the drums play, in four musical steps only:
 //   crotchets (1 per beat) -> quavers (2) -> semiquavers (4) -> demisemiquavers (8, rare).
@@ -930,14 +936,14 @@ async function startScore() {
     const g = ctx.createGain(); g.gain.value = 0;
     src.connect(lp); lp.connect(g); g.connect(out); src.start(t0); parts.push({ g, lp, norm: b[k].norm });
   }
-  a.score = { out, parts }; scoreFollow(Math.max(0, Math.floor(pos)));
+  a.score = { out, parts, t0 }; scoreFollow(Math.max(0, Math.floor(pos)));
 }
 function scoreFollow(c) {
   if (!A || !A.score || !A.score.parts) return; const t = A.ctx.currentTime, { tot } = colStats(c);
   A.score.parts.forEach((p, k) => {
     const lvl = k < 4 ? Math.min(1, tot[k] / V.rows * 4) : colRank(c);                 // same readings the meters show
     const on = meters[k] && meters[k].cb && !meters[k].cb.checked ? 0 : 1;             // the per-voice mute boxes still work
-    p.g.gain.setTargetAtTime(p.norm * on * lvl, t, 0.25);
+    p.lvl = on * lvl; p.g.gain.setTargetAtTime(p.norm * on * lvl, t, 0.25);
     if (k >= 1 && k <= 3) p.lp.frequency.setTargetAtTime(600 + 8400 * lvl, t, 0.25);   // more data, brighter tone
   });
 }
@@ -1341,6 +1347,7 @@ async function renderOffline(i, seconds, solo) {
   return { aw: +aw.toFixed(1), rms: +db(Math.sqrt(sum / (nw * win))).toFixed(1), active: aN ? +db(Math.sqrt(aSum / aN)).toFixed(1) : -120, peak: +db(peak).toFixed(1), activeShare: +(aN / nw).toFixed(2) };
 }
 
+window.EJ = { get A() { return A; }, get T() { return T; }, get playing() { return playing; }, scoreOn, INSTR };   // read-only view for the scrolling sheet music (sheet.js)
 if (location.search.includes("debug")) window.__jb = { TRACKS, musicBuffers, scoreBuffers, startMusic, setTrack, renderOffline, wake, colStats, get T() { return T; }, get V() { return V; }, get A() { return A; } };   // test hook, only with ?debug in the address
 setTrack(tabIndex('year') >= 0 ? tabIndex('year') : 0);
 })();
