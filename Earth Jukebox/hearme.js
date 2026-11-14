@@ -53,28 +53,50 @@
   }
   function parts() { const k = kind(); return k === 'home' ? homeParts() : k === 'sub' ? subParts() : k === 'settings' ? settingsParts() : dataParts(); }
 
-  function speakAll(list) {
-    if (!ok) return; SS.cancel(); const v = SS.getVoices().find(x => $('voice') && x.name === $('voice').value);
-    list.forEach(t => { const u = new SpeechSynthesisUtterance(t); if (v) u.voice = v; u.rate = 1; SS.speak(u); });
+  // ---- speaking, with checks: speech engines fail quietly, so we watch for the first word starting, retry once with the default voice, and otherwise say so ----
+  let gen = 0;
+  const caption = t => { const c = $('hearCaption'); if (c) c.textContent = t || ''; };
+  function failure(why) {
+    caption('');
+    const m = `Hear Me could not start speaking (${why}). Check that the sound is not muted, or choose another voice in Settings. The text of this screen is being shown below instead, so a screen reader can read it.`;
+    const f = $('hearFallback'); if (f) { f.hidden = false; f.textContent = m + ' ' + lastText; }
   }
-  function hear(extra) {
+  let lastText = '';
+  function speakList(list, useVoice, my) {
+    SS.resume(); const voices = SS.getVoices(), chosen = useVoice ? voices.find(x => $('voice') && x.name === $('voice').value) : null; let started = false;
+    list.forEach((t, i) => {
+      const u = new SpeechSynthesisUtterance(t); if (chosen) { u.voice = chosen; u.lang = chosen.lang; } else u.lang = 'en'; u.rate = 1;
+      u.onstart = () => { if (my !== gen) return; started = true; caption(t); };
+      u.onerror = e => { if (my !== gen || e.error === 'canceled' || e.error === 'interrupted') return; started = false; if (useVoice) { gen++; speakList(list, false, gen); } else failure(e.error || 'error'); };
+      if (i === list.length - 1) u.onend = () => { if (my === gen) caption(''); };
+      SS.speak(u);
+    });
+    setTimeout(() => { if (my !== gen || started) return; if (useVoice) { SS.cancel(); gen++; setTimeout(() => speakList(list, false, gen), 150); } else failure('nothing was spoken after 4 seconds'); }, useVoice ? 3500 : 4000);
+  }
+  function speakAll(list, now) {
+    if (!ok) return; gen++; const my = gen; lastText = list.join(' '); const f = $('hearFallback'); if (f) f.hidden = true;
+    const go = () => speakList(list, true, my);
+    if (SS.speaking || SS.pending) { SS.cancel(); setTimeout(() => { if (my === gen) go(); }, 160); } else go();       // a short pause after cancel: some browsers drop speech spoken straight after it
+  }
+  function hear(extra, now) {
     if (!on) return; try { if (window.EJ && window.EJ.playing && kind() === 'data') window.EJ.follow.pauseSweep(); } catch (e) {}
-    clearTimeout(timer); timer = setTimeout(() => speakAll((extra ? [extra] : []).concat(parts())), 350);
+    clearTimeout(timer); const list = (extra ? [extra] : []).concat(parts());
+    if (now) speakAll(list); else timer = setTimeout(() => speakAll(list), 350);                  // from a button press, speak at once (browsers want speech to start from the press)
   }
   function setOn(v) {
     on = v; btn.setAttribute('aria-pressed', String(on)); btn.classList.toggle('on', on); btn.innerHTML = on ? '🔊 Hear Me is on' : '🔊 Hear Me'; bar.hidden = !on;
-    if (on) { if (!ok) { btn.setAttribute('aria-pressed', 'false'); on = false; bar.hidden = true; $('jbLive').textContent = 'Sorry, this browser cannot speak. Please use a screen reader instead.'; return; } hear('Hear Me is on. I will describe each screen as you move around. Press H to hear a screen again.'); }
-    else { clearTimeout(timer); if (ok) { SS.cancel(); const u = new SpeechSynthesisUtterance('Hear Me is off.'); SS.speak(u); } }
+    if (on) { if (!ok) { btn.setAttribute('aria-pressed', 'false'); on = false; bar.hidden = true; $('jbLive').textContent = 'Sorry, this browser cannot speak. Please use a screen reader instead.'; return; } hear('Hear Me is on. I will describe each screen as you move around. Press H to hear a screen again.', true); }
+    else { clearTimeout(timer); gen++; caption(''); const f = $('hearFallback'); if (f) f.hidden = true; if (ok) { SS.cancel(); const u = new SpeechSynthesisUtterance('Hear Me is off.'); SS.speak(u); } }
   }
-  btn.addEventListener('click', () => { if (!on) setOn(true); else hear(); });             // first press turns it on; pressing again reads the screen once more
-  $('hearAgain').addEventListener('click', () => hear());
+  btn.addEventListener('click', () => { if (!on) setOn(true); else hear(null, true); });             // first press turns it on; pressing again reads the screen once more
+  $('hearAgain').addEventListener('click', () => hear(null, true));
   $('hearOff').addEventListener('click', () => setOn(false));
   document.addEventListener('keydown', e => {
     if (!on || e.ctrlKey || e.metaKey || e.altKey || (e.key !== 'h' && e.key !== 'H')) return; const t = e.target;
     if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && t.type !== 'checkbox' && t.type !== 'range') return;
-    e.preventDefault(); hear();
+    e.preventDefault(); hear(null, true);
   });
   window.addEventListener('ej-page', () => hear());                                          // the page changed: describe the new one
-  $('play').addEventListener('click', () => { if (on && SS) SS.cancel(); });                   // do not talk over the music
+  $('play').addEventListener('click', () => { if (on && SS) { gen++; SS.cancel(); caption(''); } });                   // do not talk over the music
   window.addEventListener('pagehide', () => { if (SS) SS.cancel(); });
 })();

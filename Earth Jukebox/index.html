@@ -220,6 +220,8 @@
   button.hear-me.on{background:linear-gradient(180deg,#d8ffb0,#6ed13a 55%,#3d9a16);box-shadow:0 0 0 3px #1f5a0a,0 0 22px 4px rgba(120,220,60,.75),0 8px 16px -4px rgba(0,0,0,.7);animation:none}
   @keyframes hearglow{50%{box-shadow:0 0 0 3px #7a4a0c,0 0 34px 10px rgba(255,200,60,.95),0 8px 16px -4px rgba(0,0,0,.7)}}
   .hear-bar{position:fixed;left:14px;bottom:14px;z-index:130;display:flex;flex-wrap:wrap;gap:10px;padding:10px 12px;border-radius:16px;border:3px solid #d9b25a;background:linear-gradient(180deg,#4a2810,#2d170a);box-shadow:0 0 0 4px #5a3d0c,0 14px 30px -8px #000}
+  .hear-caption{flex:1 1 100%;margin:4px 0 0;max-width:520px;font:italic .92rem Georgia,serif;color:#ffe9a6;line-height:1.35}
+  #hearFallback{font-style:normal;color:#ffd2c8;max-height:40vh;overflow:auto}
   @media (prefers-reduced-motion:reduce){button.hear-me{animation:none}}
 </style>
 </head>
@@ -286,7 +288,7 @@
           </div>
         </div>
 </section>
-<div id="hearBar" class="hear-bar" role="group" aria-label="Hear Me" hidden><button id="hearAgain" type="button">🔊 Hear this screen again (H)</button><button id="hearOff" type="button" class="secondary">Turn Hear Me off</button></div>
+<div id="hearBar" class="hear-bar" role="group" aria-label="Hear Me" hidden><button id="hearAgain" type="button">🔊 Hear this screen again (H)</button><button id="hearOff" type="button" class="secondary">Turn Hear Me off</button><p id="hearCaption" class="hear-caption" aria-hidden="true"></p><p id="hearFallback" class="hear-caption" role="status" aria-live="assertive" hidden></p></div>
 <div id="jbLive" class="sr-only" role="status" aria-live="polite"></div>
 <a class="skip" href="#controls">Skip to controls</a>
 <div class="wrap">
