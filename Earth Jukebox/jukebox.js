@@ -10,7 +10,7 @@
     sst: { code: 'B2', title: 'Sea temperature', icon: '🌡️', blurb: 'How warm is the surface of the ocean? Choose how to hear it.', items: [
       { track: 'sst', title: 'Still map', dsc: "NASA's sea surface temperature map, a long-term average. A beam sweeps from west to east." },
       { track: 'sstVideo', title: 'Turning globe', dsc: 'The same temperature field as a globe turning once in a minute. The sound follows the beam.' },
-      { track: 'sstEl', title: 'El Niño through the years', dsc: "The map with NASA's monthly temperature anomaly and NOAA's El Niño index, 1982 to today." } ] },
+      { track: 'sstEl', minor: true, title: 'El Niño through the years', dsc: "The map with NASA's monthly temperature anomaly and NOAA's El Niño index, 1982 to today." } ] },
     sss: { code: 'C1', title: 'Salinity', icon: '🧂', blurb: 'How salty is the surface of the ocean? Choose how to hear it.', items: [
       { track: 'sss', title: 'Still map', dsc: "NASA's sea surface salinity map, a long-term average. A beam sweeps from west to east." },
       { track: 'sssVideo', title: 'Turning globe', dsc: 'The same salinity field as a globe turning once in a minute. The sound follows the beam.' } ] },
@@ -77,7 +77,7 @@
     $('jbSubInner').innerHTML = `<div class="jb-cabinet">
       <div class="jb-top"><div class="jb-tube" aria-hidden="true"></div><p class="jb-title" role="heading" aria-level="1">${g.icon} ${esc(g.title)}</p><p class="jb-tag">Record ${g.code}</p></div>
       <section class="jb-card"><h2>Choose a version</h2><p>${esc(g.blurb)}</p></section>
-      <div class="jb-records" role="group" aria-label="Versions">${g.items.map((it, i) => `<button class="rec" type="button" data-track="${it.track}" aria-label="${g.code}, version ${i + 1}. ${esc(it.title)}. ${esc(it.dsc)}"><span class="knob" aria-hidden="true">${i + 1}</span><span class="card"><span class="ttl">${esc(it.title)}</span><span class="dsc">${esc(it.dsc)}</span></span></button>`).join('')}</div>
+      <div class="jb-records" role="group" aria-label="Versions">${g.items.map((it, i) => `<button class="rec${it.minor ? ' minor' : ''}" type="button" data-track="${it.track}" aria-label="${g.code}, version ${i + 1}. ${esc(it.title)}. ${esc(it.dsc)}"><span class="knob" aria-hidden="true">${i + 1}</span><span class="card"><span class="ttl">${esc(it.title)}</span><span class="dsc">${esc(it.dsc)}</span></span></button>`).join('')}</div>
       <div class="jb-foot"><span class="jb-prompt">Press a red button to choose a version.</span><button class="secondary" type="button" data-back="1">← All records</button></div>
     </div>`;
     $('jbSubInner').querySelectorAll('.rec').forEach(b => b.addEventListener('click', () => openRecord(b.dataset.track)));
