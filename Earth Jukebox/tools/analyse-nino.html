@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Analyse the El Nino anomaly video</title>
+<style>body{font:14px system-ui;background:#111;color:#eee;padding:16px} pre{white-space:pre-wrap}</style></head>
+<body>
+<h1>Analyse the El Niño sea surface temperature anomaly movie</h1>
+<p>NASA SVS 4695 (monthly sea surface temperature anomaly, 1982 to 2017). Reads the movie month by month, turns each colour into a temperature anomaly using NASA's colour bar (steps of 0.5 degrees C), sums it onto the app's 160 x 18 grid, and saves <code>elnino_grid.js</code>. Needs <code>tools\serve.ps1</code> (a page cannot read the pixels of a video opened from a file).</p>
+<button id="go">Run analysis</button> <a id="dl" style="display:none;color:#7cc4ff">Download elnino_grid.js</a>
+<pre id="log"></pre>
+<script src="../sst_grid.js"></script>
+<script src="../nino34_index.js"></script>
+<script>
+const COLS = 160, ROWS = 18, MONTHS = 432, SRC = '../assets/elnino/nino34.webm', W = 960, H = 540, Y0 = 5, Y1 = 485;   // the 2:1 map fills video rows 10 to 970 of 1080 (5 to 485 at this half size); the offset was fitted so the Nino 3.4 box follows NOAA's index best
+const SEC_PER_MONTH = 0.17685;                                            // the movie runs about 0.4712 years per second from January 1982 (read off the date labels)
+const log = m => { document.getElementById('log').textContent += m + '\n'; };
+const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+function hsv(r, g, b) { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); return [0, mx <= 0 ? 0 : (mx - mn) / mx, mx]; }
+async function getLut() {                                                 // 18 steps from -4.5 to +4.5 degrees C
+  const img = await load('../assets/elnino/sst_anomaly_cbar.png'), c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0); const lut = [];
+  for (let k = 0; k < 18; k++) { const x = Math.round(65 + (575 - 65) / 18 * (k + 0.5)), d = g.getImageData(x, 72, 1, 1).data; lut.push({ rgb: [d[0], d[1], d[2]], a: -4.25 + 0.5 * k }); }
+  return lut;
+}
+const inMask = (x, y) => (x < 0.435 * W && y > 341) || (y < 41 && x < 0.36 * W) || (x > 0.955 * W && x < 0.99 * W);       // NASA's timeline inset (lower left), the title and the latitude ruler at the right edge: no data there
+async function run() {
+  const lut = await getLut(); log('colour bar: ' + lut.map(l => l.rgb.join(',') + '=' + l.a).join('  '));
+  const v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.src = SRC;
+  await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error('video failed to load')); });
+  const dur = v.duration, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d', { willReadFrequently: true });
+  log(`video ${v.videoWidth}x${v.videoHeight}, ${dur.toFixed(1)} s`);
+  const seek = t => new Promise(r => { v.onseeked = r; v.currentTime = t; setTimeout(r, 4000); });
+  // 1. which longitude is the left edge? Compare the grey-land profile of the frame with the app's own SST map land.
+  const land = window.SST_GRID.land, sstProf = new Float64Array(COLS), vidProf = new Float64Array(COLS);
+  for (let c = 0; c < COLS; c++) { let s = 0; for (let r = 1; r < ROWS - 2; r++) s += land[r * COLS + c] / 255; sstProf[c] = s / (ROWS - 3); }
+  for (const t of [5, 25, 45]) {
+    await seek(t); g.drawImage(v, 0, 0, W, H); const d = g.getImageData(0, 0, W, H).data;
+    for (let c = 0; c < COLS; c++) { let s = 0, n = 0; for (let y = Math.round(Y0 + (Y1 - Y0) * 0.1); y < Math.round(Y0 + (Y1 - Y0) * 0.68); y += 2) for (let x = Math.round(c * W / COLS); x < Math.round((c + 1) * W / COLS); x++) { const k = (y * W + x) * 4, h = hsv(d[k], d[k + 1], d[k + 2]); n++; if (h[1] < 0.1 && h[2] > 0.3 && h[2] < 0.62) s++; } vidProf[c] += (n ? s / n : 0) / 3; }
+  }
+  let bestShift = 0, bestErr = 1e9;
+  for (let s = 0; s < COLS; s++) { let e = 0; for (let c = 0; c < COLS; c++) e += Math.abs(vidProf[(c + s) % COLS] - sstProf[c]); if (e < bestErr) { bestErr = e; bestShift = s; } }
+  log(`longitude shift: SST column c = video column (c + ${bestShift}) mod ${COLS}   (video left edge is at ${(-180 - bestShift * 2.25).toFixed(1)} degrees; error ${bestErr.toFixed(1)})`);
+  // 2. every month
+  const out = new Uint8Array(MONTHS * ROWS * COLS).fill(255), box = [];
+  const thr2 = 42 * 42, nino = [];
+  for (let m = 0; m < MONTHS; m++) {
+    await seek(Math.min(dur - 0.05, (m + 0.5) * SEC_PER_MONTH)); g.drawImage(v, 0, 0, W, H); const d = g.getImageData(0, 0, W, H).data;
+    const sum = new Float64Array(ROWS * COLS), cnt = new Float64Array(ROWS * COLS); let bs = 0, bn = 0;
+    for (let y = Y0; y < Y1; y++) {
+      const row = Math.min(ROWS - 1, Math.floor((y - Y0) / (Y1 - Y0) * ROWS));
+      for (let x = 0; x < W; x++) {
+        if (inMask(x, y)) continue; const k = (y * W + x) * 4, R = d[k], G = d[k + 1], B = d[k + 2], h = hsv(R, G, B);
+        if (h[1] < 0.07 && h[2] < 0.78) continue;                            // grey land
+        let best = 1e9, bi = 0; for (let j = 0; j < 18; j++) { const dr = R - lut[j].rgb[0], dg = G - lut[j].rgb[1], db = B - lut[j].rgb[2], dd = dr * dr + dg * dg + db * db; if (dd < best) { best = dd; bi = j; } }
+        if (best > thr2) continue;
+        const col = ((Math.floor(x / W * COLS) - bestShift) % COLS + COLS) % COLS;        // video column -> SST column
+        const idx = row * COLS + col; sum[idx] += lut[bi].a; cnt[idx]++;
+        const lon = -180 - bestShift * 2.25 + x / W * 360, lat = 90 - (y - Y0) / (Y1 - Y0) * 180, lw = ((lon + 180) % 360 + 360) % 360 - 180;
+        if (lw >= -170 && lw <= -120 && lat >= -5 && lat <= 5) { bs += lut[bi].a; bn++; }
+      }
+    }
+    for (let i = 0; i < ROWS * COLS; i++) if (cnt[i] >= 12) out[m * ROWS * COLS + i] = Math.max(0, Math.min(254, Math.round(sum[i] / cnt[i] * 10) + 100));
+    box.push(bn ? bs / bn : null);
+    if (m % 24 === 0) log(`month ${m}/${MONTHS}  ${1982 + Math.floor(m / 12)}-${String(m % 12 + 1).padStart(2, '0')}  Nino 3.4 box mean from the picture ${box[m] === null ? '-' : box[m].toFixed(2)}  (NOAA index ${window.NINO34.values[(1982 - 1948) * 12 + m]})`);
+  }
+  // 3. check against NOAA's index: how well does the picture's Nino 3.4 box follow the published numbers?
+  const xs = [], ys = []; for (let m = 0; m < MONTHS; m++) { const ix = window.NINO34.values[(1982 - 1948) * 12 + m]; if (box[m] !== null && ix !== null) { xs.push(box[m]); ys.push(ix); } }
+  const mean = a => a.reduce((p, q) => p + q, 0) / a.length, mx = mean(xs), my = mean(ys); let sxy = 0, sxx = 0, syy = 0; xs.forEach((x, i) => { sxy += (x - mx) * (ys[i] - my); sxx += (x - mx) ** 2; syy += (ys[i] - my) ** 2; });
+  log(`correlation of the picture's Nino 3.4 box with NOAA's index: r = ${(sxy / Math.sqrt(sxx * syy)).toFixed(3)} over ${xs.length} months`);
+  let b64 = ''; for (let i = 0; i < out.length; i += 8192) b64 += String.fromCharCode.apply(null, out.subarray(i, i + 8192));
+  const js = 'window.ELNINO = ' + JSON.stringify({ cols: COLS, rows: ROWS, months: MONTHS, start: 1982, shift: bestShift, note: 'uint8 per cell: (anomaly in degrees C x 10) + 100; 255 = no data', b64: btoa(b64) }) + ';';
+  const dl = document.getElementById('dl'); dl.href = URL.createObjectURL(new Blob([js], { type: 'text/javascript' })); dl.download = 'elnino_grid.js'; dl.style.display = 'inline';
+  try { const r = await fetch('/save/elnino_grid.js', { method: 'POST', body: js }); log(r.ok ? 'saved elnino_grid.js next to the app' : 'save failed: ' + r.status); } catch (e) { log('could not save automatically: ' + e.message); }
+  log('done'); window.__done = { shift: bestShift };
+}
+document.getElementById('go').onclick = () => run().catch(e => log('ERROR ' + e.message));
+if (location.search.includes('run=1')) document.getElementById('go').click();
+</script>
+</body></html>

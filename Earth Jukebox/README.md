@@ -72,6 +72,25 @@ On the Ocean currents track, a panel under the map lets you follow one current a
 
 How it works and its limits: `tools/make-flow-field.ps1` measures the direction of the lines in each 16-pixel tile of the frame (`flow_field.js`). The tracing follows those directions. **A flow line has an orientation but no arrow**, so the picture alone cannot say which way the water flows. The named currents use their well-known direction; a start you choose heads east unless you tick *Reverse direction*. The path follows the drawn lines at 2.8-degree tile resolution, so it is a sketch of the current, not a measured track, and traces can wander across a basin. The temperature is decoded from line colour (see below).
 
+## El Niño layer (an add-on for the Sea temperature track)
+
+The sea temperature map is a long-term average, so it cannot show warming or El Niño. This add-on brings in two real time series so the music can respond to **change from normal** (an anomaly):
+
+- **NASA SVS 4695**, monthly sea surface temperature anomaly maps, 1982 to 2017 (<https://svs.gsfc.nasa.gov/4695>).
+- **NOAA PSL Niño 3.4 index**, monthly numbers from 1948 to the latest published month (<https://psl.noaa.gov/data/correlation/nina34.anom.data>; page: <https://psl.noaa.gov/data/timeseries/month/Nino34_CPC/>). In the copy used, the last published value is +2.30 °C for October 2026, in the El Niño range (NOAA uses +0.5 °C as its threshold).
+
+Under the Sea temperature map, tick **Add the El Niño layer** and choose a month with the slider or one of the buttons (Dec 1982, Dec 1988, Dec 1997, Dec 2015, or the latest month).
+
+- **See:** the anomaly map is laid over the temperature map (red is warmer than normal, blue cooler). The temperature map is faded to grey so the anomaly stands out; *Hide the temperature map under it* shows the anomaly alone, and *Layer strength* sets how strong it is.
+- **Hear (the sweep):** press Play and the sweep also plays the anomaly under the beam. Warm anomalies are bright glass notes and cool ones are dull kalimba notes, with **pitch = the anomaly** (higher is warmer than normal). The mood is now set by the anomaly, not by the picture's ranking: sad where the water is warmer than normal, urgent where it is much warmer (about +2.5 °C and over), calm where it is near normal. The text under the sheet music says why.
+- **Hear (the years):** *Play the years* plays the Niño 3.4 index from the chosen month onward, one note for each three months (like NOAA's three-month Oceanic Niño Index), while the anomaly maps animate. El Niño (index at or above +0.5) turns the music sad, strong El Niño (about +1.5 and over) urgent, and La Niña (at or below -0.5) drops the pitch. There is a short chime when a phase begins. After 2017 there is no map, only the index.
+
+How it was made and its limits:
+- **Decoding:** NASA's movie was read month by month with `tools/analyse-nino.html`, turning each colour into an anomaly using NASA's colour bar (steps of 0.5 °C) and summing onto the app's 160 by 18 grid (`elnino_grid.js`). The picture's Niño 3.4 box follows NOAA's index closely (correlation 0.96 over 432 months), but its values run a few tenths of a degree larger in size, probably because the two use different baselines; I have not checked. **Do not compare the two sets of numbers directly.** The geometry (the movie's time axis and where the map sits in the frame) was fitted, not documented; it was checked against NOAA's index, not against the original data.
+- **Coarse:** rows are 10-degree latitude bands, and the lower-left corner and title of NASA's movie (their own timeline inset) have no data. The overlay leaves those areas uncovered.
+- **Raw numbers:** the NOAA table is used as published. The pages describing the index disagree on its version (ERSST v4, v5 or v6) and base period; check before quoting a value.
+- **What it does not do:** the temperature map under it is a fixed average, so the layer shows a chosen month, not a trend, and it says nothing about the effects of El Niño on weather. Nothing here has been listened to by anyone yet.
+
 ## Accessibility features
 
 - **Spoken guided tour** (off by default; tick "Spoken narration"). It describes the image, explains how to listen, plays the sweep once with no talking over it, and stops. There is a **short** (about 20 seconds) and a **full** version of the intro, and a Skip button.

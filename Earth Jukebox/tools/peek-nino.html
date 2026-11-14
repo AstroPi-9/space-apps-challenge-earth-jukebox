@@ -1,0 +1,4 @@
+<!doctype html><meta charset="utf-8"><title>Peek</title>
+<body style="margin:0;background:#222;color:#eee;font:14px system-ui">
+<video id="v" src="../assets/elnino/nino34.webm" muted style="width:1920px;height:1080px;display:block"></video>
+<script>const v=document.getElementById('v'); window.seek=t=>new Promise(r=>{v.onseeked=r; v.currentTime=t; setTimeout(r,3000);});</script>

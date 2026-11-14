@@ -425,11 +425,13 @@ function chordFor(k) {                                    // the pad chord for l
   if (SCALE.thirds) return [R, R + (SCALE.trb ? 3 : 4), R + 7];                 // Latin America: chords of major thirds, or minor thirds when troubled
   return n >= 7 ? [R, scNote(50, j + 2), scNote(50, j + 4)] : [R, scNote(50, j + 2), scNote(50, j + 3)];
 }
+const colMoodOverride = c => (window.EJ_elnino && window.EJ_elnino.active() && window.EJ_elnino.mood(c)) || null;
 function setScaleFor(c, r) {                              // choose the scale and mood for column c (and, when clicking, the region of row r)
   if (!regionsOn() || !V.emo) { SCALE = FIXED_SCALE; EMO.troubled = false; EMO.urgent = 0; EMO.concern = 0; return SCALE; }
-  const e = V.emo, reg = (r != null && !T.timeAxis && V.reg && V.reg[r * V.cols + c]) || e.reg[c], def = SCALES[reg] || SCALES.ocean, trb = !!e.tro[c], pick = trb ? def.sad : def.calm;
+  const e = V.emo, reg = (r != null && !T.timeAxis && V.reg && V.reg[r * V.cols + c]) || e.reg[c], def = SCALES[reg] || SCALES.ocean;
+  const ov = colMoodOverride(c), trb = ov ? ov.trb : !!e.tro[c], pick = trb ? def.sad : def.calm;     // the El Nino layer, when on, decides the mood from the anomaly
   SCALE = { deg: pick[1], name: pick[0], place: def.place, reg, thirds: !!def.thirds, trb };
-  EMO.troubled = trb; EMO.urgent = e.urg[c]; EMO.concern = e.con[c];
+  EMO.troubled = trb; EMO.urgent = ov ? ov.urg : e.urg[c]; EMO.concern = e.con[c];
   return SCALE;
 }
 function computeEmotion() {                               // per column: how troubled the data is, whether it is urgent, and which region's scale applies
@@ -917,6 +919,7 @@ function scheduler() {
     setScaleFor(nextCol);                                                          // scale and mood of this column (regional scale, calm or troubled)
     T.schedule(nextCol, nextTime, step, tot, cen, V);
     urgentFx(nextCol, nextTime, step);
+    if (window.EJ_elnino && window.EJ_elnino.active()) window.EJ_elnino.fx(nextCol, nextTime, step);        // El Nino layer: the anomaly under the beam
     queue.push({ c: nextCol, t: nextTime, step });
     nextCol++; nextTime += step;
   }
@@ -1155,7 +1158,7 @@ function updateMeters(c) {
   const sn = $('scaleNow');
   if (sn && V.emo) {
     if (!regionsOn()) sn.textContent = 'Scale: Mohanam everywhere (regional scales and emotion are off).';
-    else { const reg = V.emo.reg[c], d = SCALES[reg] || SCALES.ocean, trb = V.emo.tro[c], u = V.emo.urg[c]; sn.textContent = `Scale: ${(trb ? d.sad : d.calm)[0]}, for ${d.place}. Mood: ${u > 0.3 ? 'urgent, because the data is at its strongest and rising: something is wrong' : trb ? 'troubled and sad, because the data is strong' : 'calm and hopeful, because the data is light'}.`; }
+    else { const reg = V.emo.reg[c], d = SCALES[reg] || SCALES.ocean, ov = colMoodOverride(c), trb = ov ? ov.trb : V.emo.tro[c], u = ov ? ov.urg : V.emo.urg[c]; sn.textContent = ov ? `Scale: ${(trb ? d.sad : d.calm)[0]}, for ${d.place}. Mood (from the El Nino layer): ${ov.text}.` : `Scale: ${(trb ? d.sad : d.calm)[0]}, for ${d.place}. Mood: ${u > 0.3 ? 'urgent, because the data is at its strongest and rising: something is wrong' : trb ? 'troubled and sad, because the data is strong' : 'calm and hopeful, because the data is light'}.`; }
   }
   if (T.video) $('vcap').textContent = `Video time ${Math.round((c + 0.5) * T.grid.dur / V.cols)} s: the beam is at about ${fmtLon(lonOf(c))}`;
   if (T.timeAxis) { const d = dateLabel(T.grid.dates[c]); $('vcap').textContent = d; $('tlineOut').textContent = d; $('tline').setAttribute('aria-valuetext', d); }
