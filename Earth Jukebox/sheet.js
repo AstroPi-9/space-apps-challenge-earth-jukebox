@@ -5,9 +5,10 @@
 const EJP = () => !!(window.EJ && window.EJ.playing), EJA = () => (window.EJ ? window.EJ.A : null), EJT = () => (window.EJ ? window.EJ.T : null), EJS = () => !!(window.EJ && window.EJ.scoreOn()), EJ_INSTR = () => (window.EJ && window.EJ.INSTR) || {};   // app.js keeps its state private; it publishes these through window.EJ
 const SHEET = { notes: [], ctx: null, clef: [], drumSlot: {}, key: '', lastText: '', lastTextAt: 0, hiddenByUser: false };
 const SH = { ROW: 46, LEFT: 124, G: 4.4, PPS: 78, AHEAD: 0.3, COLORS: ['#e8765a', '#c79bf0', '#8fc1c1', '#7be860', '#ffd54a'], NAMES: ['Drone', 'Chords', 'High voice', 'Lead', 'Drums'] };
-const SH_STEP = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];                       // semitones above D -> step of the D major scale (D E F# G A B C#)
-const SH_PC = ['D', 'D', 'E', 'E', 'F sharp', 'G', 'G', 'A', 'A', 'B', 'B', 'C sharp'];
-const shDia = m => { const x = Math.round(m) - 62, o = Math.floor(x / 12); return 7 * o + SH_STEP[x - 12 * o]; };   // 0 = D4
+const SH_SPELL = [[0, ''], [1, 'b'], [1, ''], [2, 'n'], [2, ''], [3, ''], [4, 'b'], [4, ''], [5, 'b'], [5, ''], [6, 'n'], [6, '']];   // semitones above D -> [staff step in D major, accidental needed: b flat, n natural]
+const SH_PC = ['D', 'E flat', 'E', 'F', 'F sharp', 'G', 'A flat', 'A', 'B flat', 'B', 'C', 'C sharp'];
+const shDia = m => { const x = Math.round(m) - 62, o = Math.floor(x / 12); return 7 * o + SH_SPELL[x - 12 * o][0]; };   // 0 = D4
+const shAcc = m => { const x = Math.round(m) - 62; return SH_SPELL[x - 12 * Math.floor(x / 12)][1]; };
 const SH_BOTTOM = { treble: shDia(64), bass: shDia(43) };                    // bottom line: E4 (treble), G2 (bass)
 const shName = m => SH_PC[(((Math.round(m) - 62) % 12) + 12) % 12];
 
@@ -68,6 +69,8 @@ function shNote(c, x, y, n, bright, alpha, clefTop, clef) {
     c.beginPath(); c.moveTo(x - 3, y - 3); c.lineTo(x + 3, y + 3); c.moveTo(x + 3, y - 3); c.lineTo(x - 3, y + 3); c.stroke(); return;
   }
   const steps = (SH_BOTTOM[clef] === undefined) ? 0 : 0;                      // (ledger lines are drawn by the caller)
+  const acc = shAcc(n.m);
+  if (acc) { c.font = '13px "Segoe UI Symbol", serif'; c.textBaseline = 'middle'; c.fillText(acc === 'b' ? '♭' : '♮', x - 13, y); }
   const half = dur >= 1.0;
   if (dur > 0.6) { c.globalAlpha = alpha * 0.35; c.lineWidth = 2; c.beginPath(); c.moveTo(x + 4, y); c.lineTo(x + dur * SH.PPS, y); c.stroke(); c.globalAlpha = alpha; c.lineWidth = 1.4; }
   c.save(); c.translate(x, y); c.rotate(-0.35); c.beginPath(); c.ellipse(0, 0, 4.2, 2.9, 0, 0, Math.PI * 2);

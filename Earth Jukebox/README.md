@@ -22,7 +22,7 @@ Each track takes a NASA visualization, reads the colours in it as data, and play
 How the picture becomes sound:
 
 - **Left to right is time.** One sweep plays once and stops at the end. (In the Year track, the sweep runs through the year instead.)
-- **Top to bottom is latitude, and latitude is pitch.** North is high, south is low. Notes are snapped to the Carnatic raga **Mohanam** with Sa = D (D E F♯ A B), so the result is always consonant.
+- **Top to bottom is latitude, and latitude is pitch.** North is high, south is low. Notes are snapped to a scale, with the tonic always D. **The scale changes with the region the sweep is passing over**, and each region has a hopeful and a sad form (see *Scales and emotion* below). The Carnatic raga Mohanam is used for the open ocean and the Year track.
 - **Each kind of data has its own voice.** There are five voices per track: a drone, chords, a "high" voice (a quiet roll where the data is strong, a plucked or struck melody where it is light), a lead melody with gamakas (Carnatic ornaments, with no vibrato), and drums. Every track has a different set of instruments (for example, a French horn leads the Year track, a flute leads Sea temperature and an oboe leads Salinity).
 - **Drums are regional and follow the data.** Each region plays its own native drum (tabla, drum kit, darbuka, djembe, taiko, surdo and tamborim, bodhrán, daf, kendang, congas, clapsticks). The stronger the data under the sweep, the faster they play, in four musical steps only: crotchets, quavers, semiquavers and, rarely, demisemiquavers. A sudden jump in the data gets an accent. In the Year track, each latitude zone plays one drum instead.
 - **Click or tap the picture** to hear a single spot, with a description.
@@ -30,6 +30,33 @@ How the picture becomes sound:
 The five voices are generated live in the browser with the Web Audio API. Underneath them sits a **composed music layer**: for each track, two 16-second loops written for this project in Mohanam (a "bed" of chords and bass, sometimes with a harp, and a melody). They were rendered with MuseScore 4 (its bundled MS Basic sound font) and are stored as `music_data.js`. The bed stays steady and the melody comes forward where the data is strong. Untick **Composed music underneath** to hear only the live voices. `tools/make-music.ps1` rebuilds them.
 
 **Sound source: MuseScore composition (5 instruments).** An alternative to the live synthesis, chosen from the *Sound source* menu. One composition made for MuseScore (`music_scores/EarthJukebox_5voice.mscz`, editable) has five instruments that are the five voices: drone (cello), chords (strings), high voice (harp), lead (clarinet) and drums. The same five stems play for every track, and the data modulates them: each instrument is louder where its kind of data is stronger, the three upper voices open their tone with the data, and the drums follow the data strength. The live voices are off in this mode, and the spoken text and legend still describe the live instruments. `tools/make-score.ps1` rebuilds the score and `score_data.js`; to use your own edits, export five mp3 stems (one instrument each) named `drone`, `pad`, `high`, `lead`, `drums`, and run it with `-StemDir`.
+
+## Scales and emotion
+
+The music follows the data in two ways: **where** (the scale) and **how bad** (the mood). The tonic stays D, and the "Regional scales and emotion" box turns this on (default) or off (Mohanam everywhere, as before). The scale follows the same region as the drums.
+
+| Region (drum) | Hopeful form | Sad form |
+|---|---|---|
+| North America (drum kit) | Ionian (major) | Aeolian (natural minor) |
+| Central and South America (congas, surdo) | Lydian, chords with major thirds | Lydian with a minor third, chords with minor thirds |
+| Europe (bodhrán) | Mixolydian (a major Dorian) | Dorian |
+| Africa (djembe) | Aeolian dominant (a major Aeolian) | Aeolian |
+| Middle East and North Africa (darbuka) | Phrygian dominant (a major-third cousin of Locrian) | Locrian |
+| India (tabla) | Mayamalavagowla | Hanumatodi (minor-third form) |
+| East Asia (taiko) | Major pentatonic | Minor pentatonic |
+| Southeast Asia (kendang) | Slendro-like pentatonic | Pelog-like |
+| Russia and Central Asia (daf) | Dorian with a raised fourth | Hungarian minor |
+| Australia and Oceania (clapsticks) | Lydian dominant | Blues |
+| Open ocean, and the Year track | Mohanam | Hindolam |
+
+The Locrian family, Slendro-like and Pelog-like scales are approximations chosen for sound; they are not authentic tunings. The mapping of regions to scales is the author's artistic choice, not a claim about the music of those places.
+
+**Mood** comes from how strong the data is under the sweep (the same "data strength" the drums use, smoothed over a few columns):
+- **Calm and hopeful:** light data. The hopeful form of the scale.
+- **Troubled and sad:** strong data. The sad form of the scale, darker chords, and the lead sometimes adds a soft falling "sigh".
+- **Urgent:** the strongest data, or a sharp rise into strong data. A heartbeat on every beat and a tense, repeating figure (the tonic against the note a semitone above) are added.
+
+What "strong" means depends on the track (for example, lots of aerosol, or warm and swirling water), so it is a stand-in for "something is wrong", not a measure of harm. The text under the sheet music says the current scale and mood. The MuseScore composition options and the "composed music underneath" layer are **fixed pieces in Mohanam** and do not follow the data or the regions.
 
 ## Accessibility features
 

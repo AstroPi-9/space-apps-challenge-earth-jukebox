@@ -9,7 +9,7 @@ const stage = $('stage'), playhead = $('playhead'), cursorEl = $('cursor');
 // Shared sound design for the scalar ocean maps (temperature, salinity, density): low third = drone, middle = chords, high third = timpani roll or harp, fronts = bassoon.
 const SCALAR = {
   schedule(c, t, step, tot, cen, v) {
-    const chord = this.chords[Math.min(3, Math.floor(cen[1] / v.rows * 4))];
+    const chord = chordFor(Math.min(3, Math.floor(cen[1] / v.rows * 4)));
     pad(t, chord, Math.min(0.45, tot[1] * 0.1), 500 + Math.min(1, tot[1] / 4) * 1300);
     texture(c, t, step, Math.min(1, tot[2] / 3.5), cen[2], v.rows);
     drone(t, this.droneHz, Math.min(0.22, tot[0] * 0.06));
@@ -41,7 +41,7 @@ const TRACKS = [
     load: x => x[0] + x[1] + x[2] + x[3],                // data strength = total aerosol
     speech: {
       open: ["Welcome to the Earth Jukebox. This map shows aerosols, tiny particles floating in the atmosphere, across the whole world on August nineteenth, twenty twenty-five.", "Colour shows the type of particle. Lilac is desert dust, bright green is sulfate haze, grey-blue is sea salt, and orange is smoke from fires.", "First, here is what is happening in the image, from west to east."],
-      listen: ["Now, how to listen. The sweep will travel from west to east, so the sound moves across the map from the Pacific, over the Americas, the Atlantic, Africa and Asia.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from one musical scale.", "Green sulfate haze is played by a bassoon. The more haze, the busier the playing.", "Lilac dust is a warm, sustained chord. The thicker the dust, the louder it gets.", "Sea salt is a quiet timpani roll where it is strong, and a harp where it is light. Smoke from fires is a low hum with crackling.", "The drums follow the amount of aerosol. Each region plays its own drum, for example the tabla for India, the djembe for Africa, and the drum kit for North America. The more aerosol there is, the faster the drums play, and where there is very little, they fall silent.", "The sweep will now play once, from west to east, and then stop."],
+      listen: ["Now, how to listen. The sweep will travel from west to east, so the sound moves across the map from the Pacific, over the Americas, the Atlantic, Africa and Asia.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from a musical scale that changes with each region, from a hopeful form to a sad form where the data is strong.", "Green sulfate haze is played by a bassoon. The more haze, the busier the playing.", "Lilac dust is a warm, sustained chord. The thicker the dust, the louder it gets.", "Sea salt is a quiet timpani roll where it is strong, and a harp where it is light. Smoke from fires is a low hum with crackling.", "The drums follow the amount of aerosol. Each region plays its own drum, for example the tabla for India, the djembe for Africa, and the drum kit for North America. The more aerosol there is, the faster the drums play, and where there is very little, they fall silent.", "The sweep will now play once, from west to east, and then stop."],
     },
     hotspots: [
       { name: 'the Saharan dust plume crossing the Atlantic', lon: [-63, 69], lat: [12, 35], k: 1, say: -63, story: 'Dust from the Sahara travels across the Atlantic, and carries nutrients that help feed the Amazon rainforest.' },
@@ -56,7 +56,7 @@ const TRACKS = [
     legend: '<img class="legend" src="assets/aerosols_cbar.png" alt="Colour key: black carbon is orange-red, dust is lilac, sea salt is grey-teal, sulfate is bright green.">',
     how: [
       ['Left → right (longitude)', 'Time. One sweep of the globe is one piece.'],
-      ['Top → bottom (latitude)', 'Pitch. North is high, south is low. Notes snap to the Carnatic raga Mohanam (Sa = D: D E F# A B), so it always sounds consonant.'],
+      ['Top → bottom (latitude)', 'Pitch. North is high, south is low. Notes snap to a scale that changes with the region the sweep is over (the tonic is always D). Where the data is strong the scale turns to its sad form: for example Ionian becomes Aeolian over North America, and Mayamalavagowla becomes Hanumatodi over India.'],
       ['Brightness of a colour', 'Loudness and note density.'],
       ['Sulfate (green)', 'Bassoon notes, each ornamented with a gamaka (shake, slide or touch).'],
       ['Dust (lilac)', 'Warm sustained chords. The chord changes with latitude.'],
@@ -66,7 +66,7 @@ const TRACKS = [
       ['Ocean with little aerosol', 'Silence. Quiet is data too.'],
     ],
     schedule(c, t, step, tot, cen, v) {
-      const chord = this.chords[Math.min(3, Math.floor(cen[1] / v.rows * 4))];
+      const chord = chordFor(Math.min(3, Math.floor(cen[1] / v.rows * 4)));
       pad(t, chord, Math.min(0.5, tot[1] * 0.12), 500 + Math.min(1, tot[1] / 4) * 1500);
       texture(c, t, step, Math.min(1, tot[2] / 6), cen[2], v.rows);
       drone(t, this.droneHz, Math.min(0.2, tot[0] * 0.07));
@@ -100,7 +100,7 @@ const TRACKS = [
     describeValue: t => { const d = Math.round( 32 * t); return `Surface temperature about ${d} ${Math.abs(d) === 1 ? "degree" : "degrees"} Celsius.`; },
     speech: {
       open: ["Welcome to the Earth Jukebox. This map shows the ocean surface across the whole world on June nineteenth, two thousand and seven, from NASA's ECCO2 model. Each glowing line follows the flow of the water, so the lines are the currents.", "Colour shows sea surface temperature. Blue is cold, near zero degrees Celsius, then green, yellow, orange, and red, which is about thirty-two degrees.", "First, here is what is happening in the image, from west to east."],
-      listen: ["Now, how to listen. The sweep will travel from west to east, so the sound moves across the map from the Pacific, over the Americas, the Atlantic, Africa and Asia.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from one musical scale.", "The drums follow how warm and swirling the water is. Each region plays its own drum, for example the tabla for India, the djembe for Africa, and the drum kit for North America. The more heat and swirl under the sweep, the faster the drums play, and over cold, calm water they fall silent.", "The sweep will now play once, from west to east, and then stop."],
+      listen: ["Now, how to listen. The sweep will travel from west to east, so the sound moves across the map from the Pacific, over the Americas, the Atlantic, Africa and Asia.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from a musical scale that changes with each region, from a hopeful form to a sad form where the data is strong.", "The drums follow how warm and swirling the water is. Each region plays its own drum, for example the tabla for India, the djembe for Africa, and the drum kit for North America. The more heat and swirl under the sweep, the faster the drums play, and over cold, calm water they fall silent.", "The sweep will now play once, from west to east, and then stop."],
     },
     hotspots: [
       { name: 'near-freezing Arctic waters', lon: [-180, 180], lat: [70, 90], k: 0, say: -150, story: 'The Arctic is close to freezing, and much of its surface is covered by sea ice, so there is little to see here.' },
@@ -115,7 +115,7 @@ const TRACKS = [
     legend: '<img class="legend" src="assets/ocean_cbar.png" alt="Colour key: sea surface temperature from 0 degrees Celsius (blue) through green and yellow to 32 degrees (red).">',
     how: [
       ['Left → right (longitude)', 'Time. One sweep of the globe is one piece.'],
-      ['Top → bottom (latitude)', 'Pitch. North is high, south is low. Notes snap to the Carnatic raga Mohanam (Sa = D: D E F# A B).'],
+      ['Top → bottom (latitude)', 'Pitch. North is high, south is low. Notes snap to a scale that changes with the region the sweep is over, in its hopeful or sad form (the tonic is always D).'],
       ['Blue (cold water)', ''],
       ['Green and yellow (mild water)', ''],
       ['Orange and red (warm water)', ''],
@@ -145,7 +145,7 @@ const TRACKS = [
     describeValue: t => { const d = Math.round(32 * t); return `Surface temperature about ${d} ${Math.abs(d) === 1 ? 'degree' : 'degrees'} Celsius.`; },
     speech: {
       open: ["Welcome to the Earth Jukebox. This is a year of the ocean, from March two thousand and seven to March two thousand and eight, from NASA's ECCO2 model. Each glowing line follows the flow of the water, and the colour shows sea surface temperature.", "Blue is cold, near zero degrees Celsius, then green, yellow, orange, and red, which is about thirty-two degrees.", "First, here is what changes through the year."],
-      listen: ["Now, how to listen. This time the sweep travels through time, not across the map. The whole year plays from March to March, and at every moment you hear all of the longitudes at once.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from one musical scale. So you can hear each hemisphere warm and cool as the seasons turn.", "Northern water plays the taiko, the tropics play congas, and southern water plays the surdo. The warmer and more swirling the water, the faster the drums play.", "The year will now play once, and then stop."],
+      listen: ["Now, how to listen. This time the sweep travels through time, not across the map. The whole year plays from March to March, and at every moment you hear all of the longitudes at once.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from a musical scale that changes with each region, from a hopeful form to a sad form where the data is strong. So you can hear each hemisphere warm and cool as the seasons turn.", "Northern water plays the taiko, the tropics play congas, and southern water plays the surdo. The warmer and more swirling the water, the faster the drums play.", "The year will now play once, and then stop."],
     },
     hotspots: [
       { name: 'the cold northern mid-latitudes in spring', lon: [0, 10], lat: [30, 60], k: 1, say: 0, story: 'In March the northern mid-latitudes are close to their coldest, with surface water at only about ten degrees.' },
@@ -159,7 +159,7 @@ const TRACKS = [
     legend: '<img class="legend" src="assets/ocean_cbar.png" alt="Colour key: sea surface temperature from 0 degrees Celsius (blue) through green and yellow to 32 degrees (red).">',
     how: [
       ['Left → right (time)', 'Time. The sweep runs through one year, March 2007 to March 2008, so the season changes as it plays.'],
-      ['Top → bottom (latitude)', 'Pitch. North is high, south is low. Every latitude band is read across all longitudes. Notes snap to the Carnatic raga Mohanam (Sa = D: D E F# A B).'],
+      ['Top → bottom (latitude)', 'Pitch. North is high, south is low. Every latitude band is read across all longitudes. Notes snap to a scale that changes with the region the sweep is over, in its hopeful or sad form (the tonic is always D).'],
       ['Blue (cold water)', ''],
       ['Green and yellow (mild water)', ''],
       ['Orange and red (warm water)', ''],
@@ -196,11 +196,11 @@ const TRACKS = [
     ],
     speech: {
       open: ["Welcome to the Earth Jukebox. This map shows the average temperature of the ocean surface across the whole world.", "Colour shows the temperature. Dark blue is near freezing, then cyan, yellow, and red, which is about thirty degrees Celsius.", "First, here is what is happening in the image, from west to east."],
-      listen: ["Now, how to listen. The sweep will travel from west to east, so the sound moves across the map from the Pacific, over the Americas, the Atlantic, Africa and Asia.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from one musical scale.", "Cold water is a deep hum. Mild water makes gliding chords. Warm water adds a quiet timpani roll where it is strongest, and a harp where it is lighter.", "Sharp changes in temperature, which scientists call fronts, are played by a bassoon. The sharper the change, the busier the playing.", "The drums follow how warm and varied the water is. Each region plays its own drum, for example the tabla for India, the djembe for Africa, and the drum kit for North America. The more heat and change under the sweep, the faster the drums play, and over cold, even water they fall silent.", "The sweep will now play once, from west to east, and then stop."],
+      listen: ["Now, how to listen. The sweep will travel from west to east, so the sound moves across the map from the Pacific, over the Americas, the Atlantic, Africa and Asia.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from a musical scale that changes with each region, from a hopeful form to a sad form where the data is strong.", "Cold water is a deep hum. Mild water makes gliding chords. Warm water adds a quiet timpani roll where it is strongest, and a harp where it is lighter.", "Sharp changes in temperature, which scientists call fronts, are played by a bassoon. The sharper the change, the busier the playing.", "The drums follow how warm and varied the water is. Each region plays its own drum, for example the tabla for India, the djembe for Africa, and the drum kit for North America. The more heat and change under the sweep, the faster the drums play, and over cold, even water they fall silent.", "The sweep will now play once, from west to east, and then stop."],
     },
     how: [
       ['Left → right (longitude)', 'Time. One sweep of the globe is one piece.'],
-      ['Top → bottom (latitude)', 'Pitch. North is high, south is low. Notes snap to the Carnatic raga Mohanam (Sa = D: D E F# A B).'],
+      ['Top → bottom (latitude)', 'Pitch. North is high, south is low. Notes snap to a scale that changes with the region the sweep is over, in its hopeful or sad form (the tonic is always D).'],
       ['Dark blue (cold water)', 'A deep Sa-Pa drone.'],
       ['Cyan and green (mild water)', 'Gliding chords. The chord changes with latitude.'],
       ['Yellow and red (warm water)', 'A quiet timpani roll, tuned to the latitude, where the values are high, and a harp where they are lower.'],
@@ -236,11 +236,11 @@ const TRACKS = [
     ],
     speech: {
       open: ["Welcome to the Earth Jukebox. This map shows how salty the ocean surface is, across the whole world.", "Colour shows salinity. Dark teal is fresher water, and pale cyan and white are the saltiest.", "First, here is what is happening in the image, from west to east."],
-      listen: ["Now, how to listen. The sweep will travel from west to east, so the sound moves across the map from the Pacific, over the Americas, the Atlantic, Africa and Asia.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from one musical scale.", "Fresher water is a deep hum. Water of average salinity makes gliding chords. Salty water adds a quiet timpani roll where it is strongest, and a harp where it is lighter.", "Sharp changes in salinity, which scientists call fronts, are played by a bassoon. The sharper the change, the busier the playing.", "The drums follow how salty and varied the water is. Each region plays its own drum, for example the tabla for India, the djembe for Africa, and the drum kit for North America. The more salt and change under the sweep, the faster the drums play, and over fresh, even water they fall silent.", "The sweep will now play once, from west to east, and then stop."],
+      listen: ["Now, how to listen. The sweep will travel from west to east, so the sound moves across the map from the Pacific, over the Americas, the Atlantic, Africa and Asia.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from a musical scale that changes with each region, from a hopeful form to a sad form where the data is strong.", "Fresher water is a deep hum. Water of average salinity makes gliding chords. Salty water adds a quiet timpani roll where it is strongest, and a harp where it is lighter.", "Sharp changes in salinity, which scientists call fronts, are played by a bassoon. The sharper the change, the busier the playing.", "The drums follow how salty and varied the water is. Each region plays its own drum, for example the tabla for India, the djembe for Africa, and the drum kit for North America. The more salt and change under the sweep, the faster the drums play, and over fresh, even water they fall silent.", "The sweep will now play once, from west to east, and then stop."],
     },
     how: [
       ['Left → right (longitude)', 'Time. One sweep of the globe is one piece.'],
-      ['Top → bottom (latitude)', 'Pitch. North is high, south is low. Notes snap to the Carnatic raga Mohanam (Sa = D: D E F# A B).'],
+      ['Top → bottom (latitude)', 'Pitch. North is high, south is low. Notes snap to a scale that changes with the region the sweep is over, in its hopeful or sad form (the tonic is always D).'],
       ['Dark teal (fresher water)', 'A deep Sa-Pa drone.'],
       ['Mid teal (average salinity)', 'Gliding chords. The chord changes with latitude.'],
       ['Pale cyan and white (salty water)', 'A quiet timpani roll, tuned to the latitude, where the values are high, and a harp where they are lower.'],
@@ -273,11 +273,11 @@ const TRACKS = [
     ],
     speech: {
       open: ["Welcome to the Earth Jukebox. This map shows how dense the ocean surface water is, across the whole world. Density depends on both temperature and salt: cold, salty water is heavy, and warm, fresh water is light.", "Colour shows density. Pale blue is the lightest water, and dark navy and black are the densest.", "First, here is what is happening in the image, from west to east."],
-      listen: ["Now, how to listen. The sweep will travel from west to east, so the sound moves across the map from the Pacific, over the Americas, the Atlantic, Africa and Asia.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from one musical scale.", "Dense, heavy water is a deep hum. Medium-density water makes gliding chords. Light water adds a quiet timpani roll where it is strongest, and a harp where it is lighter.", "Sharp changes in density, which scientists call fronts, are played by a bassoon. The sharper the change, the busier the playing.", "The drums follow how dense and varied the water is. Each region plays its own drum, for example the tabla for India, the djembe for Africa, and the drum kit for North America. The more dense water and change under the sweep, the faster the drums play, and over light, even water they fall silent.", "The sweep will now play once, from west to east, and then stop."],
+      listen: ["Now, how to listen. The sweep will travel from west to east, so the sound moves across the map from the Pacific, over the Americas, the Atlantic, Africa and Asia.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from a musical scale that changes with each region, from a hopeful form to a sad form where the data is strong.", "Dense, heavy water is a deep hum. Medium-density water makes gliding chords. Light water adds a quiet timpani roll where it is strongest, and a harp where it is lighter.", "Sharp changes in density, which scientists call fronts, are played by a bassoon. The sharper the change, the busier the playing.", "The drums follow how dense and varied the water is. Each region plays its own drum, for example the tabla for India, the djembe for Africa, and the drum kit for North America. The more dense water and change under the sweep, the faster the drums play, and over light, even water they fall silent.", "The sweep will now play once, from west to east, and then stop."],
     },
     how: [
       ['Left → right (longitude)', 'Time. One sweep of the globe is one piece.'],
-      ['Top → bottom (latitude)', 'Pitch. North is high, south is low. Notes snap to the Carnatic raga Mohanam (Sa = D: D E F# A B).'],
+      ['Top → bottom (latitude)', 'Pitch. North is high, south is low. Notes snap to a scale that changes with the region the sweep is over, in its hopeful or sad form (the tonic is always D).'],
       ['Navy and black (dense water)', 'A deep Sa-Pa drone.'],
       ['Mid blue (medium density)', 'Gliding chords. The chord changes with latitude.'],
       ['Pale blue (light water)', 'A quiet timpani roll, tuned to the latitude, where the values are high, and a harp where they are lower.'],
@@ -299,7 +299,7 @@ if (window.DENSITY_VIDEO_GRID) TRACKS.push(Object.assign({}, TRACKS.find(t => t.
     open: ["Welcome to the Earth Jukebox. This is a video of the Earth turning once, about every minute, with the ocean coloured by the average density of its surface. Density depends on both temperature and salt: cold, salty water is heavy, and warm, fresh water is light.", "Pale blue is the lightest water, and dark navy and black are the densest. The land is shown as a satellite photo.", "First, here is what you will see as the globe turns, starting over the Americas."],
     listen: ["Now, how to listen. The beam is the line running down the middle of the globe. As the Earth turns, the sound follows whatever passes through that line, so it travels from the Americas eastward through the Atlantic, Africa, Asia and the Pacific.", ...TRACKS.find(t => t.id === 'density').speech.listen.slice(1, -1), "The video will now play once, as the globe turns a full circle, and then stop."],
   },
-  how: [['Video time', 'The globe turns once in 60 seconds. The sound follows the strip of ocean running down the middle of the globe, so it travels from the Americas eastward and around again.'], ...TRACKS.find(t => t.id === 'density').how.slice(1).map(r => r[0].startsWith('Top') ? ['Top → bottom (latitude)', 'Pitch. North is high, south is low. This is approximate, because the globe is tilted. Notes snap to the Carnatic raga Mohanam (Sa = D: D E F# A B).'] : r)],
+  how: [['Video time', 'The globe turns once in 60 seconds. The sound follows the strip of ocean running down the middle of the globe, so it travels from the Americas eastward and around again.'], ...TRACKS.find(t => t.id === 'density').how.slice(1).map(r => r[0].startsWith('Top') ? ['Top → bottom (latitude)', 'Pitch. North is high, south is low. This is approximate, because the globe is tilted. Notes snap to a scale that changes with the region the sweep is over, in its hopeful or sad form (the tonic is always D).'] : r)],
 }));
 
 
@@ -388,8 +388,66 @@ const fmtLat = l => Math.abs(Math.round(l)) + '°' + (l < 0 ? 'S' : 'N');
 const word = v => v > .66 ? 'strong' : v > .33 ? 'moderate' : 'faint';
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 const MOHANAM = [0, 2, 4, 7, 9];                 // Sa Ri2 Ga3 Pa Dha2 (Sa = D)
-const bellMidi = (T, r, v, up = 0) => { const L = T.instruments && LEADS[T.instruments.lead], root = L ? L.root : T.bellRoot, span = L ? L.span : 13; const i = Math.round((v.rows - 1 - r) / (v.rows - 1) * span) + up; return root + 12 * Math.floor(i / 5) + MOHANAM[i % 5]; };
-const lowMidi = (T, r, v) => { const i = Math.round((v.rows - 1 - r) / (v.rows - 1) * 9); return T.lowRoot + 12 * Math.floor(i / 5) + MOHANAM[i % 5]; };
+
+// ================= REGIONAL SCALES AND EMOTION =================
+// The tonic stays D everywhere, but the scale changes with the region the sweep is passing over, and each region has a hopeful ("calm")
+// and a troubled ("sad") form. Which form plays depends on the data: where the data is strong (lots of smoke, warm water ...) the music
+// turns to the troubled form, and where it is strongest and rising it becomes urgent (a heartbeat and a tense, repeating figure).
+// Keys are the drum-region ids (regionAt), so scales and drums always change together. 'ocean' is used for the Year track and the open sea.
+const SCALES = {
+  kit:        { place: 'North America',                     calm: ['Ionian (major)', [0, 2, 4, 5, 7, 9, 11]],               sad: ['Aeolian (natural minor)', [0, 2, 3, 5, 7, 8, 10]] },
+  conga:      { place: 'Central America and the Caribbean', calm: ['Lydian', [0, 2, 4, 6, 7, 9, 11]],                       sad: ['Lydian with a minor third', [0, 2, 3, 6, 7, 9, 11]], thirds: true },
+  samba:      { place: 'South America',                     calm: ['Lydian', [0, 2, 4, 6, 7, 9, 11]],                       sad: ['Lydian with a minor third', [0, 2, 3, 6, 7, 9, 11]], thirds: true },
+  bodhran:    { place: 'Europe',                            calm: ['Mixolydian (a major Dorian)', [0, 2, 4, 5, 7, 9, 10]],  sad: ['Dorian', [0, 2, 3, 5, 7, 9, 10]] },
+  djembe:     { place: 'Africa',                            calm: ['Aeolian dominant (a major Aeolian)', [0, 2, 4, 5, 7, 8, 10]], sad: ['Aeolian', [0, 2, 3, 5, 7, 8, 10]] },
+  darbuka:    { place: 'the Middle East and North Africa',  calm: ['Phrygian dominant (a major-third Locrian)', [0, 1, 4, 5, 7, 8, 10]], sad: ['Locrian', [0, 1, 3, 5, 6, 8, 10]] },
+  tabla:      { place: 'India',                             calm: ['Mayamalavagowla', [0, 1, 4, 5, 7, 8, 11]],              sad: ['Hanumatodi (the minor-third form)', [0, 1, 3, 5, 7, 8, 10]] },
+  taiko:      { place: 'East Asia',                         calm: ['Major pentatonic', [0, 2, 4, 7, 9]],                    sad: ['Minor pentatonic', [0, 3, 5, 7, 10]] },
+  kendang:    { place: 'Southeast Asia',                    calm: ['Slendro-like pentatonic', [0, 2, 5, 7, 9]],             sad: ['Pelog-like', [0, 1, 3, 7, 8]] },
+  daf:        { place: 'Russia and Central Asia',           calm: ['Dorian with a raised fourth', [0, 2, 3, 6, 7, 9, 10]],  sad: ['Hungarian minor', [0, 2, 3, 6, 7, 8, 11]] },
+  clapsticks: { place: 'Australia and Oceania',             calm: ['Lydian dominant', [0, 2, 4, 6, 7, 9, 10]],              sad: ['Blues', [0, 3, 5, 6, 7, 10]] },
+  ocean:      { place: 'the open ocean',                    calm: ['Mohanam', MOHANAM],                                     sad: ['Hindolam (the Carnatic minor pentatonic)', [0, 3, 5, 8, 10]] },
+};
+const FIXED_SCALE = { deg: MOHANAM, name: 'Mohanam', place: '', reg: 'ocean', thirds: false, trb: false };
+const mod = (a, n) => ((a % n) + n) % n;
+let SCALE = FIXED_SCALE;                                  // the scale of the column being scheduled (set by setScaleFor)
+const EMO = { troubled: false, urgent: 0, concern: 0 };
+const regionsOn = () => !$('emo') || $('emo').checked;
+const scNote = (root, i) => { const d = SCALE.deg, n = d.length; return root + 12 * Math.floor(i / n) + d[mod(i, n)]; };   // the i-th note of the current scale above the root
+const scSpan = base => Math.round(base * SCALE.deg.length / 5);       // a span written for a 5-note scale, stretched to cover the same octaves in this one
+const bellMidi = (T, r, v, up = 0) => { const L = T.instruments && LEADS[T.instruments.lead], root = L ? L.root : T.bellRoot, span = L ? L.span : 13; const i = Math.round((v.rows - 1 - r) / (v.rows - 1) * scSpan(span)) + up; return scNote(root, i); };
+const lowMidi = (T, r, v) => { const i = Math.round((v.rows - 1 - r) / (v.rows - 1) * scSpan(9)); return scNote(T.lowRoot, i); };
+function chordFor(k) {                                    // the pad chord for latitude band k (0..3), built on the current scale
+  const n = SCALE.deg.length, j = [0, 1, Math.round(n * 0.6), Math.round(n * 0.4)][k], R = scNote(50, j);
+  if (SCALE.thirds) return [R, R + (SCALE.trb ? 3 : 4), R + 7];                 // Latin America: chords of major thirds, or minor thirds when troubled
+  return n >= 7 ? [R, scNote(50, j + 2), scNote(50, j + 4)] : [R, scNote(50, j + 2), scNote(50, j + 3)];
+}
+function setScaleFor(c, r) {                              // choose the scale and mood for column c (and, when clicking, the region of row r)
+  if (!regionsOn() || !V.emo) { SCALE = FIXED_SCALE; EMO.troubled = false; EMO.urgent = 0; EMO.concern = 0; return SCALE; }
+  const e = V.emo, reg = (r != null && !T.timeAxis && V.reg && V.reg[r * V.cols + c]) || e.reg[c], def = SCALES[reg] || SCALES.ocean, trb = !!e.tro[c], pick = trb ? def.sad : def.calm;
+  SCALE = { deg: pick[1], name: pick[0], place: def.place, reg, thirds: !!def.thirds, trb };
+  EMO.troubled = trb; EMO.urgent = e.urg[c]; EMO.concern = e.con[c];
+  return SCALE;
+}
+function computeEmotion() {                               // per column: how troubled the data is, whether it is urgent, and which region's scale applies
+  const n = V.cols, con = new Float32Array(n), urg = new Float32Array(n), tro = [], reg = [], raw = [];
+  for (let c = 0; c < n; c++) raw.push(colRank(c));
+  for (let c = 0; c < n; c++) { let s = 0, k = 0; for (let d = -2; d <= 2; d++) { const x = raw[c + d]; if (x !== undefined) { s += x; k++; } } con[c] = s / k; }
+  let tr = false;
+  for (let c = 0; c < n; c++) {
+    if (!tr && con[c] >= 0.6) tr = true; else if (tr && con[c] < 0.5) tr = false; tro.push(tr);            // some hysteresis, so the mood does not flicker
+    const jump = c > 0 && colLoad[c] - colLoad[c - 1] > accentThr;
+    urg[c] = Math.max(Math.max(0, (con[c] - 0.8) / 0.2), tr && jump ? 0.55 : 0);
+  }
+  let prev = 'ocean';
+  for (let c = 0; c < n; c++) {
+    if (T.timeAxis) { reg.push('ocean'); continue; }
+    const w = {}; let best = null, bw = 0;
+    for (let d = -2; d <= 2; d++) { if (c + d < 0 || c + d >= n) continue; const id = speedOf(c + d) ? dominantRegion(c + d) : null; if (id) { w[id] = (w[id] || 0) + 1; if (w[id] > bw) { bw = w[id]; best = id; } } }
+    prev = best || prev; reg.push(prev);
+  }
+  V.emo = { con, urg, tro, reg };
+}
 
 // ================= AUDIO ENGINE =================
 // Per-voice level trim: timpani and harp (bus 2) a little under the rest, land percussion (bus 4) much louder.
@@ -445,14 +503,14 @@ function initAudio(ctxIn) {
 function pad(t, chord, gain, lp) {
   if (gain > 0.001) chord.slice(0, 3).forEach(m => noteLog(1, t, m, 0.5));          // sheet music
   A.padOscs.forEach((o, i) => o.frequency.setTargetAtTime(mtof(chord[i]), t, 0.4));
-  A.padGain.gain.setTargetAtTime(gain * A.padScale, t, 0.35); A.padLP.frequency.setTargetAtTime(lp * A.padMul, t, 0.3);
+  A.padGain.gain.setTargetAtTime(gain * A.padScale, t, 0.35); A.padLP.frequency.setTargetAtTime(lp * A.padMul * (EMO.troubled ? 0.7 : 1), t, 0.3);
 }
 // ---- The "high" voice (bus 2). Where the data is strong it plays a quiet rolled/struck instrument, where it is light a plucked or struck melody.
 //      Which instruments those are depends on the track: strong = timpani | marimba | vibes | gong, light = harp | celesta | kalimba | glass. ----
 const TIMP = [38, 40, 42, 45, 47, 50, 52, 54, 57];   // Mohanam notes (Sa = D) inside the timpani's range, D2 to A3
 const MARIM = [50, 52, 54, 57, 59, 62, 64, 66, 69];  // D3 to A4
 let timpFreq = null;                                  // where the drum is currently tuned, so the pitch glides from one column to the next
-const latIdx = (row, rows, top) => Math.round((rows - 1 - row) / (rows - 1) * top);          // north = high note
+const latIdx = (row, rows, top) => Math.round((rows - 1 - row) / (rows - 1) * scSpan(top));          // north = high note
 function timpStrike(t, f, from, gain) {               // one soft mallet stroke on a tuned drum head
   const { ctx, bus, nb } = A, g = ctx.createGain();
   g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
@@ -507,26 +565,26 @@ function pluck(kind, t, midi, gain, pan) {            // a plucked or struck tin
   }
   if (p) { p.pan.value = pan; g.connect(p); p.connect(bus[2]); } else g.connect(bus[2]);
 }
-const pluckMidi = (kind, i) => PLUCK[kind].reg + 12 * Math.floor(i / 5) + MOHANAM[i % 5];
+const pluckMidi = (kind, i) => scNote(PLUCK[kind].reg, i);
 function lightArp(c, t, step, level, cenRow, rows) {  // a gentle rising arpeggio in the scale, every other column
   if (c % 2) return;
   const kind = T.instruments.light, n = level < 0.2 ? 1 : level < 0.32 ? 2 : 3, base = latIdx(cenRow, rows, 9);
-  for (let k = 0; k < n; k++) pluck(kind, t + k * step * 0.6 / n, pluckMidi(kind, Math.min(11, base + k * 2)), 0.03 + 0.06 * level, (cenRow / (rows - 1) - 0.5) * 0.8);
+  for (let k = 0; k < n; k++) pluck(kind, t + k * step * 0.6 / n, pluckMidi(kind, Math.min(scSpan(11), base + k * 2)), 0.03 + 0.06 * level, (cenRow / (rows - 1) - 0.5) * 0.8);
 }
 function strongPlay(c, t, step, level, cenRow, rows) {
   const kind = T.instruments.strong;
-  if (kind !== 'gong' || c % 3 === 0) noteLog(2, t, kind === 'marimba' ? MARIM[latIdx(cenRow, rows, 8)] : kind === 'vibes' ? pluckMidi('harp', latIdx(cenRow, rows, 8)) : kind === 'gong' ? TIMP[latIdx(cenRow, rows, 8)] + 12 : TIMP[latIdx(cenRow, rows, 8)], step);   // sheet music
+  if (kind !== 'gong' || c % 3 === 0) noteLog(2, t, kind === 'marimba' ? scNote(50, latIdx(cenRow, rows, 8)) : kind === 'vibes' ? pluckMidi('harp', latIdx(cenRow, rows, 8)) : kind === 'gong' ? scNote(38, latIdx(cenRow, rows, 8)) + 12 : scNote(38, latIdx(cenRow, rows, 8)), step);   // sheet music
   if (kind === 'timpani') {                           // quiet roll, tuned to the latitude and gliding between columns
-    const f = mtof(TIMP[latIdx(cenRow, rows, 8)]), n = Math.max(2, Math.round(step / 0.075)), from0 = timpFreq || f;
+    const f = mtof(scNote(38, latIdx(cenRow, rows, 8))), n = Math.max(2, Math.round(step / 0.075)), from0 = timpFreq || f;
     for (let i = 0; i < n; i++) timpStrike(t + i * step / n, f, i === 0 ? from0 : f, (0.05 + 0.07 * level) * (0.85 + Math.random() * 0.3));
     timpFreq = f;
   } else if (kind === 'marimba') {                    // a soft mallet roll
-    const f = mtof(MARIM[latIdx(cenRow, rows, 8)]), n = Math.max(2, Math.round(step / 0.06));
+    const f = mtof(scNote(50, latIdx(cenRow, rows, 8))), n = Math.max(2, Math.round(step / 0.06));
     for (let i = 0; i < n; i++) barStrike(t + i * step / n, f, (0.05 + 0.08 * level) * (0.85 + Math.random() * 0.3), 0.5, false);
   } else if (kind === 'vibes') {                      // a gentle trill between two neighbouring scale notes
     const i0 = latIdx(cenRow, rows, 8), fa = mtof(pluckMidi('harp', i0)), fb = mtof(pluckMidi('harp', i0 + 1)), n = Math.max(2, Math.round(step / 0.11));
     for (let i = 0; i < n; i++) barStrike(t + i * step / n, i % 2 ? fb : fa, (0.04 + 0.07 * level) * (0.85 + Math.random() * 0.3), 1.4, true);
-  } else if (c % 3 === 0) gongSwell(t, mtof(TIMP[latIdx(cenRow, rows, 8)] + 12), 0.04 + 0.06 * level, true);   // gong: a slow swell every few columns
+  } else if (c % 3 === 0) gongSwell(t, mtof(scNote(38, latIdx(cenRow, rows, 8)) + 12), 0.04 + 0.06 * level, true);   // gong: a slow swell every few columns
 }
 function texture(c, t, step, level, cenRow, rows) {   // level 0..1: lots of data = the track's "strong" instrument, a little = its "light" one
   if (level < 0.06) return;
@@ -536,13 +594,13 @@ function texNote(t, level, r, rows) {                 // click-to-explore: a sho
   const P = T.instruments;
   if (level > 0.45) {
     const g = 0.05 + 0.07 * level;
-    if (P.strong === 'timpani') { const f = mtof(TIMP[latIdx(r, rows, 8)]); for (let i = 0; i < 6; i++) timpStrike(t + i * 0.075, f, f, g); }
-    else if (P.strong === 'marimba') { const f = mtof(MARIM[latIdx(r, rows, 8)]); for (let i = 0; i < 6; i++) barStrike(t + i * 0.06, f, g, 0.5, false); }
+    if (P.strong === 'timpani') { const f = mtof(scNote(38, latIdx(r, rows, 8))); for (let i = 0; i < 6; i++) timpStrike(t + i * 0.075, f, f, g); }
+    else if (P.strong === 'marimba') { const f = mtof(scNote(50, latIdx(r, rows, 8))); for (let i = 0; i < 6; i++) barStrike(t + i * 0.06, f, g, 0.5, false); }
     else if (P.strong === 'vibes') { const i0 = latIdx(r, rows, 8); for (let i = 0; i < 4; i++) barStrike(t + i * 0.11, mtof(pluckMidi('harp', i0 + (i % 2))), g, 1.4, true); }
-    else gongSwell(t, mtof(TIMP[latIdx(r, rows, 8)] + 12), g, false);
+    else gongSwell(t, mtof(scNote(38, latIdx(r, rows, 8)) + 12), g, false);
   } else {
     const b = latIdx(r, rows, 9);
-    pluck(P.light, t, pluckMidi(P.light, b), 0.05 + 0.1 * level, 0); pluck(P.light, t + 0.18, pluckMidi(P.light, Math.min(11, b + 2)), 0.04 + 0.08 * level, 0);
+    pluck(P.light, t, pluckMidi(P.light, b), 0.05 + 0.1 * level, 0); pluck(P.light, t + 0.18, pluckMidi(P.light, Math.min(scSpan(11), b + 2)), 0.04 + 0.08 * level, 0);
   }
 }
 function drone(t, hz, gain) {
@@ -554,16 +612,16 @@ function drone(t, hz, gain) {
 const GAP_BELOW = [3, 2, 2, 3, 2], GAP_ABOVE = [2, 2, 3, 2, 3];
 const GAMAKA = ['jaru', 'nokku', 'kampita', 'jaru', 'kampita'];    // default ornament per degree
 const smooth = u => u * u * (3 - 2 * u);
-function gamakaCurve(type, degree, dur) {
+function gamakaCurve(type, below, above, dur) {
   const N = 128, cents = new Float32Array(N); let gd;
   if (type === 'kampita') {                          // shake: oscillate down toward the note below and back
-    gd = Math.min(dur - 0.15, 0.95); const amp = GAP_BELOW[degree] * 100 * 0.85, hz = 5.2;
+    gd = Math.min(dur - 0.15, 0.95); const amp = below * 100 * 0.85, hz = 5.2;
     for (let i = 0; i < N; i++) { const u = i / (N - 1), env = Math.pow(Math.sin(Math.PI * u), 0.6); cents[i] = -amp * env * (0.5 - 0.5 * Math.cos(2 * Math.PI * hz * u * gd)); }
   } else if (type === 'jaru') {                      // slide: glide up into the note from the one below
-    gd = 0.24; const amp = GAP_BELOW[degree] * 100 * 0.95;
+    gd = 0.24; const amp = below * 100 * 0.95;
     for (let i = 0; i < N; i++) { const u = i / (N - 1); cents[i] = -amp * (1 - smooth(u)); }
   } else {                                           // nokku / spuritam: quick touch of the note above, then settle
-    gd = 0.32; const amp = GAP_ABOVE[degree] * 100 * 0.8;
+    gd = 0.32; const amp = above * 100 * 0.8;
     for (let i = 0; i < N; i++) { const u = i / (N - 1); cents[i] = amp * Math.pow(Math.sin(Math.PI * u), 2); }
   }
   return { cents, gd };
@@ -587,8 +645,9 @@ function getWave(name, h, ctx) {
 function lead(t, midi, gain, pan, durIn) {
   noteLog(3, t, midi, durIn || 1.4);                  // sheet music
   const { ctx, bus, nb } = A, name = T.instruments.lead, L = LEADS[name], f = mtof(midi), dur = durIn || 1.4;
-  const deg = Math.max(0, MOHANAM.indexOf((((midi - 62) % 12) + 12) % 12));
-  const type = deg === 0 ? (Math.random() < 0.3 ? 'jaru' : 'plain') : GAMAKA[deg];
+  const dg = SCALE.deg, nd = dg.length, di = Math.max(0, dg.indexOf(mod(midi - 62, 12)));       // position of this note in the current scale
+  const below = Math.max(1, dg[di] - (di ? dg[di - 1] : dg[nd - 1] - 12)), above = Math.max(1, (di < nd - 1 ? dg[di + 1] : dg[0] + 12) - dg[di]);   // semitone gaps to the neighbouring scale notes, for the gamaka
+  const type = di === 0 ? (Math.random() < 0.3 ? 'jaru' : 'plain') : GAMAKA[di % 5];
   const out = ctx.createGain();                      // breath or bow envelope: attack, steady air, release
   out.gain.setValueAtTime(0, t); out.gain.linearRampToValueAtTime(gain * 1.5, t + L.att);
   out.gain.setTargetAtTime(gain * 1.1, t + L.att, L.tc); out.gain.setTargetAtTime(0, t + dur - 0.25, L.rel);
@@ -598,7 +657,7 @@ function lead(t, midi, gain, pan, durIn) {
   L.fm.forEach(([fr, q, db]) => { const b = ctx.createBiquadFilter(); b.type = 'peaking'; b.frequency.value = fr; b.Q.value = q; b.gain.value = db; tail.connect(b); tail = b; });
   tail.connect(out);
   const stopAt = t + dur + 0.1, cs = ctx.createConstantSource(); cs.offset.value = 0;           // carries the gamaka (cents); there is no vibrato oscillator
-  if (type !== 'plain') { const { cents, gd } = gamakaCurve(type, deg, dur); cs.offset.setValueCurveAtTime(cents, t, gd); }
+  if (type !== 'plain') { const { cents, gd } = gamakaCurve(type, below, above, dur); cs.offset.setValueCurveAtTime(cents, t, gd); }
   const wave = getWave(name, L.h, ctx);
   (L.pair || [0]).forEach(dt => { const o = ctx.createOscillator(); o.setPeriodicWave(wave); o.frequency.value = f; o.detune.value = dt; cs.connect(o.detune); o.connect(lp); o.start(t); o.stop(stopAt); });
   cs.start(t); cs.stop(stopAt);
@@ -608,6 +667,9 @@ function lead(t, midi, gain, pan, durIn) {
   n.buffer = nb; n.loop = true; n.connect(nbp); nbp.connect(ng); ng.connect(out); n.start(t, Math.random()); n.stop(stopAt);
   const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
   if (p) { p.pan.value = pan; out.connect(p); p.connect(bus[3]); } else out.connect(bus[3]);
+  if (EMO.troubled && regionsOn() && !lead.sighing && dur > 1.0 && Math.random() < 0.45) {       // sadness: a soft falling sigh, one scale step below, in the middle of the note
+    lead.sighing = true; lead(t + dur * 0.5, midi - below, gain * 0.5, pan, 0.8); lead.sighing = false;
+  }
 }
 // ================= WORLD PERCUSSION =================
 // Each landmass plays its own native drum(s). Strokes are tiny synth recipes:
@@ -776,6 +838,30 @@ function drumPhrase(t, c, r) {                       // click-to-explore: a few 
   const gap = Math.max(0.09, CROTCHET / Math.min(sp.div, 4));
   [0, 1, 2, 3].forEach(i => hit(id, I.pat[i] || I.filler, t + i * gap, .3 + .3 * sp.rank));
 }
+// Urgency: where the data is at its strongest and rising, a heartbeat on every beat and a tense repeating figure (the tonic against the note a semitone above).
+function heartbeat(t, g) {
+  const { ctx, bus } = A;
+  [[0, 1], [0.2, 0.6]].forEach(([dt, a]) => {
+    const o = ctx.createOscillator(), og = ctx.createGain();
+    o.frequency.setValueAtTime(72, t + dt); o.frequency.exponentialRampToValueAtTime(38, t + dt + 0.14);
+    og.gain.setValueAtTime(g * a, t + dt); og.gain.exponentialRampToValueAtTime(0.001, t + dt + 0.2);
+    o.connect(og); og.connect(bus[0]); o.start(t + dt); o.stop(t + dt + 0.25);
+  });
+  noteLog(4, t, 0, 0.12, 'heartbeat', 'urgent');
+}
+function stab(t, midi, gain, dur) {
+  const { ctx, bus } = A, g = ctx.createGain(), lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.012); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  [-8, 8].forEach(d => { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = mtof(midi); o.detune.value = d; o.connect(lp); o.start(t); o.stop(t + dur + 0.05); });
+  lp.connect(g); g.connect(bus[1]); noteLog(1, t, midi, dur);
+}
+function urgentFx(c, t, step) {
+  const u = EMO.urgent; if (!A || u < 0.1 || !regionsOn()) return;
+  for (let k = Math.ceil((t - gridOrigin) / CROTCHET - 1e-6); gridOrigin + k * CROTCHET < t + step - 1e-6; k++) heartbeat(gridOrigin + k * CROTCHET, 0.3 + 0.45 * u);
+  if (u < 0.3) return;
+  const q = CROTCHET / 2, fig = [50, 50, 51, 50];
+  for (let k = Math.ceil((t - gridOrigin) / q - 1e-6); gridOrigin + k * q < t + step - 1e-6; k++) stab(gridOrigin + k * q, fig[mod(k, 4)], 0.03 + 0.05 * u, 0.2);
+}
 function crackle(t, gain) {
   const { ctx, bus, nb } = A, s = ctx.createBufferSource(), g = ctx.createGain(), hp = ctx.createBiquadFilter();
   s.buffer = nb; hp.type = 'highpass'; hp.frequency.value = 2500 + Math.random() * 3000;
@@ -813,7 +899,9 @@ function scheduler() {
   while (!sweepEnded && nextTime < ctx.currentTime + 0.3) {
     if (nextCol >= V.cols) { sweepEnded = true; sweepEndTime = nextTime; break; }   // the sweep plays once and stops at the east edge
     const { tot, cen } = colStats(nextCol);
+    setScaleFor(nextCol);                                                          // scale and mood of this column (regional scale, calm or troubled)
     T.schedule(nextCol, nextTime, step, tot, cen, V);
+    urgentFx(nextCol, nextTime, step);
     queue.push({ c: nextCol, t: nextTime, step });
     nextCol++; nextTime += step;
   }
@@ -988,6 +1076,11 @@ function drumsNowText(c) {
 }
 function updateMeters(c) {
   const { tot } = colStats(c), dn = $('drumNow'); if (dn) dn.textContent = drumsNowText(c);
+  const sn = $('scaleNow');
+  if (sn && V.emo) {
+    if (!regionsOn()) sn.textContent = 'Scale: Mohanam everywhere (regional scales and emotion are off).';
+    else { const reg = V.emo.reg[c], d = SCALES[reg] || SCALES.ocean, trb = V.emo.tro[c], u = V.emo.urg[c]; sn.textContent = `Scale: ${(trb ? d.sad : d.calm)[0]}, for ${d.place}. Mood: ${u > 0.3 ? 'urgent, because the data is at its strongest and rising: something is wrong' : trb ? 'troubled and sad, because the data is strong' : 'calm and hopeful, because the data is light'}.`; }
+  }
   if (T.video) $('vcap').textContent = `Video time ${Math.round((c + 0.5) * T.grid.dur / V.cols)} s: the beam is at about ${fmtLon(lonOf(c))}`;
   if (T.timeAxis) { const d = dateLabel(T.grid.dates[c]); $('vcap').textContent = d; $('tlineOut').textContent = d; $('tline').setAttribute('aria-valuetext', d); }
   tot.slice(0, 4).forEach((t, k) => { meters[k].bar.style.width = Math.min(100, t / V.rows * 400) + '%'; });
@@ -1113,6 +1206,7 @@ async function explore(c, r, jump) {
   showCursor(); setReadout(describeCell(cur.c, cur.r)); updateMeters(cur.c);
   if ($('speak').checked && !guiding) speak(describeCell(cur.c, cur.r), true);
   await wake();
+  setScaleFor(cur.c, cur.r);                       // a clicked spot plays in the scale and mood of its own region
   T.explore(cur.c, cur.r, V);
   if (!playing) sleepSoon(3500);                    // let the one-shot ring out, then go quiet
   if (jump || (T.timeAxis && !playing)) seek(cur.c);
@@ -1218,8 +1312,8 @@ async function demoVoice(k, tok) {
     if (T.id === 'aerosols') for (let i = 0; i < 8; i++) crackle(t + 0.2 + i * 0.35, 0.18);
     await dwait(3400); if (tok === demoTok) drone(A.ctx.currentTime, T.droneHz, 0);
   } else if (k === 1) {
-    demoLabel(`${sp[1].name}: ${sp[1].sound}.`, 1); pad(t, T.chords[0], 0.4, 1400); await dwait(1700); if (tok !== demoTok) return;
-    pad(A.ctx.currentTime, T.chords[2], 0.4, 1400); await dwait(1700); if (tok === demoTok) pad(A.ctx.currentTime, T.chords[2], 0, 1000);
+    demoLabel(`${sp[1].name}: ${sp[1].sound}.`, 1); pad(t, chordFor(0), 0.4, 1400); await dwait(1700); if (tok !== demoTok) return;
+    pad(A.ctx.currentTime, chordFor(2), 0.4, 1400); await dwait(1700); if (tok === demoTok) pad(A.ctx.currentTime, chordFor(2), 0, 1000);
   } else if (k === 2) {
     demoLabel(`${sp[2].name}, where it is strong: ${STRONG_NAME[P.strong]}.`, 2);
     for (let i = 0; i < 10; i++) strongPlay(i * 3, t + i * 0.25, 0.25, 0.8, mid, rows);
@@ -1288,7 +1382,7 @@ function buildVoices() {
 }
 function setTrack(i) {
   if (playing) pause(); stopSpeech(); lastNarrCol = -1;
-  T = TRACKS[i]; V = mkView(T.grid); computeRegions(); computeDrumModel(); lastInstr = null; pos = 0; cur = null; queue = []; lastSpoken = '';
+  T = TRACKS[i]; V = mkView(T.grid); computeRegions(); computeDrumModel(); computeEmotion(); lastInstr = null; pos = 0; cur = null; queue = []; lastSpoken = '';
   const vid = $('vid');
   if (T.video) { $('map').style.display = 'none'; vid.style.display = 'block'; vid.setAttribute('aria-label', T.alt); vid.src = T.video; $('vcap').style.display = 'block'; $('vcap').textContent = ''; }
   else { vid.pause(); vid.removeAttribute('src'); vid.load(); vid.style.display = 'none'; $('vcap').style.display = 'none'; $('map').style.display = 'block'; $('map').src = T.image; $('map').alt = T.alt; }
