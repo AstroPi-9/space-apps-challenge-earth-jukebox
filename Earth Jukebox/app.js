@@ -412,7 +412,8 @@ function initAudio(ctxIn) {
   const gate = ctx.createGain(); gate.gain.value = 1;          // hard mute switch, separate from the volume slider
   const limiter = ctx.createDynamicsCompressor(); limiter.threshold.value = -9; limiter.knee.value = 0; limiter.ratio.value = 20; limiter.attack.value = 0.003; limiter.release.value = 0.15;   // catches drum peaks so nothing clips
   dry.connect(comp); wet.connect(comp); comp.connect(limiter); limiter.connect(gate); gate.connect(master); master.connect(ctx.destination);
-  const bus = [0, 1, 2, 3, 4].map(k => { const g = ctx.createGain(); g.gain.value = meters[k] && !meters[k].cb.checked ? 0 : busGain(k); g.connect(mix); return g; });
+  const live = ctx.createGain(); live.gain.value = 1; live.connect(mix);          // all live voices pass through here; the MuseScore-composition source turns it down while it plays
+  const bus = [0, 1, 2, 3, 4].map(k => { const g = ctx.createGain(); g.gain.value = meters[k] && !meters[k].cb.checked ? 0 : busGain(k); g.connect(live); return g; });
   const nb = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), nd = nb.getChannelData(0);
   for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
 
@@ -436,7 +437,7 @@ function initAudio(ctxIn) {
   const droneLP = ctx.createBiquadFilter(); droneLP.type = 'lowpass'; droneLP.frequency.value = 3000;
   d1.connect(droneLP); d2.connect(droneLP); droneLP.connect(droneGain); droneGain.connect(bus[0]); d1.start(); d2.start();
 
-  A = { ctx, master, gate, mix, music: null, bus, nb, padGain, padOscs, padLP, pf1, pf2, saltGain, saltBP, droneGain, droneLP, d1, d2, padMul: 1, padScale: 1, droneRatio: 1.5, droneScale: 1 };
+  A = { ctx, master, gate, mix, live, music: null, score: null, bus, nb, padGain, padOscs, padLP, pf1, pf2, saltGain, saltBP, droneGain, droneLP, d1, d2, padMul: 1, padScale: 1, droneRatio: 1.5, droneScale: 1 };
   applyPalette();
   return A;
 }
@@ -836,7 +837,7 @@ async function play() {
   if (SPEECH && $('speak').checked && pos < 1.5) { const ok = await runGuide(); if (!ok) return; }   // spoken overview + listening guide first
   clearInterval(timer); playing = true; sweepEnded = false; timpFreq = null; nextTime = A.ctx.currentTime + 0.1; gridOrigin = nextTime; nextCol = Math.floor(pos); if (nextCol >= V.cols) nextCol = 0; queue = [];
   timer = setInterval(scheduler, 50); scheduler();
-  startVideo(); startMusic();
+  startVideo(); if (scoreOn()) startScore(); else { A.live.gain.value = 1; startMusic(); }
   $('play').textContent = '⏸ Pause'; $('play').setAttribute('aria-pressed', 'true');
   playhead.style.display = 'block'; requestAnimationFrame(frame);
 }
@@ -864,7 +865,7 @@ async function musicBuffers(ctx, id) {
   return out;
 }
 async function startMusic() {
-  if (!A || !$('music').checked || A.music) return;
+  if (!A || !$('music').checked || A.music || scoreOn()) return;
   const a = A, ctx = a.ctx; a.music = { starting: true };
   let b = null; try { b = await musicBuffers(ctx, T.id); } catch (e) {}
   if (!b || A !== a || !playing) { if (A === a) a.music = null; return; }
@@ -887,7 +888,59 @@ $('music').addEventListener('change', () => {
   if (!$('music').checked) fadeMusic(0.1);
   else if (playing) { if (A.music && A.music.out) A.music.out.gain.setTargetAtTime(1, A.ctx.currentTime, 0.3); else startMusic(); }
 });
-function fadeMusic(tc) { if (A && A.music && A.music.out) A.music.out.gain.setTargetAtTime(0, A.ctx.currentTime, tc); }
+function fadeMusic(tc) {
+  if (!A) return; const t = A.ctx.currentTime;
+  if (A.music && A.music.out) A.music.out.gain.setTargetAtTime(0, t, tc);
+  if (A.score && A.score.out) A.score.out.gain.setTargetAtTime(0, t, tc);
+}
+
+// ================= SOUND SOURCE: MUSESCORE COMPOSITION (5 instruments) =================
+// An alternative to the live synthesis. One composition (made in MuseScore, editable: music_scores/EarthJukebox_5voice.mscz) has five
+// instruments, which are the five voices of the app: drone, chords, high voice, lead melody and drums. The same five stems play for every
+// track, and the data modulates them: each instrument gets louder where its kind of data is stronger (and, for the three upper voices,
+// its tone opens up), and the drums follow the data strength rank. The live voices are muted while this plays.
+const SCORE = { buf: null, loop: 32, lead: 0.075, names: ['drone', 'pad', 'high', 'lead', 'drums'], rms: [0.03, 0.028, 0.022, 0.03, 0.03] };
+const scoreOn = () => $('source').value === 'score' && !!window.SCORE_B64;
+$('source').addEventListener('change', () => {                    // the source is chosen at the start of a sweep: stop, and say what will play next
+  const s = scoreOn(); $('music').disabled = s; if (playing) pause();
+  setReadout(s ? 'Sound source: the MuseScore composition. Press play: its five instruments rise and fall with the data. The live voices are off.' : 'Sound source: live synthesis. Press play.');
+});
+async function scoreBuffers(ctx) {
+  if (SCORE.buf) return SCORE.buf;
+  const out = [];
+  for (let k = 0; k < 5; k++) {
+    const bin = atob(window.SCORE_B64[SCORE.names[k]]), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    const buf = await ctx.decodeAudioData(u.buffer);
+    let s = 0, n = 0; const end = Math.min(buf.length, Math.floor(SCORE.loop * buf.sampleRate));
+    for (let ch = 0; ch < buf.numberOfChannels; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < end; i++) { s += d[i] * d[i]; n++; } }
+    out.push({ buf, norm: Math.min(10, SCORE.rms[k] / (Math.sqrt(s / Math.max(1, n)) || 1e-4)) });      // each instrument at its own target loudness at full data
+  }
+  return (SCORE.buf = out);
+}
+async function startScore() {
+  if (!A || A.score) return;
+  const a = A, ctx = a.ctx; a.live.gain.value = 0; a.score = { starting: true };
+  let b = null; try { b = await scoreBuffers(ctx); } catch (e) {}
+  if (!b || A !== a || !playing) { if (A === a) { a.score = null; if (!b) a.live.gain.value = 1; } return; }
+  const out = ctx.createGain(); out.gain.value = 0; out.connect(a.mix); out.gain.setTargetAtTime(1, ctx.currentTime, 0.4);
+  const t0 = ctx.currentTime + 0.05, parts = [];
+  for (let k = 0; k < 5; k++) {
+    const src = ctx.createBufferSource(); src.buffer = b[k].buf; src.loop = true; src.loopStart = SCORE.lead; src.loopEnd = Math.min(SCORE.lead + SCORE.loop, b[k].buf.duration);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 9000;
+    const g = ctx.createGain(); g.gain.value = 0;
+    src.connect(lp); lp.connect(g); g.connect(out); src.start(t0); parts.push({ g, lp, norm: b[k].norm });
+  }
+  a.score = { out, parts }; scoreFollow(Math.max(0, Math.floor(pos)));
+}
+function scoreFollow(c) {
+  if (!A || !A.score || !A.score.parts) return; const t = A.ctx.currentTime, { tot } = colStats(c);
+  A.score.parts.forEach((p, k) => {
+    const lvl = k < 4 ? Math.min(1, tot[k] / V.rows * 4) : colRank(c);                 // same readings the meters show
+    const on = meters[k] && meters[k].cb && !meters[k].cb.checked ? 0 : 1;             // the per-voice mute boxes still work
+    p.g.gain.setTargetAtTime(p.norm * on * lvl, t, 0.25);
+    if (k >= 1 && k <= 3) p.lp.frequency.setTargetAtTime(600 + 8400 * lvl, t, 0.25);   // more data, brighter tone
+  });
+}
 function startVideo() {                                // start the movie at the sweep's position
   if (!T.video) return; const vid = $('vid'); vid.currentTime = pos / V.cols * T.grid.dur;
   vid.play().then(() => { if (!playing) vid.pause(); }).catch(() => {});      // if Pause was pressed while the movie was starting, stop it again
@@ -918,7 +971,7 @@ function frame() {
   if (queue.length && queue[0].t <= now) {
     const q = queue[0]; pos = (q.c + Math.min(1, (now - q.t) / q.step)) % V.cols;
     if (T.video) { const tgt = pos / V.cols * T.grid.dur, vid = $('vid'); if (Math.abs(vid.currentTime - tgt) > 0.3) vid.currentTime = tgt; if (vid.paused) vid.play().catch(() => {}); }   // keep the picture in step with the sound
-    setHead(pos); updateMeters(q.c); musicFollow(q.c);
+    setHead(pos); updateMeters(q.c); musicFollow(q.c); scoreFollow(q.c);
     if (q.c !== lastNarrCol) { lastNarrCol = q.c; if ($('narrate').checked) narrateTour(q.c); }
   }
   requestAnimationFrame(frame);
@@ -1288,6 +1341,6 @@ async function renderOffline(i, seconds, solo) {
   return { aw: +aw.toFixed(1), rms: +db(Math.sqrt(sum / (nw * win))).toFixed(1), active: aN ? +db(Math.sqrt(aSum / aN)).toFixed(1) : -120, peak: +db(peak).toFixed(1), activeShare: +(aN / nw).toFixed(2) };
 }
 
-if (location.search.includes("debug")) window.__jb = { TRACKS, musicBuffers, startMusic, setTrack, renderOffline, wake, colStats, get T() { return T; }, get V() { return V; }, get A() { return A; } };   // test hook, only with ?debug in the address
+if (location.search.includes("debug")) window.__jb = { TRACKS, musicBuffers, scoreBuffers, startMusic, setTrack, renderOffline, wake, colStats, get T() { return T; }, get V() { return V; }, get A() { return A; } };   // test hook, only with ?debug in the address
 setTrack(tabIndex('year') >= 0 ? tabIndex('year') : 0);
 })();

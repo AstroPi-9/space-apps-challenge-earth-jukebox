@@ -53,6 +53,10 @@ The live synthesis is precise but sounds synthetic, so real-instrument loops wer
 - At load time each stem is normalised to the same loudness, so the result does not depend on what MuseScore rendered. While playing, the bed swells a little and the melody comes forward where the data is strong.
 - Checked: all 12 files decode, loop without a click (the 0.075 s of silence the mp3 encoder adds is skipped), start with the sweep and are destroyed on pause. **Not checked by ear.** Whether the loops fit with the live voices, and whether they make the mix too busy, is untested.
 
+## MuseScore composition as the sound source
+
+The author's intent was for a MuseScore score to supply the voices themselves, not sit under the live ones. So there is a second, optional source (the default is unchanged). One 16-bar score in Mohanam (Sa = D, 120 bpm) has five instruments, one per voice. Each is rendered to its own stem, and the app loops all five and sets each stem's loudness from the same data reading the voice meters show (drums from the data-strength rank); the three upper voices also get a brighter tone as their data grows. Checked: it loads and plays, the stems follow the data, pause ends it, and switching back to live restores the original behaviour. **Not checked by ear.** Limits: the same composition is used for every track, so tracks differ only by what the data does to it; the narration and legend still name the live instruments.
+
 ## Mistakes found and fixed
 
 - **The ocean colours were misread as current speed.** The first Ocean currents track treated blue to red as slow to fast. NASA's documentation (and the team's earlier analysis) says the colour is **sea surface temperature** and the lines show the currents. The track was rebuilt: temperature decoded from the colour bar, and "swirl" measured from the geometry of the flow lines. Every claim about "fast currents" was removed. That track is now hidden, because the Year track covers the same data and adds time.

@@ -29,6 +29,8 @@ How the picture becomes sound:
 
 The five voices are generated live in the browser with the Web Audio API. Underneath them sits a **composed music layer**: for each track, two 16-second loops written for this project in Mohanam (a "bed" of chords and bass, sometimes with a harp, and a melody). They were rendered with MuseScore 4 (its bundled MS Basic sound font) and are stored as `music_data.js`. The bed stays steady and the melody comes forward where the data is strong. Untick **Composed music underneath** to hear only the live voices. `tools/make-music.ps1` rebuilds them.
 
+**Sound source: MuseScore composition (5 instruments).** An alternative to the live synthesis, chosen from the *Sound source* menu. One composition made for MuseScore (`music_scores/EarthJukebox_5voice.mscz`, editable) has five instruments that are the five voices: drone (cello), chords (strings), high voice (harp), lead (clarinet) and drums. The same five stems play for every track, and the data modulates them: each instrument is louder where its kind of data is stronger, the three upper voices open their tone with the data, and the drums follow the data strength. The live voices are off in this mode, and the spoken text and legend still describe the live instruments. `tools/make-score.ps1` rebuilds the score and `score_data.js`; to use your own edits, export five mp3 stems (one instrument each) named `drone`, `pad`, `high`, `lead`, `drums`, and run it with `-StemDir`.
+
 ## Accessibility features
 
 - **Spoken guided tour** (off by default; tick "Spoken narration"). It describes the image, explains how to listen, plays the sweep once with no talking over it, and stops. There is a **short** (about 20 seconds) and a **full** version of the intro, and a Skip button.
