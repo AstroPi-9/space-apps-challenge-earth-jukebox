@@ -420,7 +420,46 @@ const scNote = (root, i) => { const d = SCALE.deg, n = d.length; return root + 1
 const scSpan = base => Math.round(base * SCALE.deg.length / 5);       // a span written for a 5-note scale, stretched to cover the same octaves in this one
 const bellMidi = (T, r, v, up = 0) => { const L = T.instruments && LEADS[T.instruments.lead], root = L ? L.root : T.bellRoot, span = L ? L.span : 13; const i = Math.round((v.rows - 1 - r) / (v.rows - 1) * scSpan(span)) + up; return scNote(root, i); };
 const lowMidi = (T, r, v) => { const i = Math.round((v.rows - 1 - r) / (v.rows - 1) * scSpan(9)); return scNote(T.lowRoot, i); };
-function chordFor(k) {                                    // the pad chord for latitude band k (0..3), built on the current scale
+// ================= HARMONY (the "Harmonious mode" box) =================
+// Fewer notes, and every pitched voice agrees with one chord at a time. The chord changes only at the start of a bar (two seconds), it is always a plain
+// consonant triad (a root, a major or minor third, and a perfect fifth) built on a root that sits well with the tonic D, and the lead and high voices
+// land on that chord's notes (the lead may pass through other scale notes between beats, unless they would clash). The scale and the mood also change
+// only at the start of a bar, the drone drops its fifth for an octave when the scale has no perfect fifth, and the drums, melody and sparkles are thinned.
+const harmOn = () => !$('harm') || $('harm').checked;
+let curBar = -1, barChord = null, heldBarFor = -2, heldReg = null, heldTrb = false, lastLeadT = -9, lastPluckT = -9;
+function holdFor(reg, trb) {                               // scale and mood: new values only count from the start of the next bar
+  if (!harmOn() || curBar < 0) return [reg, trb];
+  if (heldBarFor !== curBar) { heldBarFor = curBar; heldReg = reg; heldTrb = trb; }
+  return [heldReg, heldTrb];
+}
+const dist12 = (a, b) => { const d = (((a - b) % 12) + 12) % 12; return Math.min(d, 12 - d); };
+const dronePcs = () => { const r = A ? droneRatio() : 1.5; return (r > 1.4 && r < 1.6) ? [2, 9] : [2]; };         // the drone sounds D, and A too if it has a fifth
+function harmChord(k) {                                    // a consonant triad for latitude band k: I, V, IV or vi-ish, whichever the scale has and the drone allows
+  const has = pc => SCALE.deg.includes(((pc % 12) + 12) % 12), prefs = [[0], [7, 5, 0], [5, 7, 0], [9, 8, 10, 3, 4, 0]][Math.max(0, Math.min(3, k))];
+  const drone = dronePcs(), safe = pc => drone.every(d => { const x = dist12(pc, d); return x !== 1 && x !== 6; });     // not a semitone or a tritone from the drone
+  const rootPc = prefs.find(p => has(p) && safe(p + 2)) || 0, maj = has(rootPc + 4), min = has(rootPc + 3);
+  const third = (maj && min) ? (SCALE.trb ? 3 : 4) : maj ? 4 : min ? 3 : (SCALE.trb ? 3 : 4), R = 50 + (rootPc > 6 ? rootPc - 12 : rootPc);
+  const keep = [R], extra = [R + third, R + 7].filter(n => safe(n));                                   // a chord note that would clash with the drone is left out
+  const notes = keep.concat(extra); while (notes.length < 3) notes.push(R + 12 * notes.length);      // fill with octaves of the root, so there are always three
+  const all = [...new Set(notes.map(n => ((n % 12) + 12) % 12))];
+  return { notes: notes.slice(0, 3), all, safe: all.filter(safe), drone };
+}
+function chordSnap(m, onlyIfClash) {                       // land a note on a chord tone (or, with onlyIfClash, only move it if it would clash)
+  if (!harmOn() || !barChord || curBar < 0) return m;
+  const mr = Math.round(m), pc = ((mr % 12) + 12) % 12, B = barChord;
+  const clashes = p => B.all.concat(B.drone).some(q => { const x = dist12(p, q); return x === 1 || x === 6; });
+  if (onlyIfClash) { if (!clashes(pc)) return m; } else if (B.safe.includes(pc)) return m;
+  const pool = B.safe.length ? B.safe : B.all; let best = mr, bd = 99;
+  for (let d = -6; d <= 6; d++) if (pool.includes((((mr + d) % 12) + 12) % 12) && Math.abs(d) < bd) { bd = Math.abs(d); best = mr + d; }
+  return best;
+}
+const droneRatio = () => (harmOn() && A.droneRatio > 1.4 && A.droneRatio < 1.6 && !SCALE.deg.includes(7)) ? 2 : A.droneRatio;      // a fifth only if the scale has one
+function chordFor(k) {
+  if (harmOn()) {
+    const key = SCALE.name + (SCALE.trb ? "s" : "c");
+    if (curBar < 0 || !barChord || barChord.bar !== curBar || barChord.key !== key) barChord = Object.assign({ bar: curBar, key }, harmChord(k));
+    return barChord.notes;
+  }                                    // the pad chord for latitude band k (0..3), built on the current scale
   const n = SCALE.deg.length, j = [0, 1, Math.round(n * 0.6), Math.round(n * 0.4)][k], R = scNote(50, j);
   if (SCALE.thirds) return [R, R + (SCALE.trb ? 3 : 4), R + 7];                 // Latin America: chords of major thirds, or minor thirds when troubled
   return n >= 7 ? [R, scNote(50, j + 2), scNote(50, j + 4)] : [R, scNote(50, j + 2), scNote(50, j + 3)];
@@ -428,8 +467,8 @@ function chordFor(k) {                                    // the pad chord for l
 const colMoodOverride = c => (window.EJ_elnino && window.EJ_elnino.active() && window.EJ_elnino.mood(c)) || null;
 function setScaleFor(c, r) {                              // choose the scale and mood for column c (and, when clicking, the region of row r)
   if (!regionsOn() || !V.emo) { SCALE = FIXED_SCALE; EMO.troubled = false; EMO.urgent = 0; EMO.concern = 0; return SCALE; }
-  const e = V.emo, reg = (r != null && !T.timeAxis && V.reg && V.reg[r * V.cols + c]) || e.reg[c], def = SCALES[reg] || SCALES.ocean;
-  const ov = colMoodOverride(c), trb = ov ? ov.trb : !!e.tro[c], pick = trb ? def.sad : def.calm;     // the El Nino layer, when on, decides the mood from the anomaly
+  const e = V.emo, reg0 = (r != null && !T.timeAxis && V.reg && V.reg[r * V.cols + c]) || e.reg[c];
+  const ov = colMoodOverride(c), trb0 = ov ? ov.trb : !!e.tro[c], held = (r != null) ? [reg0, trb0] : holdFor(reg0, trb0), reg = held[0], trb = held[1], def = SCALES[reg] || SCALES.ocean, pick = trb ? def.sad : def.calm;     // the El Nino layer, when on, decides the mood from the anomaly
   SCALE = { deg: pick[1], name: pick[0], place: def.place, reg, thirds: !!def.thirds, trb };
   EMO.troubled = trb; EMO.urgent = ov ? ov.urg : e.urg[c]; EMO.concern = e.con[c];
   return SCALE;
@@ -559,6 +598,7 @@ const PLUCK = {                                       // partial = [multiple, st
   glass:   { parts: [[1, 1, 2.4], [2.7, 0.45, 1.1], [5.2, 0.18, 0.5]], reg: 74, click: 0 },
 };
 function pluck(kind, t, midi, gain, pan) {            // a plucked or struck tine, string or glass bell
+  if (harmOn()) { if (playing && t < lastPluckT + 0.4) return; lastPluckT = t; midi = chordSnap(midi); }
   noteLog(2, t, midi, 0.5, kind);                     // sheet music and note trace
   if (sampleOn() && SM.buf) { const pn = A.ctx.createStereoPanner ? A.ctx.createStereoPanner() : null; if (pn) { pn.pan.value = pan; pn.connect(A.bus[2]); } samplePlay(kind, midi, t, 0.8, gain * 1.5, pn || A.bus[2], { rel: 0.5, att: 0.004 }); return; }
   const { ctx, bus, nb } = A, K = PLUCK[kind], f = mtof(midi), g = ctx.createGain(), p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
@@ -582,16 +622,16 @@ function lightArp(c, t, step, level, cenRow, rows) {  // a gentle rising arpeggi
 }
 function strongPlay(c, t, step, level, cenRow, rows) {
   const kind = T.instruments.strong;
-  if (kind !== 'gong' || c % 3 === 0) noteLog(2, t, kind === 'marimba' ? scNote(50, latIdx(cenRow, rows, 8)) : kind === 'vibes' ? pluckMidi('harp', latIdx(cenRow, rows, 8)) : kind === 'gong' ? scNote(38, latIdx(cenRow, rows, 8)) + 12 : scNote(38, latIdx(cenRow, rows, 8)), step, kind);   // sheet music and note trace
+  if (kind !== 'gong' || c % 3 === 0) noteLog(2, t, chordSnap(kind === 'marimba' ? scNote(50, latIdx(cenRow, rows, 8)) : kind === 'vibes' ? pluckMidi('harp', latIdx(cenRow, rows, 8)) : kind === 'gong' ? scNote(38, latIdx(cenRow, rows, 8)) + 12 : scNote(38, latIdx(cenRow, rows, 8))), step, kind);   // sheet music and note trace
   if (kind === 'timpani') {                           // quiet roll, tuned to the latitude and gliding between columns
-    const f = mtof(scNote(38, latIdx(cenRow, rows, 8))), n = Math.max(2, Math.round(step / 0.075)), from0 = timpFreq || f;
+    const f = mtof(chordSnap(scNote(38, latIdx(cenRow, rows, 8)))), n = Math.max(2, Math.round(step / 0.075)), from0 = timpFreq || f;
     for (let i = 0; i < n; i++) timpStrike(t + i * step / n, f, i === 0 ? from0 : f, (0.05 + 0.07 * level) * (0.85 + Math.random() * 0.3));
     timpFreq = f;
   } else if (kind === 'marimba') {                    // a soft mallet roll
-    const f = mtof(scNote(50, latIdx(cenRow, rows, 8))), n = Math.max(2, Math.round(step / 0.06));
+    const f = mtof(chordSnap(scNote(50, latIdx(cenRow, rows, 8)))), n = Math.max(2, Math.round(step / 0.06));
     for (let i = 0; i < n; i++) barStrike(t + i * step / n, f, (0.05 + 0.08 * level) * (0.85 + Math.random() * 0.3), 0.5, false);
   } else if (kind === 'vibes') {                      // a gentle trill between two neighbouring scale notes
-    const i0 = latIdx(cenRow, rows, 8), fa = mtof(pluckMidi('harp', i0)), fb = mtof(pluckMidi('harp', i0 + 1)), n = Math.max(2, Math.round(step / 0.11));
+    const i0 = latIdx(cenRow, rows, 8), fa = mtof(chordSnap(pluckMidi('harp', i0))), fb = mtof(chordSnap(pluckMidi('harp', i0 + 2))), n = Math.max(2, Math.round(step / 0.11));
     for (let i = 0; i < n; i++) barStrike(t + i * step / n, i % 2 ? fb : fa, (0.04 + 0.07 * level) * (0.85 + Math.random() * 0.3), 1.4, true);
   } else if (c % 3 === 0) gongSwell(t, mtof(scNote(38, latIdx(cenRow, rows, 8)) + 12), 0.04 + 0.06 * level, true);   // gong: a slow swell every few columns
 }
@@ -613,9 +653,9 @@ function texNote(t, level, r, rows) {                 // click-to-explore: a sho
   }
 }
 function drone(t, hz, gain) {
-  if (gain > 0.001) { const m = Math.round(69 + 12 * Math.log2(hz / 440)); noteLog(0, t, m, 0.6); noteLog(0, t, m + Math.round(12 * Math.log2(A.droneRatio)), 0.6); }   // sheet music
+  if (gain > 0.001) { const m = Math.round(69 + 12 * Math.log2(hz / 440)); noteLog(0, t, m, 0.6); noteLog(0, t, m + Math.round(12 * Math.log2(droneRatio())), 0.6); }   // sheet music
   if (sampleOn() && SM.buf) { droneSample(t, hz, gain); return; }
-  A.d1.frequency.setTargetAtTime(hz, t, 0.2); A.d2.frequency.setTargetAtTime(hz * A.droneRatio, t, 0.2); A.droneGain.gain.setTargetAtTime(gain * 0.4 * A.droneScale, t, 0.4); }
+  A.d1.frequency.setTargetAtTime(hz, t, 0.2); A.d2.frequency.setTargetAtTime(hz * droneRatio(), t, 0.2); A.droneGain.gain.setTargetAtTime(gain * 0.4 * A.droneScale, t, 0.4); }
 // one-shots
 // ---- Bassoon with Carnatic gamakas (no vibrato LFO: all pitch movement is a shaped ornament) ----
 // semitone gap to the neighbouring Mohanam note below / above, by scale degree [Sa Ri Ga Pa Dha]
@@ -653,6 +693,11 @@ function getWave(name, h, ctx) {
   return (waveCache[name] = ctx.createPeriodicWave(real, imag));
 }
 function lead(t, midi, gain, pan, durIn) {
+  if (harmOn()) {
+    if (playing && !lead.sighing && t < lastLeadT + 0.5) return;                       // thinner: about one melody note per beat at most
+    if (!lead.sighing) lastLeadT = t;
+    midi = Math.round(t / CROTCHET) % 2 === 0 ? chordSnap(midi) : chordSnap(midi, true);   // strong beats on chord tones; other notes only pass through if they would not clash
+  }
   noteLog(3, t, midi, durIn || 1.4);                  // sheet music
   const { ctx, bus, nb } = A, name = T.instruments.lead, L = LEADS[name], f = mtof(midi), dur = durIn || 1.4;
   const dg = SCALE.deg, nd = dg.length, di = Math.max(0, dg.indexOf(mod(midi - 62, 12)));       // position of this note in the current scale
@@ -841,13 +886,13 @@ function dominantRegion(c) {                         // the drum of the region h
 function dataBeat(c, t, step) {
   const sp = speedOf(c); if (!sp) return;
   const id = dominantRegion(c); if (!id) return;
-  let div = sp.div; if (div === 8 && Math.random() < 0.4) div = 4;               // demisemiquavers: only the very strongest columns, and not always
+  let div = sp.div; if (div === 8 && Math.random() < 0.4) div = 4; if (harmOn()) div = Math.min(div, 2);      // calmer: no faster than quavers, and no filler strokes               // demisemiquavers: only the very strongest columns, and not always
   const I = INSTR[id], u = CROTCHET / div, base = 0.25 + 0.3 * sp.rank;
   const accent = colLoad[c] - colLoad[(c + V.cols - 1) % V.cols] > accentThr ? 1.5 : 1;   // data jumps up (edge of a plume or current): louder hits
   for (let k = Math.ceil((t - gridOrigin) / u - 1e-6); gridOrigin + k * u < t + step - 1e-6; k++) {
     const tt = gridOrigin + k * u;
     if (k % div === 0) hit(id, I.pat[(k / div) % I.pat.length], tt, base * accent);          // on the beat: the instrument's own 8-beat pattern
-    else hit(id, I.filler, tt, base * (div === 8 ? 0.35 : 0.5));                              // between beats: light fillers
+    else if (!harmOn()) hit(id, I.filler, tt, base * (div === 8 ? 0.35 : 0.5));                              // between beats: light fillers
   }
 }
 function drumPhrase(t, c, r) {                       // click-to-explore: a few strokes of that spot's drum, at that spot's speed
@@ -876,10 +921,11 @@ function urgentFx(c, t, step) {
   const u = EMO.urgent; if (!A || u < 0.1 || !regionsOn()) return;
   for (let k = Math.ceil((t - gridOrigin) / CROTCHET - 1e-6); gridOrigin + k * CROTCHET < t + step - 1e-6; k++) heartbeat(gridOrigin + k * CROTCHET, 0.3 + 0.45 * u);
   if (u < 0.3) return;
-  const q = CROTCHET / 2, fig = [50, 50, 51, 50];
+  const q = CROTCHET / 2, fig = (harmOn() && barChord) ? [barChord.notes[0], barChord.notes[2], barChord.notes[0], barChord.notes[1]] : [50, 50, 51, 50];      // calm mode: the repeating figure uses the chord, not a clashing semitone
   for (let k = Math.ceil((t - gridOrigin) / q - 1e-6); gridOrigin + k * q < t + step - 1e-6; k++) stab(gridOrigin + k * q, fig[mod(k, 4)], 0.03 + 0.05 * u, 0.2);
 }
 function crackle(t, gain) {
+  if (harmOn() && Math.random() < 0.6) return;                        // fewer crackles in the calmer mode
   const { ctx, bus, nb } = A, s = ctx.createBufferSource(), g = ctx.createGain(), hp = ctx.createBiquadFilter();
   s.buffer = nb; hp.type = 'highpass'; hp.frequency.value = 2500 + Math.random() * 3000;
   g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
@@ -917,7 +963,7 @@ function scheduler() {
   while (!sweepEnded && nextTime < ctx.currentTime + 0.3) {
     if (nextCol >= V.cols) { sweepEnded = true; sweepEndTime = nextTime; break; }   // the sweep plays once and stops at the east edge
     const { tot, cen } = colStats(nextCol);
-    traceCol = nextCol; setScaleFor(nextCol);                                      // scale and mood of this column (regional scale, calm or troubled)
+    curBar = Math.floor(nextCol / Math.max(4, Math.round(2 / step))); traceCol = nextCol; setScaleFor(nextCol);                                      // scale and mood of this column (regional scale, calm or troubled)
     T.schedule(nextCol, nextTime, step, tot, cen, V);
     urgentFx(nextCol, nextTime, step);
     if (window.EJ_elnino && window.EJ_elnino.active()) window.EJ_elnino.fx(nextCol, nextTime, step);        // El Nino layer: the anomaly under the beam
@@ -946,7 +992,7 @@ function sleepSoon(ms) {                             // mute right away, then te
   }, ms);
 }
 async function play() {
-  if (playing || starting) return; if (window.EJ_followStop) window.EJ_followStop(); starting = true;
+  if (playing || starting) return; if (window.EJ_followStop) window.EJ_followStop(); curBar = -1; barChord = null; heldBarFor = -2; lastLeadT = -9; lastPluckT = -9; starting = true;
   try { await wake(); } finally { starting = false; }
   if (SPEECH && $('speak').checked && pos < 1.5) { const ok = await runGuide(); if (!ok) return; }   // spoken overview + listening guide first
   clearInterval(timer); playing = true; sweepEnded = false; timpFreq = null; nextTime = A.ctx.currentTime + 0.1; gridOrigin = nextTime; nextCol = Math.floor(pos); if (nextCol >= V.cols) nextCol = 0; queue = [];
@@ -1097,7 +1143,7 @@ function droneSample(t, hz, gain) {                       // the drone: the toni
   const D = a.smDrone, m1 = 69 + 12 * Math.log2(hz / 440);
   if (D.key !== inst && gain > 0.001) {
     D.voices.forEach(v => { v.g.gain.cancelScheduledValues(t); v.g.gain.setTargetAtTime(0, t, 0.25); try { v.src.stop(t + 1.5); } catch (e) {} });
-    D.voices = [m1, m1 + 12 * Math.log2(a.droneRatio)].map(mm => samplePlay(inst, mm, t, 600, 1, D.g, { loop: true, att: 0.5, rel: 0.3 })).filter(Boolean); D.key = inst;
+    D.voices = [m1, m1 + 12 * Math.log2(droneRatio())].map(mm => samplePlay(inst, mm, t, 600, 1, D.g, { loop: true, att: 0.5, rel: 0.3 })).filter(Boolean); D.key = inst;
   }
   D.g.gain.setTargetAtTime(gain * 0.4 * a.droneScale * 3, t, 0.4);
 }
@@ -1120,6 +1166,7 @@ function silenceContinuous() {
   [A.padGain, A.saltGain, A.droneGain, A.smPad && A.smPad.g, A.smDrone && A.smDrone.g].forEach(g => g && g.gain.setTargetAtTime(0, t, 0.15));
 }
 function hardStop() {                                  // silence everything at once: mute the output, then destroy the whole audio graph
+  curBar = -1; barChord = null; heldBarFor = -2;
   clearTimeout(idleTimer);
   if (A) { try { A.gate.gain.cancelScheduledValues(A.ctx.currentTime); A.gate.gain.setValueAtTime(0, A.ctx.currentTime); } catch (e) {} }
   shutdownAudio();
@@ -1252,6 +1299,7 @@ async function runGuide() {
 }
 function cancelGuide() { if (!guiding) return; guideTok++; guiding = false; stopSpeech(); showGuideUI(false); setReadout('Intro stopped. Press play to start again.'); }
 function finishSweep() {                             // the sweep reached the east edge: let the last notes ring out, then stop
+  curBar = -1; barChord = null; heldBarFor = -2;
   if (T.video) $('vid').pause();
   clearInterval(timer); timer = null; playing = false; silenceContinuous(); fadeMusic(0.8); sleepSoon(3000);
   $('play').textContent = '▶ Play the globe'; $('play').setAttribute('aria-pressed', 'false');
@@ -1556,9 +1604,9 @@ window.EJ = { get A() { return A; }, get T() { return T; }, get playing() { retu
   dataInfo: () => DATA_INFO[T.id] || null, commonLimit: COMMON_LIMIT, sourceName: id => (INSTR[id] ? INSTR[id].name : id),
   follow: {                                          // what the "Follow a current" feature (follow.js) needs from the sound engine
     wake, lead, pad, drone, pluck, chordFor, regionAt, SCALES, silence: silenceContinuous, pauseSweep: () => { if (playing) pause(); },
-    hold: on => { holdAudio = on; }, hardStop,
+    hold: on => { holdAudio = on; }, hardStop, setBar: n => { curBar = n; },
     scale: () => SCALE, say: s => setReadout(s),
-    setScaleAt(lon, lat, trb, urg) { const reg = regionAt(lon, lat), def = SCALES[reg] || SCALES.ocean, pick = trb ? def.sad : def.calm; SCALE = { deg: pick[1], name: pick[0], place: def.place, reg, thirds: !!def.thirds, trb }; EMO.troubled = trb; EMO.urgent = urg; EMO.concern = trb ? 0.7 : 0.2; return SCALE; },
+    setScaleAt(lon, lat, trb, urg) { const h = holdFor(regionAt(lon, lat), trb), reg = h[0], trbH = h[1], def = SCALES[reg] || SCALES.ocean, pick = trbH ? def.sad : def.calm; SCALE = { deg: pick[1], name: pick[0], place: def.place, reg, thirds: !!def.thirds, trb: trbH }; EMO.troubled = trbH; EMO.urgent = urg; EMO.concern = trb ? 0.7 : 0.2; return SCALE; },
     valueMidi(frac) { const L = LEADS[T.instruments.lead]; return scNote(L.root, Math.round(Math.max(0, Math.min(1, frac)) * scSpan(L.span))); },
     urgentAt(t, step, t0) { gridOrigin = t0; urgentFx(0, t, step); },
     droneHz: () => T.droneHz, lightKind: () => T.instruments.light,

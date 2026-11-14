@@ -34,6 +34,16 @@ The five voices are generated live in the browser with the Web Audio API. Undern
 
 **Sound source: MuseScore composition (5 instruments).** An alternative to the live synthesis, chosen from the *Sound source* menu. One composition made for MuseScore (`music_scores/EarthJukebox_5voice.mscz`, editable) has five instruments that are the five voices: drone (cello), chords (strings), high voice (harp), lead (clarinet) and drums. The same five stems play for every track, and the data modulates them: each instrument is louder where its kind of data is stronger, the three upper voices open their tone with the data, and the drums follow the data strength. The live voices are off in this mode, and the spoken text and legend still describe the live instruments. `tools/make-score.ps1` rebuilds the score and `score_data.js`; to use your own edits, export five mp3 stems (one instrument each) named `drone`, `pad`, `high`, `lead`, `drums`, and run it with `-StemDir`.
 
+## Harmonious mode (on by default)
+
+The **Harmonious mode (fewer notes, chord-based)** box makes the live music calmer and keeps every pitched sound in agreement. Untick it for the busier original version.
+- **One chord at a time.** The chord changes only at the start of a bar (two seconds). It is always a plain consonant triad (a root, a major or minor third, a perfect fifth) on a root that sits well with the tonic D, and any chord note that would clash with the drone (a semitone or tritone away) is left out. The scale and the mood also change only at the start of a bar.
+- **Melody and sparkles land on the chord.** The lead and the high voice (plucks, mallets) are moved to the nearest chord note on strong beats; between beats the lead may pass through other scale notes unless they would clash with the chord or the drone. This loosens the link between pitch and latitude by a few semitones, but keeps the contour.
+- **Fewer notes.** At most about one melody note per beat, plucks at least 0.4 s apart, drums no faster than quavers and without the filler strokes, fewer crackles.
+- **The drone** uses an octave instead of a fifth when the scale has no perfect fifth (for example Locrian). The "urgent" figure uses the chord notes instead of a semitone clash; the heartbeat is unchanged.
+
+Measured by counting (not by ear) over 13-second sweeps with the trace: the lead played about 75% fewer notes, the drums about 55% fewer, and the share of melody notes a semitone or tritone from a sounding chord or drone note fell from about 73% to 0 to 11% (the remainder are the first moments after a chord change, while the previous chord is still fading). It does not affect the fixed MuseScore pieces or the "composed music underneath" layer.
+
 ## Scales and emotion
 
 The music follows the data in two ways: **where** (the scale) and **how bad** (the mood). The tonic stays D, and the "Regional scales and emotion" box turns this on (default) or off (Mohanam everywhere, as before). The scale follows the same region as the drums.

@@ -81,7 +81,7 @@
     const sched = () => {
       const a = window.EJ.A; if (!a || a.ctx !== ctx) { stop(); return; }
       while (next < P.length && t0 + next * STEP < ctx.currentTime + 0.4) {
-        const p = P[next], t = t0 + next * STEP, frac = p.t / 32, trb = p.t > 22.4, urg = p.t > 28 ? 0.8 : 0, sc = A.setScaleAt(p.lon, p.lat, trb, urg);
+        A.setBar(Math.floor(next / 8)); const p = P[next], t = t0 + next * STEP, frac = p.t / 32, trb = p.t > 22.4, urg = p.t > 28 ? 0.8 : 0, sc = A.setScaleAt(p.lon, p.lat, trb, urg);
         const pan = Math.max(-0.8, Math.min(0.8, (p.x / cols - 0.5) * 1.6)), prev = P[Math.max(0, next - 3)], front = Math.abs(p.t - prev.t) > 2.5, swirl = p.mag < 0.35;
         const k = Math.min(3, Math.floor((90 - p.lat) / 180 * 4));
         window.EJ_traceExtra = { kind: 'follow a current', path_step: next, longitude_deg: +p.lon.toFixed(1), latitude_deg: +p.lat.toFixed(1), temperature_c: +p.t.toFixed(1), flow_line_coherence: +p.mag.toFixed(2), source: 'assets/ocean.jpg via flow_field.js' };

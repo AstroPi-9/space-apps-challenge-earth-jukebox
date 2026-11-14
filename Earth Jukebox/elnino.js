@@ -104,7 +104,7 @@
     const sched = () => {
       const a = window.EJ.A; if (!a || a.ctx !== ctx) { stopYears(); return; }
       while (next < nQ && t0 + next * QS < ctx.currentTime + 0.4) {
-        const q = q0 + next, t = t0 + next * QS, m = q3(q); if (m === null) { next = nQ; break; }
+        A.setBar(Math.floor(next / 8)); const q = q0 + next, t = t0 + next * QS, m = q3(q); if (m === null) { next = nQ; break; }
         const zq = prevM === null ? 0 : (m - prevM) / qMad; persist = zq >= 0.75 ? persist + 1 : 0; prevM = m;      // how fast the index is changing, in units of its usual change
         const rapid = (m >= 0.5 && persist >= 2 && zq >= 1) ? Math.min(1, 0.45 + 0.2 * zq) : 0;                     // a sustained, fast rise into the El Niño range is urgent even before the index is very high
         const trb = m >= 0.5, urg = Math.max(m >= 1.5 ? Math.min(1, (m - 1) / 1.5) : 0, rapid), st = m >= 0.5 ? 1 : m <= -0.5 ? -1 : 0; qinfo[q] = { z: zq, rapid: rapid > 0 }; A.setScaleAt(-145, 0, trb, urg);
