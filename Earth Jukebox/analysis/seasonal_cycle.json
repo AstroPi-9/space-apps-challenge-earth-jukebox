@@ -1,0 +1,154 @@
+{
+  "record": "2007-03-26 to 2008-03-02 (342 days, less than a full year)",
+  "bands": [
+    {
+      "lat_band": "90 to 80",
+      "mean_c": 1.8,
+      "annual_amplitude_c": 0.0,
+      "warmest_around": "25 Sep",
+      "harmonic_r2": -7.93,
+      "decoded_share": 0.21
+    },
+    {
+      "lat_band": "80 to 70",
+      "mean_c": 2.7,
+      "annual_amplitude_c": 0.66,
+      "warmest_around": "14 Aug",
+      "harmonic_r2": 0.78,
+      "decoded_share": 0.15
+    },
+    {
+      "lat_band": "70 to 60",
+      "mean_c": 5.3,
+      "annual_amplitude_c": 2.05,
+      "warmest_around": "20 Aug",
+      "harmonic_r2": 0.86,
+      "decoded_share": 0.09
+    },
+    {
+      "lat_band": "60 to 50",
+      "mean_c": 7.0,
+      "annual_amplitude_c": 3.06,
+      "warmest_around": "26 Aug",
+      "harmonic_r2": 0.94,
+      "decoded_share": 0.16
+    },
+    {
+      "lat_band": "50 to 40",
+      "mean_c": 11.2,
+      "annual_amplitude_c": 4.51,
+      "warmest_around": "04 Sep",
+      "harmonic_r2": 0.96,
+      "decoded_share": 0.23
+    },
+    {
+      "lat_band": "40 to 30",
+      "mean_c": 19.6,
+      "annual_amplitude_c": 4.84,
+      "warmest_around": "07 Sep",
+      "harmonic_r2": 0.98,
+      "decoded_share": 0.34
+    },
+    {
+      "lat_band": "30 to 20",
+      "mean_c": 25.2,
+      "annual_amplitude_c": 2.41,
+      "warmest_around": "03 Sep",
+      "harmonic_r2": 0.99,
+      "decoded_share": 0.38
+    },
+    {
+      "lat_band": "20 to 10",
+      "mean_c": 27.5,
+      "annual_amplitude_c": 0.94,
+      "warmest_around": "19 Aug",
+      "harmonic_r2": 0.91,
+      "decoded_share": 0.52
+    },
+    {
+      "lat_band": "10 to 0",
+      "mean_c": 27.9,
+      "annual_amplitude_c": 0.44,
+      "warmest_around": "08 Jun",
+      "harmonic_r2": 0.65,
+      "decoded_share": 0.6
+    },
+    {
+      "lat_band": "0 to -10",
+      "mean_c": 27.3,
+      "annual_amplitude_c": 0.98,
+      "warmest_around": "14 Apr",
+      "harmonic_r2": 0.91,
+      "decoded_share": 0.57
+    },
+    {
+      "lat_band": "-10 to -20",
+      "mean_c": 26.2,
+      "annual_amplitude_c": 1.43,
+      "warmest_around": "19 Mar",
+      "harmonic_r2": 0.99,
+      "decoded_share": 0.47
+    },
+    {
+      "lat_band": "-20 to -30",
+      "mean_c": 23.0,
+      "annual_amplitude_c": 2.59,
+      "warmest_around": "04 Mar",
+      "harmonic_r2": 1.0,
+      "decoded_share": 0.48
+    },
+    {
+      "lat_band": "-30 to -40",
+      "mean_c": 17.2,
+      "annual_amplitude_c": 3.6,
+      "warmest_around": "01 Mar",
+      "harmonic_r2": 0.99,
+      "decoded_share": 0.49
+    },
+    {
+      "lat_band": "-40 to -50",
+      "mean_c": 8.9,
+      "annual_amplitude_c": 1.84,
+      "warmest_around": "28 Feb",
+      "harmonic_r2": 0.96,
+      "decoded_share": 0.57
+    },
+    {
+      "lat_band": "-50 to -60",
+      "mean_c": 4.5,
+      "annual_amplitude_c": 1.1,
+      "warmest_around": "24 Feb",
+      "harmonic_r2": 0.94,
+      "decoded_share": 0.56
+    },
+    {
+      "lat_band": "-60 to -70",
+      "mean_c": 2.3,
+      "annual_amplitude_c": 0.68,
+      "warmest_around": "16 Feb",
+      "harmonic_r2": 0.79,
+      "decoded_share": 0.29
+    },
+    {
+      "lat_band": "-70 to -80",
+      "mean_c": 1.8,
+      "annual_amplitude_c": 0.04,
+      "warmest_around": "04 Feb",
+      "harmonic_r2": 0.3,
+      "decoded_share": 0.05
+    },
+    {
+      "lat_band": "-80 to -90",
+      "status": "too little decoded data"
+    }
+  ],
+  "hemisphere_check": {
+    "northern_vs_southern_mid_latitudes_correlation": -0.95,
+    "expected": "strongly negative: the seasons are opposite"
+  },
+  "limits": [
+    "one partial year, so the fitted amplitude mixes the seasonal cycle with any other change in that year",
+    "temperature is decoded only from flow-line colour (about a third of pixels), and the bands are 10 degrees wide",
+    "no independent measurement was used: this checks that the decode behaves like a seasonal cycle, not that its values are right"
+  ]
+}

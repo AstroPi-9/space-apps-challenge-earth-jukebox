@@ -1,0 +1,72 @@
+{
+  "method_note": "applied to anomaly maps decoded from NASA SVS 4695 (tools/analyse-nino.html) and the NOAA PSL Nino 3.4 index",
+  "months": 432,
+  "grid": [
+    18,
+    160
+  ],
+  "eof": {
+    "cells_used": 1560,
+    "cells_total": 2880,
+    "missing_share_of_all_cells": 0.394,
+    "modes": [
+      {
+        "mode": 1,
+        "variance_explained_pct": 15.7,
+        "r_with_nino34": 0.913
+      },
+      {
+        "mode": 2,
+        "variance_explained_pct": 12.5,
+        "r_with_nino34": -0.045
+      },
+      {
+        "mode": 3,
+        "variance_explained_pct": 5.6,
+        "r_with_nino34": 0.07
+      }
+    ],
+    "mode1_peak_loading": {
+      "lat_band_centre": -5.0,
+      "lon": -120.4
+    },
+    "reading": "mode 1 is the El Nino pattern if its time series follows the Nino 3.4 index and its loading peaks in the eastern equatorial Pacific"
+  },
+  "index_spectrum": {
+    "months": 946,
+    "first_year": 1948,
+    "strongest_period_years_in_2_to_8_year_band": 3.6,
+    "variance_share_in_band_pct": 61.0
+  },
+  "tendency": {
+    "monthly_change_mad_scale_c": 0.222,
+    "three_month_mean_change_mad_scale_c": 0.178,
+    "last_12_monthly_changes_in_mad_units": [
+      -0.5,
+      0.7,
+      -0.0,
+      1.7,
+      1.1,
+      2.3,
+      1.6,
+      2.2,
+      0.7,
+      0.7,
+      0.9,
+      0.9
+    ],
+    "last_4_three_month_mean_changes_in_mad_units": [
+      1.9,
+      1.5,
+      1.0,
+      1.1
+    ]
+  },
+  "naive_baselines_next_month_index": {
+    "test_months": 189,
+    "mae_climatology": 0.65,
+    "mae_persistence": 0.18,
+    "lag1_autocorrelation": 0.942,
+    "note": "any prediction claim must beat these; this app makes no predictions"
+  }
+}

@@ -14,6 +14,7 @@ const shName = m => SH_PC[(((Math.round(m) - 62) % 12) + 12) % 12];
 
 function noteLog(v, t, m, d, stroke, id) {                                    // called by the live voices as they schedule a note
   if (!EJP() || EJS()) return;
+  if (typeof traceAdd === 'function') traceAdd(v, t, m, d, stroke, id);       // the note trace records every scheduled note (trace.js)
   if (EJA() && SHEET.ctx !== EJA().ctx) { SHEET.ctx = EJA().ctx; SHEET.notes = []; SHEET.clef = []; SHEET.drumSlot = {}; }      // a new audio clock: forget the old notes
   const N = SHEET.notes;
   if (v < 2) for (let i = N.length - 1; i >= Math.max(0, N.length - 40); i--) { const n = N[i]; if (n.v === v && n.m === m && n.t + n.d >= t - 0.06) { n.d = Math.max(n.d, t + d - n.t); return; } }   // sustained voices: one long note

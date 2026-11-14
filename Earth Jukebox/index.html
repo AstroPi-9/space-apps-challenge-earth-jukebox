@@ -135,6 +135,11 @@
       <label>Voice <select id="voice" aria-label="Narration voice"></select></label>
     </div>
 
+    <div class="controls" role="group" aria-label="Note trace">
+      <button id="traceCsv" type="button" class="secondary">Export note trace (CSV)</button>
+      <button id="traceJson" type="button" class="secondary">Export note trace (JSON, with sources and method)</button>
+      <span id="traceStatus" class="sub" style="margin:0" aria-live="polite">Every note played is recorded with its column, longitude or month, the data under it, the scale and mood, and the source file's fingerprint. Play something, then export.</span>
+    </div>
     <p class="sub" id="speakHelp">With spoken narration on, pressing play first has a voice describe the image from west to east, then explain how to listen. Then the sweep plays once, with no talking over the music, and stops at the end. Clicking a spot also describes it aloud. If you use a screen reader, you may prefer to leave narration off and use the descriptions below.</p>
     <div class="panel" aria-labelledby="whereH">
       <h2 id="whereH">Where you are</h2>
@@ -195,6 +200,8 @@
 <script src="flow_field.js"></script>
 <script src="elnino_grid.js"></script>
 <script src="nino34_index.js"></script>
+<script src="source_hashes.js"></script>
+<script src="trace.js"></script>
 <script src="sheet.js"></script>
 <script src="app.js"></script>
 <script src="follow.js"></script>

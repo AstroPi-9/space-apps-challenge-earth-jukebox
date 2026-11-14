@@ -91,6 +91,30 @@ How it was made and its limits:
 - **Raw numbers:** the NOAA table is used as published. The pages describing the index disagree on its version (ERSST v4, v5 or v6) and base period; check before quoting a value.
 - **What it does not do:** the temperature map under it is a fixed average, so the layer shows a chosen month, not a trend, and it says nothing about the effects of El Niño on weather. Nothing here has been listened to by anyone yet.
 
+## Note trace (export)
+
+Under the controls, **Export note trace (CSV)** and **(JSON, with sources and method)** save a record of every note played in the last run: a sweep, a followed current, or *Play the years*, with the live synthesis or the MuseScore instrument sounds. Each row has the time, voice, instrument, MIDI pitch and note name, duration, and where the note came from:
+- **Sweep:** column number, longitude (or date for the Year track, or video time), the column's four data-channel totals, how strong the column is compared with the rest (0 to 1), the source picture, and for lead notes an estimate of the latitude the pitch stands for. With the El Niño layer on, also the month and the anomaly under the beam.
+- **Follow a current:** path step, longitude, latitude, temperature and flow-line coherence.
+- **Play the years:** the month, the three-month index, how fast it is changing compared with its usual change, and whether it is a rapid onset.
+- **All modes:** the scale, its region, the mood (calm, sad or urgent) and the urgency.
+
+The JSON also lists the **SHA-256 fingerprint of every source file named in the rows** (`source_hashes.js`, rebuilt by `tools/hash-sources.ps1`), how the values were decoded, the checks that were run, and the limits. A note stands for the whole column, step or month it was scheduled for, not for one pixel; the trace records what was scheduled to play, not a measurement of the audio; and the fixed MuseScore stems source has no notes to trace. The idea comes from the team's earlier RAM AVATAR project (this is a separate implementation).
+
+## Checks and validation
+
+The numbers are decoded from rendered pictures, so these checks test that the decode behaves like the real thing. They do not show that every value is exact. The scripts need only Python with numpy and write their results to `analysis/`.
+
+| Check | Script | Result |
+|---|---|---|
+| **EOF (principal component) analysis** of the 432 decoded monthly anomaly maps | `tools/validate-elnino.py` | Mode 1 explains 15.7% of the variance, follows NOAA's Niño 3.4 index with correlation **+0.91**, and peaks in the eastern equatorial Pacific (about 5° S, 120° W). The decoded Niño 3.4 box correlates 0.96. |
+| **Spectrum** of NOAA's index, 1948 to 2026 | same | Strongest peak in the El Niño band at **3.6 years**; 61% of the variance is in the 2 to 8 year band. |
+| **Seasonal cycle** of the decoded Year-track temperature, by latitude band | `tools/seasonal-cycle.py` | Warmest in late Aug to early Sep at 60 to 30 N and in late Feb to early Mar at 30 to 60 S; amplitude about 4.5 to 4.8 °C at 30 to 50 degrees and under 1 °C in the tropics; the two hemispheres correlate **-0.95**. One partial year, so it checks behaviour, not accuracy. |
+| **Robust rate of change** of the index (differences scaled by the median absolute deviation) | `elnino.js`, `tools/validate-elnino.py` | Used for the "rapid onset" part of the urgent mood in *Play the years*. Descriptive, not a forecast. |
+| **Naive baselines** | `tools/validate-elnino.py` | Predicting next month's index by repeating this month gives an average error of 0.18 °C, against 0.65 °C for the long-term mean. The app makes no predictions; any future one must beat these. |
+
+These methods were chosen after reviewing the team's earlier project RAM AVATAR, which also showed why baselines matter: in its run on the 2,001 ocean frames, both models predicting next-frame brightness (best error 0.00198) did worse than simply repeating the current frame (0.00143). Our code is written independently and no code was copied. The same results are in each track's *Data and limits* panel.
+
 ## Accessibility features
 
 - **Spoken guided tour** (off by default; tick "Spoken narration"). It describes the image, explains how to listen, plays the sweep once with no talking over it, and stops. There is a **short** (about 20 seconds) and a **full** version of the intro, and a Skip button.

@@ -84,11 +84,12 @@
         const p = P[next], t = t0 + next * STEP, frac = p.t / 32, trb = p.t > 22.4, urg = p.t > 28 ? 0.8 : 0, sc = A.setScaleAt(p.lon, p.lat, trb, urg);
         const pan = Math.max(-0.8, Math.min(0.8, (p.x / cols - 0.5) * 1.6)), prev = P[Math.max(0, next - 3)], front = Math.abs(p.t - prev.t) > 2.5, swirl = p.mag < 0.35;
         const k = Math.min(3, Math.floor((90 - p.lat) / 180 * 4));
+        window.EJ_traceExtra = { kind: 'follow a current', path_step: next, longitude_deg: +p.lon.toFixed(1), latitude_deg: +p.lat.toFixed(1), temperature_c: +p.t.toFixed(1), flow_line_coherence: +p.mag.toFixed(2), source: 'assets/ocean.jpg via flow_field.js' };
         A.drone(t, A.droneHz(), 0.1); A.pad(t, A.chordFor(k), 0.2, 900 + 1100 * Math.min(1, p.cov * 2));
         if (next % 2 === 0) A.lead(t, A.valueMidi(frac), 0.1 + 0.16 * Math.min(1, p.cov * 2), pan, swirl ? 0.9 : 1.2);
         if (front || (swirl && next % 2 === 1)) A.pluck(lightKind, t + 0.06, A.valueMidi(Math.min(1, frac + 0.12)) + 12, 0.07 + (front ? 0.05 : 0), pan);
         if (urg) A.urgentAt(t, STEP, t0);
-        next++;
+        window.EJ_traceExtra = null; next++;
       }
     };
     run = { timer: setInterval(sched, 80), raf: 0, endT: 0 }; sched();

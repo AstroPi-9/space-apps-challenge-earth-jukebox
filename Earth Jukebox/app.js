@@ -559,7 +559,7 @@ const PLUCK = {                                       // partial = [multiple, st
   glass:   { parts: [[1, 1, 2.4], [2.7, 0.45, 1.1], [5.2, 0.18, 0.5]], reg: 74, click: 0 },
 };
 function pluck(kind, t, midi, gain, pan) {            // a plucked or struck tine, string or glass bell
-  noteLog(2, t, midi, 0.5);                           // sheet music
+  noteLog(2, t, midi, 0.5, kind);                     // sheet music and note trace
   if (sampleOn() && SM.buf) { const pn = A.ctx.createStereoPanner ? A.ctx.createStereoPanner() : null; if (pn) { pn.pan.value = pan; pn.connect(A.bus[2]); } samplePlay(kind, midi, t, 0.8, gain * 1.5, pn || A.bus[2], { rel: 0.5, att: 0.004 }); return; }
   const { ctx, bus, nb } = A, K = PLUCK[kind], f = mtof(midi), g = ctx.createGain(), p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
   g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.003);
@@ -582,7 +582,7 @@ function lightArp(c, t, step, level, cenRow, rows) {  // a gentle rising arpeggi
 }
 function strongPlay(c, t, step, level, cenRow, rows) {
   const kind = T.instruments.strong;
-  if (kind !== 'gong' || c % 3 === 0) noteLog(2, t, kind === 'marimba' ? scNote(50, latIdx(cenRow, rows, 8)) : kind === 'vibes' ? pluckMidi('harp', latIdx(cenRow, rows, 8)) : kind === 'gong' ? scNote(38, latIdx(cenRow, rows, 8)) + 12 : scNote(38, latIdx(cenRow, rows, 8)), step);   // sheet music
+  if (kind !== 'gong' || c % 3 === 0) noteLog(2, t, kind === 'marimba' ? scNote(50, latIdx(cenRow, rows, 8)) : kind === 'vibes' ? pluckMidi('harp', latIdx(cenRow, rows, 8)) : kind === 'gong' ? scNote(38, latIdx(cenRow, rows, 8)) + 12 : scNote(38, latIdx(cenRow, rows, 8)), step, kind);   // sheet music and note trace
   if (kind === 'timpani') {                           // quiet roll, tuned to the latitude and gliding between columns
     const f = mtof(scNote(38, latIdx(cenRow, rows, 8))), n = Math.max(2, Math.round(step / 0.075)), from0 = timpFreq || f;
     for (let i = 0; i < n; i++) timpStrike(t + i * step / n, f, i === 0 ? from0 : f, (0.05 + 0.07 * level) * (0.85 + Math.random() * 0.3));
@@ -909,6 +909,7 @@ function colStats(c) {
 }
 
 // ================= TRANSPORT =================
+let traceCol = null;                                 // the column whose notes are being scheduled (for the note trace)
 let lastFrameIdx = -1, durBackup = null, sweepEnded = false, sweepEndTime = 0, guiding = false, guideTok = 0, guideSkip = false, lastNarrCol = -1, lastInstr = null, playing = false, nextCol = 0, nextTime = 0, timer = null, queue = [], pos = 0, lastSpoken = '', cur = null;
 const stepDur = () => $('dur').value / V.cols;
 function scheduler() {
@@ -916,7 +917,7 @@ function scheduler() {
   while (!sweepEnded && nextTime < ctx.currentTime + 0.3) {
     if (nextCol >= V.cols) { sweepEnded = true; sweepEndTime = nextTime; break; }   // the sweep plays once and stops at the east edge
     const { tot, cen } = colStats(nextCol);
-    setScaleFor(nextCol);                                                          // scale and mood of this column (regional scale, calm or troubled)
+    traceCol = nextCol; setScaleFor(nextCol);                                      // scale and mood of this column (regional scale, calm or troubled)
     T.schedule(nextCol, nextTime, step, tot, cen, V);
     urgentFx(nextCol, nextTime, step);
     if (window.EJ_elnino && window.EJ_elnino.active()) window.EJ_elnino.fx(nextCol, nextTime, step);        // El Nino layer: the anomaly under the beam
@@ -1358,6 +1359,18 @@ const DATA_INFO = {
     colour: 'Line colour is sea surface temperature, 0 °C (blue) to 32 °C (red).', decode: ['As in the Year of the ocean track.'], caveats: ['As in the Year of the ocean track.'],
   },
 };
+// Checks that were run on the decoded data (scripts in tools/, results in analysis/). They test that the decode behaves like the real thing, not that its values are exact.
+DATA_INFO.year.checks = [
+  'Seasonal cycle (tools/seasonal-cycle.py): a one-year harmonic fitted to the decoded temperature of each 10-degree latitude band. The northern mid-latitudes (60 to 30 N) are warmest in late August to early September and the southern ones (30 to 60 S) in late February to early March. The seasonal swing is largest at 30 to 50 degrees (amplitude about 4.5 to 4.8 °C) and small in the tropics (under 1 °C). The northern and southern mid-latitude series are strongly opposite (correlation -0.95).',
+  'This is one partial year (342 days), temperature is decoded from flow-line colour in 10-degree bands, and no independent measurement was used, so it checks the behaviour of the decode, not its accuracy. The polar band (90 to 80 N) is too sparse to fit and should be ignored.',
+];
+DATA_INFO.sst.checks = [
+  'El Niño layer, EOF / principal component analysis of the 432 decoded monthly anomaly maps (tools/validate-elnino.py): the first mode explains 15.7% of the variance, its time series follows NOAA\'s Niño 3.4 index with correlation +0.91, and its pattern peaks in the eastern equatorial Pacific (about 5° S, 120° W). Separately, the decoded Niño 3.4 box correlates 0.96 with the index. So the decoded maps carry the real El Niño signal.',
+  'Not shown by those checks: that the values are exact. The picture\'s anomalies run a few tenths of a degree larger than NOAA\'s index, probably because of different baselines, which has not been checked. About 39% of cells (land, ice and the corner covered by NASA\'s inset) have no data.',
+  'NOAA\'s index over 1948 to 2026: the strongest peak in the El Niño band is at 3.6 years, and 61% of the variance lies in the 2 to 8 year band, as expected for El Niño.',
+  'Naive baselines for next month\'s index: repeating this month gives an average error of 0.18 °C, against 0.65 °C for the long-term mean (correlation from one month to the next: 0.94). This app makes no predictions; any future prediction would have to beat these.',
+  '"Urgent" in Play the years: the index is at or above +1.5 °C, or it is already in the El Niño range and has risen fast and steadily: in the latest quarter at least as fast as its usual quarter-to-quarter change (a robust, median-based measure from the whole 1948 to 2026 record), and at least three-quarters as fast in the quarter before. This is descriptive, not a forecast.',
+];
 function renderData() {
   const d = DATA_INFO[T.id], el = $('dataBody'); if (!d) { el.innerHTML = ''; return; }
   const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;'), li = a => '<ul>' + a.map(x => `<li>${esc(x)}</li>`).join('') + '</ul>';
@@ -1366,6 +1379,7 @@ function renderData() {
     <dt>Date</dt><dd>${esc(d.date)}</dd>
     <dt>What the colours mean</dt><dd>${esc(d.colour)}</dd>
     <dt>How the values were decoded</dt><dd>${li(d.decode)}</dd>
+    ${d.checks ? `<dt>Checks that were run</dt><dd>${li(d.checks)}</dd>` : ''}
     <dt>Limits and caveats</dt><dd>${li(d.caveats.concat([COMMON_LIMIT]))}</dd></dl>`;
 }
 
@@ -1523,6 +1537,23 @@ async function renderOffline(i, seconds, solo) {
 }
 
 window.EJ = { get A() { return A; }, get T() { return T; }, get playing() { return playing; }, scoreOn, INSTR,
+  traceContext() {                                   // what the note trace (trace.js) records about the column, step or month being scheduled
+    const x = window.EJ_traceExtra, sc = SCALE, base = { track: T.id, scale: sc.name, scale_region: sc.reg, mood: EMO.urgent > 0.3 ? 'urgent' : EMO.troubled ? 'sad' : 'calm', urgency: +EMO.urgent.toFixed(2) };
+    if (x) return Object.assign(base, x);
+    const c = traceCol; if (c === null || !V) return base;
+    const { tot } = colStats(c), o = Object.assign(base, { kind: 'sweep column', column: c, longitude_deg: T.timeAxis ? null : +lonOf(c).toFixed(1), data_channels: tot.slice(0, 4).map(v => +v.toFixed(3)), data_strength_rank: +colRank(c).toFixed(3),
+      source: T.timeAxis ? T.frames[c] : (T.video || T.image) });
+    if (T.timeAxis) o.date_utc = T.grid.dates[c]; if (T.video) o.video_seconds = +(c / V.cols * T.grid.dur).toFixed(2);
+    if (window.EJ_elnino && window.EJ_elnino.active()) Object.assign(o, window.EJ_elnino.trace(c));
+    return o;
+  },
+  latFromLead(midi) {                                // the latitude a lead note stands for (pitch is latitude in the sweep); '' if it cannot be told
+    const L = LEADS[T.instruments.lead], span = scSpan(L.span);
+    for (let i = 0; i <= span + 5; i++) if (scNote(L.root, i) === midi) return +(latOf(Math.round((1 - Math.min(1, i / span)) * (V.rows - 1)))).toFixed(0);
+    return '';
+  },
+  settings: () => ({ sound_source: $('source').value, regional_scales_and_emotion: regionsOn(), skip_antarctic_drone: $('skipAnt').checked, tour_length_seconds: +$('dur').value, instruments: T.instruments, channel_names: T.species.slice(0, 4).map(s => s.name), image: T.image, video: T.video || null, grid_columns: V.cols, grid_rows: V.rows }),
+  dataInfo: () => DATA_INFO[T.id] || null, commonLimit: COMMON_LIMIT, sourceName: id => (INSTR[id] ? INSTR[id].name : id),
   follow: {                                          // what the "Follow a current" feature (follow.js) needs from the sound engine
     wake, lead, pad, drone, pluck, chordFor, regionAt, SCALES, silence: silenceContinuous, pauseSweep: () => { if (playing) pause(); },
     hold: on => { holdAudio = on; }, hardStop,

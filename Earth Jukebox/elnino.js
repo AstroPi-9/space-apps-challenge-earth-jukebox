@@ -28,6 +28,7 @@
   }
   window.EJ_elnino = {
     active: () => on && onSST() && month < MONTHS,
+    trace(c) { const s = colStats(c); return { el_layer_month: label(month), el_anomaly_mean_c: s ? +s.mean.toFixed(2) : null, el_anomaly_max_c: s ? +s.max.toFixed(1) : null, el_anomaly_min_c: s ? +s.min.toFixed(1) : null, el_source: 'assets/elnino/nino34.webm via elnino_grid.js' }; },
     mood(c) {                                          // replaces the ranking-based mood while the layer is on
       const s = colStats(c); if (!s) return null;
       const trb = s.mean > 0.3 || s.max >= 1.5, urg = s.max >= 2.5 ? Math.min(1, (s.max - 2) / 2) : 0;
@@ -83,18 +84,26 @@
     if (run) { stopYears('Stopped.'); return; }
     const A = API(); if (!A || !onSST()) return; if (prevStop) prevStop(); A.pauseSweep();
     const startM = month >= MAXM - 3 ? 0 : month, q0 = Math.floor(startM / 3), nQ = Math.floor((MAXM - q0 * 3) / 3) + 1, QS = 0.25, MS = QS / 3;
-    window.EJ_following = true; A.hold(true); await A.wake(); const ctx = window.EJ.A.ctx, t0 = ctx.currentTime + 0.3; let next = 0, prevState = 0, lastQ = -1;
+    window.EJ_following = true; A.hold(true); await A.wake(); const ctx = window.EJ.A.ctx, t0 = ctx.currentTime + 0.3; let next = 0, prevState = 0, lastQ = -1, prevM = null, persist = 0; const qinfo = {};
     $('elYears').textContent = '⏹ Stop'; $('elYears').setAttribute('aria-pressed', 'true'); on = true; $('elOn').checked = true;
     const q3 = q => { let s = 0, n = 0; for (let k = 0; k < 3; k++) { const v = idxAt(q * 3 + k); if (v !== null) { s += v; n++; } } return n ? s / n : null; };
+    const qMad = (() => {                                // the usual quarter-to-quarter change of the index: median absolute deviation (x 1.4826) of the changes in three-month means, whole record
+      const qs = []; for (let i = 0; i + 2 < IDX.values.length; i += 3) { const a = IDX.values.slice(i, i + 3); if (a.every(v => v !== null)) qs.push((a[0] + a[1] + a[2]) / 3); }
+      const d = qs.slice(1).map((v, i) => v - qs[i]).sort((x, y) => x - y), med = d[d.length >> 1], dev = d.map(v => Math.abs(v - med)).sort((x, y) => x - y);
+      return Math.max(0.05, 1.4826 * dev[dev.length >> 1]);
+    })();
     const sched = () => {
       const a = window.EJ.A; if (!a || a.ctx !== ctx) { stopYears(); return; }
       while (next < nQ && t0 + next * QS < ctx.currentTime + 0.4) {
         const q = q0 + next, t = t0 + next * QS, m = q3(q); if (m === null) { next = nQ; break; }
-        const trb = m >= 0.5, urg = m >= 1.5 ? Math.min(1, (m - 1) / 1.5) : 0, st = m >= 0.5 ? 1 : m <= -0.5 ? -1 : 0; A.setScaleAt(-145, 0, trb, urg);
+        const zq = prevM === null ? 0 : (m - prevM) / qMad; persist = zq >= 0.75 ? persist + 1 : 0; prevM = m;      // how fast the index is changing, in units of its usual change
+        const rapid = (m >= 0.5 && persist >= 2 && zq >= 1) ? Math.min(1, 0.45 + 0.2 * zq) : 0;                     // a sustained, fast rise into the El Niño range is urgent even before the index is very high
+        const trb = m >= 0.5, urg = Math.max(m >= 1.5 ? Math.min(1, (m - 1) / 1.5) : 0, rapid), st = m >= 0.5 ? 1 : m <= -0.5 ? -1 : 0; qinfo[q] = { z: zq, rapid: rapid > 0 }; A.setScaleAt(-145, 0, trb, urg);
+        window.EJ_traceExtra = { kind: 'years', month: label(q * 3 + 1), nino34_three_month_mean_c: +m.toFixed(2), change_vs_usual_quarterly_change: +zq.toFixed(1), rapid_onset: rapid > 0, source: 'nino34_index.js (NOAA PSL nina34.anom.data)' };
         A.drone(t, A.droneHz(), 0.1); A.pad(t, A.chordFor(m >= 1.5 ? 3 : m >= 0.5 ? 2 : m <= -0.5 ? 1 : 0), 0.2, 800 + 900 * Math.max(0, Math.min(1, 0.5 + m / 4)));
         A.lead(t, A.valueMidi(Math.max(0, Math.min(1, 0.5 + m / 6))), 0.17, 0, 0.6);
         if (st !== prevState && next > 0) { if (st === 1 && prevState !== 1) { A.pluck('glass', t + 0.05, A.valueMidi(0.9) + 12, 0.1, 0); A.pluck('glass', t + 0.2, A.valueMidi(1) + 12, 0.1, 0); } else if (st === -1) A.pluck('kalimba', t + 0.05, A.valueMidi(0.2), 0.1, 0); }
-        prevState = st; if (urg) A.urgentAt(t, QS, t0); next++;
+        prevState = st; if (urg) A.urgentAt(t, QS, t0); window.EJ_traceExtra = null; next++;
       }
     };
     run = { timer: setInterval(sched, 80), raf: 0 }; sched();
@@ -105,7 +114,7 @@
       if (month < MONTHS && vid) { const want = monthTime(month); if (vid.paused || Math.abs(vid.currentTime - want) > 0.6) { vid.currentTime = want; vid.playbackRate = SPM / MS; if (vid.paused) vid.play().catch(() => {}); } }
       else if (vid && !vid.paused) vid.pause();
       draw(); const q = Math.floor(month / 3);
-      if (q !== lastQ) { lastQ = q; const v = q3(q); $('elStatus').textContent = v === null ? '' : `${label(month)}: Niño 3.4 index ${sgn(v)} °C (three-month mean), ${state(v)}.` + (month >= MONTHS ? ' No map after 2017: index only.' : ''); }
+      if (q !== lastQ) { lastQ = q; const v = q3(q); $('elStatus').textContent = v === null ? '' : `${label(month)}: Niño 3.4 index ${sgn(v)} °C (three-month mean), ${state(v)}.` + (qinfo[q] && qinfo[q].z >= 1 ? ` Rising ${qinfo[q].z.toFixed(1)} times faster than its usual quarter-to-quarter change${qinfo[q].rapid ? ': a rapid onset' : ''}.` : '') + (month >= MONTHS ? ' No map after 2017: index only.' : ''); }
       if (el > nQ * QS + 1.2) { const vs = [0, 1, 2].map(k => idxAt(MAXM - k)).filter(v => v !== null); stopYears(`That is the whole record, to ${label(MAXM)}. The latest index values are ${vs.map(sgn).join(', ')} °C (the newest first).`); return; }
       run.raf = requestAnimationFrame(tick);
     };
