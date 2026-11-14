@@ -44,6 +44,15 @@ The author cannot hear the result while building it, so the balance was set by m
 
 This makes the mix measurably balanced and consistent; it does not make it pleasant. A listening pass is still needed.
 
+## Composed music layer
+
+The live synthesis is precise but sounds synthetic, so real-instrument loops were added underneath.
+
+- `tools/make-music.ps1` writes a small MIDI file per stem (original eight-bar phrases in Mohanam, Sa = D, at the app's fixed 120 bpm, so a loop is exactly 16 s), renders each with MuseScore 4's command line, and packs the mp3 files into `music_data.js` so the app still works from a folder.
+- Each track has a **bed** (chords every two bars, a bass note, sometimes a harp arpeggio) and a **melody** in the track's own instrument, with a short grace note on the longer notes as a nod to gamakas. The chords only use notes of the scale.
+- At load time each stem is normalised to the same loudness, so the result does not depend on what MuseScore rendered. While playing, the bed swells a little and the melody comes forward where the data is strong.
+- Checked: all 12 files decode, loop without a click (the 0.075 s of silence the mp3 encoder adds is skipped), start with the sweep and are destroyed on pause. **Not checked by ear.** Whether the loops fit with the live voices, and whether they make the mix too busy, is untested.
+
 ## Mistakes found and fixed
 
 - **The ocean colours were misread as current speed.** The first Ocean currents track treated blue to red as slow to fast. NASA's documentation (and the team's earlier analysis) says the colour is **sea surface temperature** and the lines show the currents. The track was rebuilt: temperature decoded from the colour bar, and "swirl" measured from the geometry of the flow lines. Every claim about "fast currents" was removed. That track is now hidden, because the Year track covers the same data and adds time.

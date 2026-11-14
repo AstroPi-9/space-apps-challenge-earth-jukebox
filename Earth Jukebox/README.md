@@ -27,7 +27,7 @@ How the picture becomes sound:
 - **Drums are regional and follow the data.** Each region plays its own native drum (tabla, drum kit, darbuka, djembe, taiko, surdo and tamborim, bodhrán, daf, kendang, congas, clapsticks). The stronger the data under the sweep, the faster they play, in four musical steps only: crotchets, quavers, semiquavers and, rarely, demisemiquavers. A sudden jump in the data gets an accent. In the Year track, each latitude zone plays one drum instead.
 - **Click or tap the picture** to hear a single spot, with a description.
 
-Everything is generated live in the browser with the Web Audio API. No audio files are used.
+The five voices are generated live in the browser with the Web Audio API. Underneath them sits a **composed music layer**: for each track, two 16-second loops written for this project in Mohanam (a "bed" of chords and bass, sometimes with a harp, and a melody). They were rendered with MuseScore 4 (its bundled MS Basic sound font) and are stored as `music_data.js`. The bed stays steady and the melody comes forward where the data is strong. Untick **Composed music underneath** to hear only the live voices. `tools/make-music.ps1` rebuilds them.
 
 ## Accessibility features
 
@@ -81,6 +81,7 @@ Each track's page section **Data and limits** gives its source, date, what the c
 | Path | What it is |
 |---|---|
 | `index.html`, `app.js` | The whole application. |
+| `music_data.js` | The composed music loops (12 mp3 files, base64), built by `tools/make-music.ps1` with MuseScore 4. The phrases were written by the AI assistant, not a human composer; the MS Basic sound font's licence has not been checked. |
 | `*_grid.js` | Precomputed sound grids for each track (`year_grid.js`, `grid.js` for aerosols, `sst_grid.js`, `sss_grid.js`, `density_grid.js`, `video_grid.js`, `ocean_grid.js`). |
 | `assets/` | Pictures, colour bars, the density video (`assets/video`) and 160 time-lapse frames (`assets/year`). |
 | `tools/` | Scripts that rebuild the grids from the source images (see below). |

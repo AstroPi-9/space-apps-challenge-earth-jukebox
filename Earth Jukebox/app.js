@@ -436,7 +436,7 @@ function initAudio(ctxIn) {
   const droneLP = ctx.createBiquadFilter(); droneLP.type = 'lowpass'; droneLP.frequency.value = 3000;
   d1.connect(droneLP); d2.connect(droneLP); droneLP.connect(droneGain); droneGain.connect(bus[0]); d1.start(); d2.start();
 
-  A = { ctx, master, gate, bus, nb, padGain, padOscs, padLP, pf1, pf2, saltGain, saltBP, droneGain, droneLP, d1, d2, padMul: 1, padScale: 1, droneRatio: 1.5, droneScale: 1 };
+  A = { ctx, master, gate, mix, music: null, bus, nb, padGain, padOscs, padLP, pf1, pf2, saltGain, saltBP, droneGain, droneLP, d1, d2, padMul: 1, padScale: 1, droneRatio: 1.5, droneScale: 1 };
   applyPalette();
   return A;
 }
@@ -836,10 +836,58 @@ async function play() {
   if (SPEECH && $('speak').checked && pos < 1.5) { const ok = await runGuide(); if (!ok) return; }   // spoken overview + listening guide first
   clearInterval(timer); playing = true; sweepEnded = false; timpFreq = null; nextTime = A.ctx.currentTime + 0.1; gridOrigin = nextTime; nextCol = Math.floor(pos); if (nextCol >= V.cols) nextCol = 0; queue = [];
   timer = setInterval(scheduler, 50); scheduler();
-  startVideo();
+  startVideo(); startMusic();
   $('play').textContent = '⏸ Pause'; $('play').setAttribute('aria-pressed', 'true');
   playhead.style.display = 'block'; requestAnimationFrame(frame);
 }
+
+// ================= COMPOSED MUSIC (MuseScore-rendered snippets) =================
+// Per track: a "bed" (chords, bass, sometimes harp) and a "tune" (a melody in Mohanam), each a 16 s loop (8 bars at 120 bpm).
+// They are original phrases written for this project (tools/make-music.ps1), rendered by MuseScore 4, and sit under the live sound.
+// The bed stays steady; the tune comes forward where the data is strong. Pausing closes the audio context, which also ends these loops.
+const MUS = { buf: {}, loop: 16, lead: 0.075, bedRms: 0.025, tuneRms: 0.022 };              // target loudness (linear RMS) of each stem before the data swell
+async function musicBuffers(ctx, id) {
+  const out = {};
+  for (const part of ['bed', 'tune']) {
+    const key = id + '_' + part;
+    if (!MUS.buf[key]) {
+      const b64 = window.MUSIC_B64 && window.MUSIC_B64[key]; if (!b64) return null;
+      const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      const buf = await ctx.decodeAudioData(u.buffer);
+      let s = 0, n = 0; const end = Math.min(buf.length, Math.floor(MUS.loop * buf.sampleRate));
+      for (let ch = 0; ch < buf.numberOfChannels; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < end; i++) { s += d[i] * d[i]; n++; } }
+      const rms = Math.sqrt(s / Math.max(1, n)) || 1e-4;
+      MUS.buf[key] = { buf, norm: Math.min(8, (part === 'bed' ? MUS.bedRms : MUS.tuneRms) / rms) };   // so every stem sits at the same loudness whatever MuseScore rendered
+    }
+    out[part] = MUS.buf[key];
+  }
+  return out;
+}
+async function startMusic() {
+  if (!A || !$('music').checked || A.music) return;
+  const a = A, ctx = a.ctx; a.music = { starting: true };
+  let b = null; try { b = await musicBuffers(ctx, T.id); } catch (e) {}
+  if (!b || A !== a || !playing) { if (A === a) a.music = null; return; }
+  const out = ctx.createGain(); out.gain.value = 0; out.connect(a.mix); out.gain.setTargetAtTime(1, ctx.currentTime, 0.7);
+  const parts = {}, t0 = ctx.currentTime + 0.05;
+  for (const k of ['bed', 'tune']) {
+    const g = ctx.createGain(); g.gain.value = b[k].norm * (k === 'bed' ? 0.8 : 0.3);
+    const src = ctx.createBufferSource(); src.buffer = b[k].buf; src.loop = true; src.loopStart = MUS.lead; src.loopEnd = Math.min(MUS.lead + MUS.loop, b[k].buf.duration);   // mp3 encoding adds about 0.075 s of silence at the start: loop from there, so the join falls where the notes have ended
+    src.connect(g); g.connect(out); src.start(t0); parts[k] = { g, norm: b[k].norm };
+  }
+  a.music = { out, parts };
+}
+function musicFollow(c) {                          // the tune comes forward where the data is strong
+  if (!A || !A.music || !A.music.parts) return; const t = A.ctx.currentTime, r = colRank(c), p = A.music.parts;
+  p.bed.g.gain.setTargetAtTime(p.bed.norm * (0.7 + 0.3 * r), t, 0.8);
+  p.tune.g.gain.setTargetAtTime(p.tune.norm * (0.25 + 0.75 * r), t, 0.8);
+}
+$('music').addEventListener('change', () => {
+  if (!A) return;
+  if (!$('music').checked) fadeMusic(0.1);
+  else if (playing) { if (A.music && A.music.out) A.music.out.gain.setTargetAtTime(1, A.ctx.currentTime, 0.3); else startMusic(); }
+});
+function fadeMusic(tc) { if (A && A.music && A.music.out) A.music.out.gain.setTargetAtTime(0, A.ctx.currentTime, tc); }
 function startVideo() {                                // start the movie at the sweep's position
   if (!T.video) return; const vid = $('vid'); vid.currentTime = pos / V.cols * T.grid.dur;
   vid.play().then(() => { if (!playing) vid.pause(); }).catch(() => {});      // if Pause was pressed while the movie was starting, stop it again
@@ -870,7 +918,7 @@ function frame() {
   if (queue.length && queue[0].t <= now) {
     const q = queue[0]; pos = (q.c + Math.min(1, (now - q.t) / q.step)) % V.cols;
     if (T.video) { const tgt = pos / V.cols * T.grid.dur, vid = $('vid'); if (Math.abs(vid.currentTime - tgt) > 0.3) vid.currentTime = tgt; if (vid.paused) vid.play().catch(() => {}); }   // keep the picture in step with the sound
-    setHead(pos); updateMeters(q.c);
+    setHead(pos); updateMeters(q.c); musicFollow(q.c);
     if (q.c !== lastNarrCol) { lastNarrCol = q.c; if ($('narrate').checked) narrateTour(q.c); }
   }
   requestAnimationFrame(frame);
@@ -973,7 +1021,7 @@ async function runGuide() {
 function cancelGuide() { if (!guiding) return; guideTok++; guiding = false; stopSpeech(); showGuideUI(false); setReadout('Intro stopped. Press play to start again.'); }
 function finishSweep() {                             // the sweep reached the east edge: let the last notes ring out, then stop
   if (T.video) $('vid').pause();
-  clearInterval(timer); timer = null; playing = false; silenceContinuous(); sleepSoon(3000);
+  clearInterval(timer); timer = null; playing = false; silenceContinuous(); fadeMusic(0.8); sleepSoon(3000);
   $('play').textContent = '▶ Play the globe'; $('play').setAttribute('aria-pressed', 'false');
   pos = 0; lastNarrCol = -1; setHead(V.cols);
   setReadout('The sweep has reached the end. Press play to hear it again, or click the map to explore.');
@@ -1240,6 +1288,6 @@ async function renderOffline(i, seconds, solo) {
   return { aw: +aw.toFixed(1), rms: +db(Math.sqrt(sum / (nw * win))).toFixed(1), active: aN ? +db(Math.sqrt(aSum / aN)).toFixed(1) : -120, peak: +db(peak).toFixed(1), activeShare: +(aN / nw).toFixed(2) };
 }
 
-if (location.search.includes("debug")) window.__jb = { TRACKS, setTrack, renderOffline, wake, colStats, get T() { return T; }, get V() { return V; }, get A() { return A; } };   // test hook, only with ?debug in the address
+if (location.search.includes("debug")) window.__jb = { TRACKS, musicBuffers, startMusic, setTrack, renderOffline, wake, colStats, get T() { return T; }, get V() { return V; }, get A() { return A; } };   // test hook, only with ?debug in the address
 setTrack(tabIndex('year') >= 0 ? tabIndex('year') : 0);
 })();
