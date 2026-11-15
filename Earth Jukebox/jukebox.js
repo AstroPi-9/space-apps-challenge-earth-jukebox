@@ -12,8 +12,7 @@
       { track: 'ocean', title: 'One frame: follow a current', dsc: "One frame of NASA's ocean currents. Follow a current and hear its temperature." } ] },
     sst: { code: 'B1', title: 'Sea temperature', icon: '🌡️', blurb: 'How warm is the surface of the ocean? Choose how to hear it.', items: [
       { track: 'sst', title: 'Still map', dsc: "NASA's sea surface temperature map, a long-term average. A beam sweeps from west to east." },
-      { track: 'sstVideo', title: 'Turning globe', dsc: 'The same temperature field as a globe turning once in a minute. The sound follows the beam.' },
-      { track: 'sstEl', minor: true, title: 'El Niño through the years', dsc: "The map with NASA's monthly temperature anomaly and NOAA's El Niño index, 1982 to today." } ] },
+      { track: 'sstVideo', title: 'Turning globe', dsc: 'The same temperature field as a globe turning once in a minute. The sound follows the beam.' } ] },
     sss: { code: 'B2', title: 'Salinity', icon: '🧂', blurb: 'How salty is the surface of the ocean? Choose how to hear it.', items: [
       { track: 'sss', title: 'Still map', dsc: "NASA's sea surface salinity map, a long-term average. A beam sweeps from west to east." },
       { track: 'sssVideo', title: 'Turning globe', dsc: 'The same salinity field as a globe turning once in a minute. The sound follows the beam.' } ] },

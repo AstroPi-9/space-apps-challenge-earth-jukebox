@@ -1743,7 +1743,8 @@ function setTrack(i) {
   document.querySelectorAll('#tracks button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.track === T.id)));
   setReadout(`Track: ${T.name}. Press play, or click the map.`);
 }
-const TAB_ORDER = ['year', 'ocean', 'aerosols', 'sst', 'sstEl', 'sstVideo', 'sss', 'sssVideo', 'density', 'densityVideo', 'lightning'];        // the single-frame "Ocean currents" track is hidden: the Year track covers the same data and adds time
+// El Niño ('sstEl') is switched off for now: its map image does not look good enough. Its code stays, so it can be put back by adding it here and to the sea temperature entry in jukebox.js.
+const TAB_ORDER = ['year', 'ocean', 'aerosols', 'sst', 'sstVideo', 'sss', 'sssVideo', 'density', 'densityVideo', 'lightning'];        // the single-frame "Ocean currents" track is hidden: the Year track covers the same data and adds time
 const tabIndex = id => TRACKS.findIndex(t => t.id === id);
 TAB_ORDER.forEach(id => {
   const i = tabIndex(id); if (i < 0) return; const t = TRACKS[i];
