@@ -1273,7 +1273,7 @@ function pause() {
   hardStop();                                                        // Pause means silence now: no fade, no ringing tail, no drone
   $('play').innerHTML = '<span aria-hidden="true">▶</span> Play';
 }
-function seek(col) { lastNarrCol = -1; pos = col; if (T.video) $('vid').currentTime = col / V.cols * T.grid.dur; queue = []; sweepEnded = false; if (playing) { nextCol = col; nextTime = A.ctx.currentTime + 0.05; } setHead(col); }
+function seek(col) { lastNarrCol = -1; narrReset(); pos = col; if (T.video) $('vid').currentTime = col / V.cols * T.grid.dur; queue = []; sweepEnded = false; if (playing) { nextCol = col; nextTime = A.ctx.currentTime + 0.05; } setHead(col); }
 function setHead(p) {
   if (T.timeAxis) {                                  // time-lapse: show the frame for this step and move the time slider
     const c = Math.max(0, Math.min(V.cols - 1, Math.floor(p))); playhead.style.display = 'none'; $('tline').value = c;
@@ -1290,7 +1290,7 @@ function frame() {
     const q = queue[0]; pos = (q.c + Math.min(1, (now - q.t) / q.step)) % V.cols;
     if (T.video) { const tgt = pos / V.cols * T.grid.dur, vid = $('vid'); if (Math.abs(vid.currentTime - tgt) > 0.3) vid.currentTime = tgt; if (vid.paused) vid.play().catch(() => {}); }   // keep the picture in step with the sound
     setHead(pos); updateMeters(q.c); musicFollow(q.c); scoreFollow(q.c);
-    if (q.c !== lastNarrCol) { lastNarrCol = q.c; if ($('narrate').checked) narrateTour(q.c); }
+    if (q.c !== lastNarrCol) { lastNarrCol = q.c; if ($('narrate').checked) narrateTour(q.c, false, q.step); }
   }
   requestAnimationFrame(frame);
 }
@@ -1324,30 +1324,51 @@ function describeCell(c, r) {
   txt += sp ? ` Drums: ${I.name} (${I.where}), playing ${sp.name}.` : ' The drums are silent here.';
   return txt;
 }
-// The captions under the map ("Where you are"). Two kinds of line: an event (a landmark is passed, the drums move to another region) and, between events, the current
-// state (which drums, how fast, how strong the data is). A drum change is only announced once that drum has led for a few steps, so the text does not flip back and
-// forth, and the wording rotates. Lines are spaced out in time, and the same line is never written twice in a row.
-const CHANGE_WORDS = [i => `the drums change to ${i.name}, from ${i.where}`, i => `now ${i.name} drums take over, from ${i.where}`, i => `${i.name}, the drum of ${i.where}, leads the beat`, i => `the beat moves to ${i.name}, from ${i.where}`];
-const narr = { cand: null, since: 0, n: 0, pending: [], at: -99, key: '' };
-function narrateTour(c) {
-  const lon = lonOf(c), now = performance.now() / 1000;
-  T.hotspots.forEach(h => { if (lonOf(c - 1) < h.say && lon >= h.say) narr.pending.push(h.name); });
-  if (c === 0) narr.pending.push('starting at the dateline in the Pacific');
-  const sp = speedOf(c), id = sp ? dominantRegion(c) : null;
-  if (id !== narr.cand) { narr.cand = id; narr.since = c; }
-  if (id && id !== lastInstr && Math.abs(c - narr.since) >= 6) { lastInstr = id; narr.pending.push(CHANGE_WORDS[narr.n++ % CHANGE_WORDS.length](INSTR[id])); }
-  const rank = colRank(c), strength = rank < 0.15 ? 'quiet' : rank < 0.4 ? 'light' : rank < 0.75 ? 'moderate' : 'strong';
-  const cur = lastInstr && INSTR[lastInstr], key = (cur ? cur.name : '') + '|' + (sp ? sp.name : 'silent') + '|' + strength;
-  let text = null;
-  if (narr.pending.length && now - narr.at >= 1.5) { text = narr.pending.splice(0, 2).join(' and ') + '.'; narr.key = key; }
-  else if (!narr.pending.length && key !== narr.key && now - narr.at >= 3) {
-    text = sp ? `${cur ? cur.name + ' drums, ' : 'Drums '}playing ${sp.name}; the data here is ${strength}.` : 'The drums are silent: the data here is quiet.'; narr.key = key;
+// The text under the map ("Where you are"). The number beside it (date or longitude) moves with every step; this description changes much more slowly, at most every
+// few seconds, and says what is actually under the beam: which kind of data dominates, over which part of the world, near which latitude, and the value there (a
+// temperature, say). When the beam passes a landmark (a dust plume, a season) its story is shown instead, and given a little longer to read.
+function latPhrase(lat) {
+  const a = Math.abs(lat), h = lat >= 0 ? 'northern' : 'southern';
+  return a < 8 ? 'the equator' : a < 23 ? `the ${h} tropics` : a < 40 ? `the ${h} subtropics` : a < 60 ? `the ${h} mid-latitudes` : lat >= 0 ? 'the far north' : 'the far south';
+}
+function areaDescription(c) {                        // {key, make(n)}: key changes when the picture under the beam changes; make(n) words it, rotating the phrasing
+  const isFront = k => /^an? /.test(T.species[k].what);
+  const all = T.percussionOnly ? [0, 1, 3, 4] : [0, 1, 2, 3], main = all.filter(k => !isFront(k)), front = all.find(isFront);
+  let bestR = -1, bestL = 0; const tot = {}; main.forEach(k => { tot[k] = 0; });
+  for (let r = 0; r < V.rows - 2; r++) { const L = V.load[r * V.cols + c]; if (L > bestL) { bestL = L; bestR = r; } main.forEach(k => { tot[k] += V.val(c, r, k); }); }
+  if (bestR < 0 || bestL < 0.05) return { key: 'quiet', make: () => `Very little under the beam here: ${T.quiet}` };
+  const ranked = main.slice().sort((x, y) => tot[y] - tot[x]), k1 = ranked[0], k2 = ranked[1], two = tot[k2] > 0.4 * tot[k1];
+  const strength = word(Math.max(...main.map(k => V.val(c, bestR, k)))), what1 = T.species[k1].what, what2 = two ? T.species[k2].what : '';
+  const id = !T.timeAxis && dominantRegion(c), where = id ? INSTR[id].where : '', band = latPhrase(latOf(bestR));
+  const sharp = front !== undefined && V.val(c, bestR, front) > 0.5 ? T.species[front].what : '';
+  let value = T.describeValue && V.mean(c, bestR) > 0 && V.cov(c, bestR) > 0.05 ? T.describeValue(V.mean(c, bestR)) : '';
+  if (T.id === 'year') {                              // the equator hardly changes through the year: the seasons show in the mid-latitudes, so say how warm each side is
+    const rowAt = lat => { let b = 0; for (let r = 1; r < V.rows; r++) if (Math.abs(latOf(r) - lat) < Math.abs(latOf(b) - lat)) b = r; return b; };
+    const dn = Math.round(32 * V.mean(c, rowAt(45))), ds = Math.round(32 * V.mean(c, rowAt(-45)));
+    value = `The northern mid-latitudes are near ${dn} degrees, the southern near ${ds}: ${dn > ds + 1 ? 'summer in the north' : ds > dn + 1 ? 'summer in the south' : 'the seasons are balanced'}.`;
   }
+  const key = [k1, two ? k2 : '', strength, where, band, sharp, value].join('|');
+  return { key, make: n => {
+    const lead = what1.match(/^(.*? over )/), mix = !what2 ? what1 : lead && what2.startsWith(lead[1]) ? `${what1}, and also over ${what2.slice(lead[1].length)}` : `${what1}, with ${what2}`, over = where ? ` over ${where}` : '', tail = sharp ? `, with ${sharp}` : '';
+    const t = [`${cap(strength)} ${mix}${over}, strongest around ${band}${tail}.`, `Around ${band}${over} the beam finds ${strength} ${mix}${tail}.`, `${cap(mix)}${over || ' under the beam'}, ${strength} and peaking near ${band}${tail}.`][n % 3];
+    return value ? t + ' ' + value : t;
+  } };
+}
+const narr = { n: 0, pending: [], at: -99, hold: 4, story: false, key: '' };
+function narrReset() { narr.pending = []; narr.at = -99; narr.hold = 4; narr.story = false; narr.key = ''; }
+function narrateTour(c0, force, step) {
+  // The text takes a few seconds to appear and to read, so it describes what the beam is about to reach, not where it is this instant: the words and the beam arrive together.
+  const ahead = !force && step > 0 ? Math.min(30, Math.round(3 / step)) : 0, c = Math.min(V.cols - 1, c0 + ahead), lon = lonOf(c), now = performance.now() / 1000;
+  if (force) narrReset();
+  else T.hotspots.forEach(h => { if (lonOf(c - 1) < h.say && lon >= h.say) narr.pending.push({ h, text: `${cap(h.name)}. ${h.story}` }); });
+  narr.pending = narr.pending.filter(p => lon <= p.h.lon[1]).slice(-2);          // a landmark the beam has already left is no longer worth telling
+  const area = areaDescription(c), since = now - narr.at; let text = null, story = false;
+  if (narr.pending.length && since >= (narr.story ? narr.hold : 2)) { text = narr.pending.shift().text; story = true; narr.key = area.key; }   // landmarks may interrupt a plain description, but not each other
+  else if (!narr.pending.length && area.key !== narr.key && since >= narr.hold) { text = area.make(narr.n++); narr.key = area.key; }
   if (!text || text === lastSpoken) return;
-  lastSpoken = text; narr.at = now;
+  lastSpoken = text; narr.at = now; narr.story = story; narr.hold = story ? 4.5 : 3.5;
   setReadoutEvent((T.timeAxis ? dateLabel(T.grid.dates[c]) : 'Longitude ' + fmtLon(lon)) + ': ', text);
 }
-
 // ================= SPOKEN NARRATION (browser speech synthesis) =================
 const SPEECH = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
@@ -1445,7 +1466,7 @@ async function runGuide() {
   let failed = false;
   for (const s of guideSentences()) { if (tok !== guideTok || guideSkip) break; if (!(await say(s)) && tok === guideTok && !guideSkip) { failed = true; break; } }
   const ok = tok === guideTok; guiding = false; showGuideUI(false);
-  if (ok) setReadout(failed ? 'Speech did not start in this browser or on this device (no voice or sound output), so the spoken intro was skipped. The sweep plays now.' : 'Playing the sweep once, from west to east.');
+  if (ok) setReadout(failed ? 'Speech did not start in this browser or on this device (no voice or sound output), so the spoken intro was skipped. The sweep plays now.' : '');
   return ok;
 }
 function cancelGuide() { if (!guiding) return; guideTok++; guiding = false; stopSpeech(); showGuideUI(false); setReadout('Intro stopped. Press play to start again.'); }
@@ -1704,7 +1725,7 @@ function buildVoices() {
 function setTrack(i) {
   if (window.EJ_followStop) window.EJ_followStop();
   if (playing) pause(); stopSpeech(); lastNarrCol = -1;
-  T = TRACKS[i]; V = mkView(T.grid); computeRegions(); computeDrumModel(); computeEmotion(); lastInstr = null; narr.cand = null; narr.pending = []; narr.key = ''; narr.at = -99; pos = 0; cur = null; queue = []; lastSpoken = '';
+  T = TRACKS[i]; V = mkView(T.grid); computeRegions(); computeDrumModel(); computeEmotion(); lastInstr = null; narrReset(); pos = 0; cur = null; queue = []; lastSpoken = '';
   const vid = $('vid');
   if (T.video) { $('map').style.display = 'none'; vid.style.display = 'block'; vid.setAttribute('aria-label', T.alt); vid.src = T.video; $('vcap').style.display = 'block'; $('vcap').textContent = ''; }
   else { vid.pause(); vid.removeAttribute('src'); vid.load(); vid.style.display = 'none'; $('vcap').style.display = 'none'; $('map').style.display = 'block'; $('map').src = T.image; $('map').alt = T.alt; }
@@ -1732,7 +1753,7 @@ TAB_ORDER.forEach(id => {
 });
 function togglePlay() { if (guiding) cancelGuide(); else if (playing) pause(); else play(); }
 $('play').addEventListener('click', togglePlay);
-$('tline').addEventListener('input', e => { const c = +e.target.value; seek(c); updateMeters(c); });   // drag the time slider through the year
+$('tline').addEventListener('input', e => { const c = +e.target.value; seek(c); updateMeters(c); if ($('narrate').checked) narrateTour(c, true); });   // drag the time slider through the year
 $('restart').addEventListener('click', () => { cancelGuide(); if (playing) pause(); seek(0); play(); });
 $('skip').addEventListener('click', () => { guideSkip = true; stopSpeech(); });
 $('vol').addEventListener('input', applyVolume);
