@@ -65,7 +65,7 @@
   function speakList(list, useVoice, my) {
     SS.resume(); const voices = SS.getVoices(), chosen = useVoice ? voices.find(x => $('voice') && x.name === $('voice').value) : null; let started = false;
     list.forEach((t, i) => {
-      const u = new SpeechSynthesisUtterance(t); if (chosen) { u.voice = chosen; u.lang = chosen.lang; } else u.lang = 'en'; u.rate = 1;
+      const u = new SpeechSynthesisUtterance(window.EJ_PRON ? window.EJ_PRON(t) : t); if (chosen) { u.voice = chosen; u.lang = chosen.lang; } else u.lang = 'en'; u.rate = 1;
       u.onstart = () => { if (my !== gen) return; started = true; caption(t); };
       u.onerror = e => { if (my !== gen || e.error === 'canceled' || e.error === 'interrupted') return; started = false; if (useVoice) { gen++; speakList(list, false, gen); } else failure(e.error || 'error'); };
       if (i === list.length - 1) u.onend = () => { if (my === gen) caption(''); };
