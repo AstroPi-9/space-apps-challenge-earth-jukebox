@@ -83,10 +83,18 @@
     clearTimeout(timer); const list = (extra ? [extra] : []).concat(parts());
     if (now) speakAll(list); else timer = setTimeout(() => speakAll(list), 350);                  // from a button press, speak at once (browsers want speech to start from the press)
   }
+  // Reader mode: while Hear Me is on, the sheet music is hidden (nothing there for a listener) and the music ducks whenever new text appears.
+  // Turning Hear Me off puts back what the person had, unless they changed that switch themselves in the meantime.
+  let saved = null;
+  const setBox = (id, v) => { const e = $(id); if (e && e.checked !== v) { e.checked = v; e.dispatchEvent(new Event('change', { bubbles: true })); } };
+  function readerMode(v) {
+    if (v) { if (saved) return; saved = { sheet: $('showSheet') ? $('showSheet').checked : null, quiet: $('quietRead') ? $('quietRead').checked : null }; setBox('showSheet', false); setBox('quietRead', true); }
+    else if (saved) { const s0 = saved; saved = null; if (s0.sheet !== null && $('showSheet') && !$('showSheet').checked) setBox('showSheet', s0.sheet); if (s0.quiet !== null && $('quietRead') && $('quietRead').checked) setBox('quietRead', s0.quiet); }
+  }
   function setOn(v) {
     on = v; btn.classList.toggle('on', on); btn.innerHTML = on ? '<span aria-hidden="true">🔊</span> Hear Me is on' : '<span aria-hidden="true">🔊</span> Hear Me'; bar.hidden = !on;
-    if (on) { if (!ok) { on = false; bar.hidden = true; $('jbLive').textContent = 'Sorry, this browser cannot speak. Please use a screen reader instead.'; return; } hear('Hear Me is on. I will describe each screen as you move around. Press H to hear a screen again.', true); }
-    else { clearTimeout(timer); gen++; caption(''); const f = $('hearFallback'); if (f) f.hidden = true; if (ok) { SS.cancel(); const u = new SpeechSynthesisUtterance('Hear Me is off.'); SS.speak(u); } }
+    if (on) { if (!ok) { on = false; bar.hidden = true; $('jbLive').textContent = 'Sorry, this browser cannot speak. Please use a screen reader instead.'; return; } readerMode(true); hear('Hear Me is on. I will describe each screen as you move around. Press H to hear a screen again.', true); }
+    else { readerMode(false); clearTimeout(timer); gen++; caption(''); const f = $('hearFallback'); if (f) f.hidden = true; if (ok) { SS.cancel(); const u = new SpeechSynthesisUtterance('Hear Me is off.'); SS.speak(u); } }
   }
   btn.addEventListener('click', () => { if (!on) setOn(true); else hear(null, true); });             // first press turns it on; pressing again reads the screen once more
   $('hearAgain').addEventListener('click', () => hear(null, true));

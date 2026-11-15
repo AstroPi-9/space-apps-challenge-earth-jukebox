@@ -1271,7 +1271,7 @@ function hardStop() {                                  // silence everything at 
 function pause() {
   playing = false; if (T.video) $('vid').pause(); stopSpeech(); clearInterval(timer); timer = null;
   hardStop();                                                        // Pause means silence now: no fade, no ringing tail, no drone
-  $('play').innerHTML = '<span aria-hidden="true">▶</span> Play the globe';
+  $('play').innerHTML = '<span aria-hidden="true">▶</span> Play';
 }
 function seek(col) { lastNarrCol = -1; pos = col; if (T.video) $('vid').currentTime = col / V.cols * T.grid.dur; queue = []; sweepEnded = false; if (playing) { nextCol = col; nextTime = A.ctx.currentTime + 0.05; } setHead(col); }
 function setHead(p) {
@@ -1398,7 +1398,7 @@ function say(text) {                                 // speak one sentence and r
 }
 function showGuideUI(on) {
   $('skip').hidden = !on;
-  $('play').innerHTML = on ? '<span aria-hidden="true">⏹</span> Stop intro' : '<span aria-hidden="true">▶</span> Play the globe';
+  $('play').innerHTML = on ? '<span aria-hidden="true">⏹</span> Stop intro' : '<span aria-hidden="true">▶</span> Play';
 }
 async function runGuide() {
   stopSpeech(); guiding = true; guideSkip = false; const tok = ++guideTok; showGuideUI(true);
@@ -1414,7 +1414,7 @@ function finishSweep() {                             // the sweep reached the ea
   curBar = -1; barChord = null; heldBarFor = -2;
   if (T.video) $('vid').pause();
   clearInterval(timer); timer = null; playing = false; silenceContinuous(); fadeMusic(0.8); sleepSoon(3000);
-  $('play').innerHTML = '<span aria-hidden="true">▶</span> Play the globe';
+  $('play').innerHTML = '<span aria-hidden="true">▶</span> Play';
   pos = 0; lastNarrCol = -1; setHead(V.cols);
   setReadout('The sweep has reached the end. Press play to hear it again, or click the map to explore.');
   speak('The sweep has reached the end.');
@@ -1423,7 +1423,7 @@ function finishSweep() {                             // the sweep reached the ea
 function fillVoices() {
   if (!SPEECH) return; const sel = $('voice'), keep = sel.value, vs = speechSynthesis.getVoices();
   sel.innerHTML = vs.map(v => `<option value="${v.name}">${v.name} (${v.lang})</option>`).join('');
-  const en = vs.find(v => /^en/i.test(v.lang) && v.default) || vs.find(v => /^en/i.test(v.lang));
+  const en = vs.find(v => /susan/i.test(v.name)) || vs.find(v => /^en/i.test(v.lang) && v.default) || vs.find(v => /^en/i.test(v.lang));   // Susan is the house voice when the device has her
   sel.value = vs.some(v => v.name === keep) ? keep : (en ? en.name : (vs[0] ? vs[0].name : ''));
 }
 if (SPEECH) { fillVoices(); speechSynthesis.addEventListener('voiceschanged', fillVoices); }
@@ -1572,7 +1572,7 @@ function stopDemo(quiet) {
   demoTok++; demoTimers.forEach(clearTimeout); demoTimers = []; demoRunning = false;
   document.querySelectorAll('.voice.demo-on').forEach(e => e.classList.remove('demo-on'));
   if (!quiet) hardStop();                           // the Stop button: silence now
-  silenceContinuous(); if (!quiet) $('demoStatus').textContent = ''; $('demoAll').innerHTML = '<span aria-hidden="true">🎧</span> Hear the instruments'; sleepSoon(300);
+  silenceContinuous(); if (!quiet) $('demoStatus').textContent = ''; demoBtn(false); sleepSoon(300);
 }
 async function demoVoice(k, tok) {
   const P = T.instruments, rows = V.rows, mid = Math.round(rows * 0.45), sp = T.species;
@@ -1613,12 +1613,13 @@ async function demoVoice(k, tok) {
   }
 }
 async function demoOne(k) {
-  if (playing) pause(); cancelGuide(); stopDemo(true); const tok = ++demoTok; demoRunning = true; $('demoAll').innerHTML = '<span aria-hidden="true">⏹</span> Stop';
+  if (playing) pause(); cancelGuide(); stopDemo(true); const tok = ++demoTok; demoRunning = true; demoBtn(true);
   await demoVoice(k, tok); if (tok === demoTok) { stopDemo(true); $('demoStatus').textContent = 'Done. Press Hear on another voice, or Play to hear them all together.'; }
 }
+function demoBtn(on) { const b = $('demoAll'); b.innerHTML = '<span class="ic" aria-hidden="true">' + (on ? '⏹' : '🎧') + '</span><span class="lb">' + (on ? 'Stop demo' : 'Hear instruments') + '</span><span class="st" aria-hidden="true"></span>'; b.removeAttribute('aria-label'); b.classList.toggle('running', on); b.title = on ? 'Stop the instruments demo' : 'Hear the instruments, one after another'; }
 async function demoAll() {
   if (demoRunning) { stopDemo(); return; }
-  if (playing) pause(); cancelGuide(); stopSpeech(); stopDemo(true); const tok = ++demoTok; demoRunning = true; $('demoAll').innerHTML = '<span aria-hidden="true">⏹</span> Stop';
+  if (playing) pause(); cancelGuide(); stopSpeech(); stopDemo(true); const tok = ++demoTok; demoRunning = true; demoBtn(true);
   for (let k = 0; k < 5; k++) { if (tok !== demoTok) return; await demoVoice(k, tok); await dwait(300); }
   if (tok === demoTok) { stopDemo(true); $('demoStatus').textContent = 'That is every voice. Press Play to hear them all together.'; if ($('speak').checked && SPEECH) speak('That is every voice. Press Play to hear them all together.', true); }
 }
