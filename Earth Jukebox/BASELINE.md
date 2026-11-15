@@ -21,7 +21,7 @@ Everything in the 14 Nov "Not verified" list still stands, and in addition: the 
 This marks the project as it stood after the interface redesign and the knowledge graph. It is the point to compare against or return to.
 
 - **Git tag:** `baseline-2026-11-14` (on the commit after `73db355`, which added `KNOWLEDGE_GRAPH.md`). Restore a copy with `git checkout baseline-2026-11-14`, or list changes since with `git diff baseline-2026-11-14`.
-- **Repository:** private, https://github.com/AstroPi-9/space-apps-challenge-earth-jukebox (`main`).
+- **Repository:** public, https://github.com/AstroPi-9/space-apps-challenge-earth-jukebox (`main`).
 - **Size:** app folder about 63 MB (assets about 31 MB including 160 Year frames and the El Nino movie); JavaScript total about 21.9 MB, of which audio and data files are the bulk (samples 7.5, fixed loops 4.7, stems 3.6, El Nino fine grid 4.0, coarse grid 1.6). Code: app.js 1,616 lines, plus sheet.js, follow.js, elnino.js, trace.js.
 
 ## What is in it

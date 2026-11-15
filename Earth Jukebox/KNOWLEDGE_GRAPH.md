@@ -4,7 +4,7 @@ Last updated: 14 Nov 2026. Read this first, then `README.md` (what it does and i
 Format: entities are `##` headings; relationships are written as `A —verb→ B`; **bold** = a decision or fact that is easy to get wrong.
 
 ## 0. One-paragraph summary
-A browser app (plain HTML and JS, no build, works opened from a folder) that turns NASA ocean and atmosphere pictures into live music while the picture stays on screen. Built for the **NASA Space Apps Challenge 2026, "The Earth Information Jukebox"**. **Deadline: 15 Nov 2026, 23:59 local.** It is an independent project, not a NASA product. Developed with Claude Code; the AI disclosure is in `README.md`. Repo: <https://github.com/AstroPi-9/space-apps-challenge-earth-jukebox> (**private**; make public only after the checks in section 12).
+A browser app (plain HTML and JS, no build, works opened from a folder) that turns NASA ocean and atmosphere pictures into live music while the picture stays on screen. Built for the **NASA Space Apps Challenge 2026, "The Earth Information Jukebox"**. **Deadline: 15 Nov 2026, 23:59 local.** It is an independent project, not a NASA product. Developed with Claude Code; the AI disclosure is in `README.md`. Repo: <https://github.com/AstroPi-9/space-apps-challenge-earth-jukebox> (**public**; was made public after the checks in section 12).
 
 ## 1. Relationship map
 
@@ -106,7 +106,7 @@ Re-running `make-score.ps1` overwrites `music_scores\EarthJukebox_5voice.mscz`; 
 - `app.js` is an IIFE: new code that needs its internals must be exposed on `window.EJ` or added to `__jb` (debug).
 - **Do not edit with `perl -e` using quotes or `$(`; it has corrupted files repeatedly.** Use the Edit tool or a Python script with exact-string replace and an assert. **Never put an apostrophe inside a single-quoted JS string** (it broke `app.js` and the analysis page twice). Non-ASCII characters are safe with the Edit/Write tools, not with shell one-liners.
 - Long browser tests exceed the 45 s tool limit: start an async job, store results on `window`, poll.
-- Git: commit author is `AstroPi-9` with the user's gmail address (will show publicly if the repo goes public); commits end with the Claude co-author line; push to `main`.
+- Git: commits use the GitHub no-reply address (no personal email); commits end with the Claude co-author line; push to `main`. Published via GitHub Pages (Actions workflow).
 - Check scripts parse after edits: fetch each `<script src>` and `new Function(text)` (the console log also keeps stale errors across reloads).
 
 ## 12. Open items and unverified claims (be explicit about these)
