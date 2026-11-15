@@ -686,7 +686,8 @@ function initAudio(ctxIn) {
   const gate = ctx.createGain(); gate.gain.value = 1;          // hard mute switch, separate from the volume slider
   const limiter = ctx.createDynamicsCompressor(); limiter.threshold.value = -9; limiter.knee.value = 0; limiter.ratio.value = 20; limiter.attack.value = 0.003; limiter.release.value = 0.15;   // catches drum peaks so nothing clips
   dry.connect(comp); wet.connect(comp); comp.connect(limiter); limiter.connect(gate); gate.connect(master); master.connect(ctx.destination);
-  const live = ctx.createGain(); live.gain.value = 1; live.connect(mix);          // all live voices pass through here; the MuseScore-composition source turns it down while it plays
+  const impact = ctx.createGain(); impact.gain.value = 1; impact.connect(limiter);          // the El Niño black-red timpani roll goes straight to the limiter, past the compressor, which would otherwise flatten it
+  const live = ctx.createGain(); live.gain.value = 1; const duck = ctx.createGain(); duck.gain.value = 1; live.connect(duck); duck.connect(mix);   // duck: the other voices dip a little under the black-red timpani roll, so it stands out          // all live voices pass through here; the MuseScore-composition source turns it down while it plays
   const bus = [0, 1, 2, 3, 4].map(k => { const g = ctx.createGain(); g.gain.value = meters[k] && !meters[k].cb.checked ? 0 : busGain(k); g.connect(live); return g; });
   const nb = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), nd = nb.getChannelData(0);
   for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
@@ -711,7 +712,7 @@ function initAudio(ctxIn) {
   const droneLP = ctx.createBiquadFilter(); droneLP.type = 'lowpass'; droneLP.frequency.value = 3000;
   d1.connect(droneLP); d2.connect(droneLP); droneLP.connect(droneGain); droneGain.connect(bus[0]); d1.start(); d2.start();
 
-  A = { ctx, master, gate, mix, live, music: null, score: null, bus, nb, padGain, padOscs, padLP, pf1, pf2, saltGain, saltBP, droneGain, droneLP, d1, d2, padMul: 1, padScale: 1, droneRatio: 1.5, droneScale: 1 };
+  A = { ctx, master, gate, mix, live, duck, impact, music: null, score: null, bus, nb, padGain, padOscs, padLP, pf1, pf2, saltGain, saltBP, droneGain, droneLP, d1, d2, padMul: 1, padScale: 1, droneRatio: 1.5, droneScale: 1 };
   applyPalette();
   return A;
 }
@@ -1052,12 +1053,12 @@ function rumbleHit(t, f, gain) {                      // one dark stroke on a bi
   });
   const s = ctx.createBufferSource(), lp = ctx.createBiquadFilter(), ng = ctx.createGain(); lp.type = 'lowpass'; lp.frequency.value = 320;
   ng.gain.setValueAtTime(gain * 0.6, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.05); s.buffer = nb; s.connect(lp); lp.connect(ng); ng.connect(g); s.start(t, Math.random() * 1.5, 0.07);
-  g.connect(bus[4]);
+  g.connect(A.impact);
 }
 function rumbleBed(t, dur, gain) {                    // a low rumble of filtered noise under the roll, swelling and fading with the column
   const { ctx, bus, nb } = A, s = ctx.createBufferSource(), lp = ctx.createBiquadFilter(), g = ctx.createGain(); lp.type = 'lowpass'; lp.frequency.value = 130; lp.Q.value = 0.6;
   g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(gain, t + dur * 0.5); g.gain.linearRampToValueAtTime(0.0001, t + dur * 1.3);
-  s.buffer = nb; s.loop = true; s.connect(lp); lp.connect(g); g.connect(bus[4]); s.start(t, Math.random() * 1.2); s.stop(t + dur * 1.35);
+  s.buffer = nb; s.loop = true; s.connect(lp); lp.connect(g); g.connect(A.impact); s.start(t, Math.random() * 1.2); s.stop(t + dur * 1.35);
 }
 function deepData() {                                 // per column: how much medium-dark red and black-red there is (0 to 1, against the strongest column of the pair of years), and where to stop
   const g = T.grid; if (!g.deep || !g.deepRef) return null; if (T._deep && T._deep.g === g) return T._deep;
@@ -1072,6 +1073,7 @@ function deepData() {                                 // per column: how much me
   return (T._deep = { g, mid: sm(mid, g.deepRef[0]), blk: sm(blk, g.deepRef[1]), stop });
 }
 let deepNext = 0;
+let IMPACT = 8, DUCK = 0.5;   // IMPACT: strength of the black-red roll; DUCK: how far the other voices dip under it at most (0.5 = half volume)                                  // strength of the black-red timpani roll (it bypasses the master compressor; the limiter still catches peaks)
 let deepOff = false;                                  // debug only (?debug): true switches the two deep reds off, 'only' plays only them, to measure what they add
 function elDeep(c, t, step) {
   const D = deepOff === true ? null : deepData(); if (!D) return;
@@ -1084,11 +1086,14 @@ function elDeep(c, t, step) {
     const ti = ((ch[1] - ch[0]) % 12 + 12) % 12, root = 36 + ((r0 - 36 % 12 + 12) % 12), top = root + 12 + (ti === 3 || ti === 4 ? ti : 3), notes = [root, root + fi, top > 58 ? top - 12 : top];
     deepNext = t + 1.0; notes.forEach(m => { noteLog(1, t, m, 1.2); bassNote(t, m, 1.2, 0.008 + 0.13 * L * L); });
   }
-  if (blk > 0.03) {                                                                                 // the low timpani roll and its rumble
+  const rollOn = blk > 0.03 && !(meters[4] && !meters[4].cb.checked);                               // the roll is silent when the Percussion box is unticked
+  A.duck.gain.setTargetAtTime(rollOn ? 1 - DUCK * Math.pow(Math.pow(blk, 0.7), 3) : 1, t, 0.12);   // the other voices dip while it rolls, and come back after
+  if (rollOn) {                                                                                     // the low timpani roll and its rumble
     const n = Math.max(3, Math.round(step / 0.07)), f = mtof(38), lv = Math.pow(blk, 0.7);
     noteLog(2, t, 38, step, 'low timpani rumble');
-    for (let i = 0; i < n; i++) rumbleHit(t + i * step / n, f, (0.075 * lv * lv * lv) * (0.7 + 0.5 * i / n) * (0.85 + Math.random() * 0.3));
-    rumbleBed(t, step, 0.12 * lv * lv * lv);
+    const imp = T.timeAxis ? IMPACT * 0.25 : IMPACT;                                                // the timeline has deep red in most columns at once, so it needs less to stay clear of clipping
+    for (let i = 0; i < n; i++) rumbleHit(t + i * step / n, f, (imp * lv * lv * lv) * (0.7 + 0.5 * i / n) * (0.85 + Math.random() * 0.3));
+    rumbleBed(t, step, imp * 1.6 * lv * lv * lv);
   }
 }
 
@@ -1916,6 +1921,7 @@ function buildVoices() {
 function setTrack(i) {
   if (window.EJ_followStop) window.EJ_followStop();
   if (playing) pause(); stopSpeech(); lastNarrCol = -1;
+  if (A && A.duck) { try { A.duck.gain.cancelScheduledValues(0); A.duck.gain.value = 1; } catch (e) {} }          // never carry the black-red dip over to another record
   T = TRACKS[i]; document.title = 'Earth Jukebox – ' + T.name; $('stage').setAttribute('aria-label', `${T.name}: the picture. Use arrow keys to explore, Enter to hear a spot, Space to play or pause.`); V = mkView(T.grid); computeRegions(); computeDrumModel(); computeEmotion(); lastInstr = null; narrReset(); pos = 0; cur = null; queue = []; lastSpoken = '';
   const vid = $('vid');
   if (T.video) { $('map').style.display = 'none'; vid.style.display = 'block'; vid.setAttribute('aria-label', T.alt); vid.src = T.video; $('vcap').style.display = 'block'; $('vcap').textContent = ''; }
@@ -2006,6 +2012,6 @@ window.EJ = { get A() { return A; }, get T() { return T; }, get playing() { retu
     urgentAt(t, step, t0) { gridOrigin = t0; urgentFx(0, t, step); },
     droneHz: () => T.droneHz, lightKind: () => T.instruments.light,
   } };   // read-only view for the scrolling sheet music (sheet.js)
-if (location.search.includes("debug")) window.__jb = { setDeepOff: v => { deepOff = v; }, loadSamples, SM, TRACKS, musicBuffers, scoreBuffers, startMusic, setTrack, renderOffline, wake, colStats, get T() { return T; }, get V() { return V; }, get A() { return A; } };   // test hook, only with ?debug in the address
+if (location.search.includes("debug")) window.__jb = { setDeepOff: v => { deepOff = v; }, setImpact: (v, d) => { IMPACT = v; if (d !== undefined) DUCK = d; }, loadSamples, SM, TRACKS, musicBuffers, scoreBuffers, startMusic, setTrack, renderOffline, wake, colStats, get T() { return T; }, get V() { return V; }, get A() { return A; } };   // test hook, only with ?debug in the address
 setTrack(tabIndex('year') >= 0 ? tabIndex('year') : 0);
 })();
