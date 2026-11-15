@@ -1621,7 +1621,7 @@ stage.addEventListener('keydown', e => {
 });
 
 // ================= DATA AND LIMITS (shown in the page for the current track) =================
-const COMMON_LIMIT = 'The sound mapping (pitch, instruments, drums, scale) is an artistic translation. It is not a measurement of anything in the ocean or atmosphere.';
+const COMMON_LIMIT = 'The values are read from the colour bars on the NASA pictures, but how they become sound (pitch, instruments, drums, scale) is an artistic interpretation.';
 const DATA_INFO = {
   year: {
     source: 'NASA SVS 3912, "Global Sea Surface Currents and Temperature" (ECCO2 ocean model), flat 2048×1024 frames.', url: 'https://svs.gsfc.nasa.gov/3912/',

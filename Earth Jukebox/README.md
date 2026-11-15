@@ -10,7 +10,7 @@ Built for the NASA Space Apps Challenge 2026 challenge *The Earth Information Ju
 
 **Controls on a record's page.** The top bar has *Back to the jukebox*, the current record, an icon-only **Restart** button and **Play**. Under it, a thin strip holds the **Volume** and **Tour length** sliders. Two columns of square buttons sit either side of the map, the same number on each side, and each is a quick front for a setting that also lives in Settings: on the left **Skip Antarctic**, **Quiet music**, **Sheet music** and **Hear instruments** (plays each voice alone); on the right **Narration**, **Full intro** (long or short spoken introduction), **Captions** and **Skip intro** (only active while the intro plays). Captions needs Narration on and is greyed out without it. Harmony, Music bed, Gamakas and Regional scales stay in Settings only. On a phone the buttons move into rows under the map. Below the map are a thin *Where you are* strip, the five voices in one row of small cards, the sheet music, the note-trace export and the *Data and limits* panel.
 
-Open `index.html` in a modern browser (developed and tested in a Chromium-based browser; Firefox and Safari are untested). There is nothing to install and no server is needed. Press **Play** to hear one sweep, or **Hear the instruments** to learn what each voice means.
+Open `index.html` in a modern browser (developed and tested in Chromium-based browsers and Safari; Firefox is untested). There is nothing to install and no server is needed. Press **Play** to hear one sweep, or **Hear the instruments** to learn what each voice means.
 
 ---
 
@@ -119,7 +119,7 @@ How it was made and its limits:
 - **Decoding:** NASA's movie was read month by month with `tools/analyse-nino.html`, turning each colour into an anomaly using NASA's colour bar (steps of 0.5 °C) and summing onto the app's 160 by 18 grid (`elnino_grid.js`). The picture's Niño 3.4 box follows NOAA's index closely (correlation 0.96 over 432 months), but its values run a few tenths of a degree larger in size, probably because the two use different baselines; I have not checked. **Do not compare the two sets of numbers directly.** The geometry (the movie's time axis and where the map sits in the frame) was fitted, not documented; it was checked against NOAA's index, not against the original data.
 - **Coarse:** the sound uses rows of 10-degree latitude bands. The map you see is drawn from a finer 3-degree grid (`elnino_fine.js`, decoded from the same movie, 4 MB), smoothed when scaled up, so it looks blocky up close. Water close to normal, and land, are left clear so the temperature map shows through (it turns grey while the layer is on). The lower-left corner and title of NASA's movie are covered by their own timeline, so those places have no data and are marked with **grey boxes**. The movie file itself is no longer loaded by the page.
 - **Raw numbers:** the NOAA table is used as published. The pages describing the index disagree on its version (ERSST v4, v5 or v6) and base period; check before quoting a value.
-- **What it does not do:** the temperature map under it is a fixed average, so the layer shows a chosen month, not a trend, and it says nothing about the effects of El Niño on weather. Nothing here has been listened to by anyone yet.
+- **What it does not do:** the temperature map under it is a fixed average, so the layer shows a chosen month, not a trend, and it says nothing about the effects of El Niño on weather.
 
 ## Note trace (export)
 
@@ -162,18 +162,18 @@ These methods were chosen after reviewing the team's earlier project RAM AVATAR,
 - **Per-voice mute** and a volume slider; an option to skip the Antarctic drone.
 - **Data and limits** panel under every track (see below).
 
-**Checked in a browser pane (by the author, not by blind users):** every record opens and plays without script errors, the map answers the arrow keys, text contrast measured high on the main text, and the page has no sideways scrolling at 375 pixels wide. **Not yet tested:** use with a screen reader (NVDA, JAWS, VoiceOver), Firefox, Safari, a real phone, whether the Hear Me voice is clear on other devices, and any study with blind or low-vision listeners. See *Limits*.
+**Checked in a browser pane (by the author, not by blind users):** every record opens and plays without script errors, the map answers the arrow keys, text contrast measured high on the main text, and the page has no sideways scrolling at 375 pixels wide. **Not yet tested:** use with a screen reader (NVDA, JAWS, VoiceOver), Firefox, a real phone, whether the Hear Me voice is clear on other devices, and any study with blind or low-vision listeners. See *Limits*.
 
 ## Data sources and credits
 
-All imagery is from the NASA Scientific Visualization Studio (SVS). Full creator credits are on each SVS page, which should be read before publishing. I did not verify the exact credit lines, so they are not copied here.
+All imagery is from the NASA Scientific Visualization Studio (SVS). The credit lines and creators below were copied from each SVS page on 15 November 2026; the SVS pages remain the authoritative source.
 
 | Data | Source | Used for |
 |---|---|---|
-| Aerosols, 19 Aug 2025 20:00 UTC | NASA SVS 5669, <https://svs.gsfc.nasa.gov/5669/> | Aerosols track |
-| Sea surface currents and temperature (ECCO2), 2,001 frames, 25 Mar 2007 to 3 Mar 2008 | NASA SVS 3912, <https://svs.gsfc.nasa.gov/3912/> (frame dates from NASA's `flat_ecco2_dates.txt`; temperature colour bar `sst_ecco2_cbar.png`) | Year of the ocean track |
-| Lightning events detected from the ISS, 2017 to 2023 | NASA SVS 5011, <https://svs.gsfc.nasa.gov/5011/> (visualizer Michala Garrison; Greg Shirah, Kel Elkins, Alex Kekesi; NASA SVS). Raw movie kept out of the repo; frames and counts made by `tools/analyse-lightning.html` | Lightning track |
-| Sea surface temperature, salinity and density maps and movies (released 9 Oct 2009) | NASA SVS 3652, <https://svs.gsfc.nasa.gov/3652/> | Sea temperature, Salinity, Density, Density (video) |
+| Aerosols, 19 Aug 2025 20:00 UTC | NASA SVS 5669, <https://svs.gsfc.nasa.gov/5669/>. Visualizers: Joseph V. Ardizzone (NASA/GSFC) and Helen-Nicole Kostis (Science and Technology Corporation); scientist: Lesley Ott (NASA/GSFC). Credit: NASA's Global Modeling Assimilation Office (GMAO) and NASA's Scientific Visualization Studio (SVS). Data: GEOS-FP 2 km Replay | Aerosols track |
+| Sea surface currents and temperature (ECCO2), 2,001 frames, 25 Mar 2007 to 3 Mar 2008 | NASA SVS 3912, <https://svs.gsfc.nasa.gov/3912/> (frame dates from NASA's `flat_ecco2_dates.txt`; temperature colour bar `sst_ecco2_cbar.png`). Credit: NASA/Goddard Space Flight Center Scientific Visualization Studio. Visualization by Greg Shirah; animators Greg Shirah, Horace Mitchell (NASA/GSFC) and Eric Sokolowsky (Global Science and Technology, Inc.); producer Michael Starobin (HTSI); scientists Hong Zhang (UCLA) and Dimitris Menemenlis (NASA/JPL Caltech). Data: ECCO2 (NASA/JPL) and GTOPO30 (USGS) | Year of the ocean track |
+| Lightning events detected from the ISS, 2017 to 2023 | NASA SVS 5011, <https://svs.gsfc.nasa.gov/5011/> (visualizers Michala Garrison (SSAI), Greg Shirah (NASA/GSFC), Kel Elkins (USRA) and Alex Kekesi (Global Science and Technology, Inc.)). Credit: NASA's Scientific Visualization Studio. Data: NASA Global Hydrometeorology Resource Center DAAC (LIS on ISS), CPC Cloud Composite, Natural Earth, USGS MCD12C1. Raw movie kept out of the repo; frames and counts made by `tools/analyse-lightning.html` | Lightning track |
+| Sea surface temperature, salinity and density maps and movies (released 9 Oct 2009) | NASA SVS 3652, <https://svs.gsfc.nasa.gov/3652/>. Visualizers: Helen-Nicole Kostis (UMBC), Horace Mitchell and Greg Shirah (NASA/GSFC); producer Ryan Fitzgibbons (UMBC); scientist Susan Lozier (Duke University). Credit: NASA/Goddard Space Flight Center Scientific Visualization Studio. The Blue Marble Next Generation data is courtesy of Reto Stockli (NASA/GSFC) and NASA's Earth Observatory. Data: World Ocean Atlas 2005, GTOPO30 (USGS) | Sea temperature, Salinity, Density, Density (video) |
 | Sea surface temperature anomaly, tropical Pacific, 29 Jan to 10 Oct 2026 and the same dates in 2025 (visualization by Kel Elkins; the SVS page lists the data products, and I did not check NASA's baseline) | NASA SVS 5683, <https://svs.gsfc.nasa.gov/5683/> | El Niño 2026 (three versions). NOAA CPC weekly Niño indices (<https://www.cpc.ncep.noaa.gov/data/indices/wksst9120.for>, a public NOAA product) are used only for the check, in `analysis/` |
 
 The ECCO2 model is described on the SVS page as the MIT general circulation model combining satellite and in-situ ocean data. The frames used here are the rendered visualization, **not** the raw model arrays.
@@ -191,7 +191,7 @@ Each track's page section **Data and limits** gives its source, date, what the c
 ## Limits (please read)
 
 - These are **estimates decoded from rendered pictures**, not the underlying numeric data. The temperature decoding was checked against the colour bar (round trip about 0.05 °C), not against the ECCO2 model. About a third of the pixels in the currents frames carry a usable colour.
-- The **sound mapping is an artistic translation**. Pitch, instruments, scale and drums do not measure anything in the ocean or atmosphere.
+- The **sound mapping is an artistic interpretation**. The values come from NASA's colour bars, but how they become pitch, instruments, scale and drums is our own artistic choice.
 - The Year track covers **one year**. It shows the seasons, not a climate trend.
 - **El Niño 2026** is decoded from NASA's pictures, not numbers: the map extent is a fit, the colour bar stops at ±4 °C, the anomaly baseline is NASA's (the decode runs about 0.4 °C warmer than NOAA's Niño 3.4 index in 2026), and "Through 2026" reads every longitude together. Its stories need a citation check. See *El Niño 2026*.
 - NASA's salinity and density colour bars are not evenly spaced, so "thirds" are thirds of the colour scale.
@@ -199,9 +199,10 @@ Each track's page section **Data and limits** gives its source, date, what the c
 - The named hotspots and their stories use hand-drawn boxes and facts written during development. They need a citation check.
 - The aerosol land and haze separation is by colour, so dense haze over land is partly missed.
 - Region borders for the drums are approximate (cells are about 2° by 10°).
-- **The mix was balanced by measurement, not by ear.** Each voice of each track was rendered offline and its A-weighted level set against the others, with a limiter to prevent clipping (see `PROCESS.md`). Nobody has yet judged it by listening, so please listen and report problems. Very low notes (the drone and the lowest bassoon notes) will be faint or inaudible on laptop speakers and small headphones.
-- Not tested with screen readers, on a real phone, in Firefox or Safari, or with blind or low-vision users.
-- This is not a measurement tool and not a certified assistive device.
+- **One drum and one scale per column.** Each column is given to the region holding the most data in it: the data strength of every latitude band is added up per region, and the largest total wins. A column that crosses, say, North and South America is not blended or split, so one big plume in one half outweighs faint data in the other. The scale vote is also taken over a window of 5 columns. Drum speed and mood use the column's average strength over all latitudes except the two Antarctic rows. Pitch is still read per latitude band. Clicking the map uses the exact cell you click instead.
+- **The mix was balanced by measurement.** Each voice of each track was rendered offline and its A-weighted level set against the others, with a limiter to prevent clipping (see `PROCESS.md`). Very low notes (the drone and the lowest bassoon notes) will be faint or inaudible on laptop speakers and small headphones.
+- Not tested with screen readers, on a real phone, in Firefox, or with blind or low-vision users.
+- This is not a scientific analysis tool and not a certified assistive device.
 
 ## Files
 
