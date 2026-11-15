@@ -246,7 +246,7 @@ window.SOURCE_HASHES = {
   "density_grid.js": "709733e512d509a474a1fedf5cc6a51c8757b82f70c93c1bb0333d85be3195b9",
   "elnino_fine.js": "abae6c3637bfaa34522b5204ee633be92811278df84366f6924c8547fe0f00ca",
   "elnino_grid.js": "63c2910395758771be81de3782ef5d18f12ac2b54ace250738d0cbad57d8be83",
-  "elnino_grids.js": "9e443faee4b22e060ea5f0e19f4320099536e96d7ef2053f644e95d9587e350e",
+  "elnino_grids.js": "aa9fa4d1abea70a0e45596c53ebcfa210c5a92fa7933d0ac14aa03ec651bf1c7",
   "flow_field.js": "09f748def4bf617eb3a858f8879fa631ad388a93ec125f3b0efa79eab81826a0",
   "grid.js": "c802efb66869c09c662a5b417c49ed53e43410a5e49eed9f54593f869812a94e",
   "lightning_grid.js": "5d81c69dc5e41a1fffa228967f68fa29aa3188e114613f0f48101cd8590d3049",
