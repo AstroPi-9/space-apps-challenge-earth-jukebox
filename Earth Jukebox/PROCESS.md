@@ -141,3 +141,12 @@ For blind and low-vision people, a **Hear Me** button on the home page (large, g
 - Export each track as an audio file, for a recorded demo and for people who cannot run it live.
 - A "simple mode" with fewer voices.
 - A multi-year view once more of the dataset is added.
+
+## El Niño 2026 (record D1)
+
+The earlier El Niño layer (SVS 4695, 1982 to 2017) was hidden because its picture looked poor. NASA published SVS 5683 in October 2026, with flat map panels and a clean colour bar, so the decode method used for the other records could be applied directly.
+- **Method:** each ocean pixel is matched to NASA's colour bar; the map extent had to be fitted, because the picture has no coordinates (land matched to a public coastline, fit quality about 0.84 overlap on the mainlands). Dates were read off NASA's labelled movie.
+- **Check:** the decoded Niño 3.4 box was compared with NOAA's weekly index (correlation +0.994 in 2026). The decode ran about 0.4 °C warmer; a baseline difference and a timing difference both fit, and the data cannot separate them, so the README says so.
+- **Design decisions:** the mood of the music is ranked against both years together (`rankWith` in `app.js`), because ranking each year on its own made the quiet 2025 sound as troubled as 2026. The "Through 2026" version reads every longitude together, so it blurs where the warming is; the two map versions keep the longitude.
+- **Found on the way:** the time slider's date label overflowed the page at 375 px on the time-axis records (already 3 px on Year of the ocean); fixed by letting the label wrap.
+- **Not done:** nobody has listened to this record yet, the stories need a citation check, and the SVS credit line has not been verified beyond the name on the page.

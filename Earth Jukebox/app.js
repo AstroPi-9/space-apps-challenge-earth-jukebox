@@ -323,6 +323,62 @@ globeVideoTrack('sst', 'sstVideo', 'Sea temperature (turning globe)', 'SST_VIDEO
 globeVideoTrack('sss', 'sssVideo', 'Salinity (turning globe)', 'SSS_VIDEO_GRID', 'sss', 'salinity', 'Dark teal is the freshest water, then green and yellow, and white is the saltiest. The land is shown as a satellite photo.', 'dark teal for the freshest water, through green and yellow, to white for the saltiest water');
 { const sst = TRACKS.find(t => t.id === 'sst'); TRACKS.push(Object.assign({}, sst, { species: sst.species.map(s => ({ ...s })), id: 'sstEl', name: 'Sea temperature and El Niño', emoji: '🌡️' })); }   // the same map and sound, with the El Nino layer panel (elnino.js)
 
+// ---- El Niño 2026 (NASA SVS 5683, "Signs of El Niño in 2026"): sea surface temperature ANOMALY (how much warmer or cooler than normal) over the tropical Pacific.
+//      Three records: the map of 10 October 2026, the same week of 2025, and a sweep through time from 29 January to 10 October 2026. The grids come from elnino_grids.js
+//      (tools/make-elnino2026.py). The map shows only part of the world, so the tracks give their own latitude and longitude (latFn, lonFn). The mood is ranked against both years (rankWith). ----
+if (window.ELNINO26_GRID && window.ELNINO25_GRID && window.ELNINO_YEAR_GRID && window.ELNINO_YEAR25_GRID && window.ELNINO_EXTENT) {
+  const X = window.ELNINO_EXTENT, wrap = l => ((l + 180) % 360 + 360) % 360 - 180;
+  const anLoad = x => 0.15 * x[1] + x[2] + 1.5 * x[3];                      // data strength: warm and strongly abnormal water, not near-normal water
+  const loadsOf = g => { const v = mkView(g), out = []; for (let c = 0; c < v.cols; c++) { let s = 0; for (let r = 0; r < v.rows - 2; r++) s += anLoad([0, 1, 2, 3].map(k => v.val(c, r, k))); out.push(s / (v.rows - 2)); } return out; };
+  const aNames = ['Cooler than normal', 'Near normal', 'Warmer than normal', 'Strong anomalies'];
+  const aSpecies = base => base.species.map((s, i) => ({ ...s, name: aNames[i] || s.name, what: ['cooler-than-normal water', 'near-normal water', 'warmer-than-normal water', 'a strong anomaly'][i] || s.what }));
+  const aDescribe = t => { const a = Math.round(-4 + 8 * t); return a === 0 ? 'The surface here is close to its normal temperature.' : `The surface here is about ${Math.abs(a)} ${Math.abs(a) === 1 ? 'degree' : 'degrees'} Celsius ${a > 0 ? 'warmer' : 'cooler'} than normal (the colour bar stops at four).`; };
+  const aLegend = '<img class="legend" src="assets/elnino2026/ssta_cbar.png" alt="Colour key: sea surface temperature anomaly from minus four degrees Celsius (dark blue, cooler than normal) through pale cream at zero (normal) to plus four degrees (dark red, warmer than normal).">';
+  const aHow = (first, second, perc) => [first, second, ['Blue (cooler than normal)', ''], ['Pale cream (near normal)', ''], ['Orange and red (warmer than normal)', ''], ['Strong anomalies (two degrees or more, warm or cool)', ''], ['Percussion (data rhythm)', perc], ['Land', 'Silence, because there is no ocean data.']];
+  const percMap = 'A native drum for each region where the data is. The warmer and more abnormal the water under the sweep, the faster the drums: crotchets, then quavers, semiquavers, and rarely demisemiquavers. Near-normal water means quiet drums, and a sudden jump gets an accent.';
+  const stillBase = TRACKS.find(t => t.id === 'sst'), listenGeneric = ["Now, how to listen. The sweep will travel from west to east across the tropical Pacific, from Indonesia and New Guinea to the coast of South America.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from a musical scale that changes with the region and its mood.", "That is the whole picture.", "Press Play to start the sweep."];
+  const still = (id, name, image, grid, other, introHead, alt, open, hotspots) => Object.assign({}, stillBase, {
+    species: aSpecies(stillBase), id, name, emoji: '🔥', grid, image, startLon: X.lon_from, lonFn: c => wrap(X.lon_from + (c + 0.5) / grid.cols * (X.lon_to - X.lon_from)),
+    latFn: r => X.lat_north - (r + 0.5) * (X.lat_north - X.lat_south) / grid.rows, rankWith: () => loadsOf(other), load: anLoad, describeValue: aDescribe,
+    intro: introHead, alt, hotspots, quiet: 'no ocean data here (land).', legend: aLegend, how: aHow(['Left → right (longitude)', 'Time. One sweep of the tropical Pacific, from Indonesia to South America, is one piece.'],
+      ['Top → bottom (latitude)', 'Pitch. North (about 30 degrees) is high, south (about 23 degrees) is low. Notes snap to a scale that changes with the region the sweep is over, in its hopeful or sad form (the tonic is always D).'], percMap),
+    speech: { open, listen: listenGeneric },
+  });
+  TRACKS.push(still('elnino26', 'El Niño, 10 October 2026', 'assets/elnino2026/oct2026.jpg', window.ELNINO26_GRID, window.ELNINO25_GRID,
+    'Hear the tropical Pacific on 10 October 2026, as NASA saw it (SVS 5683): how much warmer or cooler than normal the sea surface was. A playhead sweeps from west to east.',
+    'A map of the tropical Pacific Ocean on 10 October 2026, from Indonesia and New Guinea on the left to the coast of South America on the right, with the land in grey. The colour shows how much warmer or cooler than normal the sea surface is: blue is cooler, pale cream is normal, and orange to dark red is warmer. A broad band of very dark red, more than three degrees warmer than normal, runs along the equator from the middle of the Pacific to the coast of Peru and Ecuador. That is the sign of a strong El Niño. Cooler blue water lies around Indonesia and New Guinea and in a wide area south of the equator.',
+    ["Welcome to the Earth Jukebox. This map shows the tropical Pacific Ocean on October tenth, two thousand and twenty-six, from NASA.", "Colour shows how much warmer or cooler than normal the sea surface is. Blue is cooler, pale cream is normal, and orange to dark red is warmer.", "First, here is what you will see, and then you will hear it."],
+    [{ name: 'the warm tongue along the equator', lon: [-175, -85], lat: [-6, 6], k: 2, say: -175, story: 'A broad band of water more than three degrees warmer than normal runs along the equator. This warm tongue is the sign of El Niño. In this picture it is about as warm as the colour bar can show.' },
+     { name: 'the Niño 3.4 region', lon: [-170, -120], lat: [-5, 5], k: 3, say: -170, story: 'This box, from 170 West to 120 West along the equator, is the region NOAA uses for its Niño 3.4 index. In this picture its average is about three degrees above normal, and NOAA reports a similar value for the same week.' },
+     { name: 'the coast of Peru and Ecuador', lon: [-90, -78], lat: [-15, 2], k: 3, say: -90, story: 'Off Peru and Ecuador the water is at least four degrees warmer than normal in places, and the colour bar stops at four. Fishing communities there gave El Niño its name, because the warm water used to arrive around Christmas.' },
+     { name: 'Indonesia and New Guinea', lon: [120, 160], lat: [-12, 8], k: 0, say: 140, story: 'Around Indonesia and New Guinea the water is cooler than normal while the eastern Pacific is very warm: the two ends of one see-saw.' }]));
+  TRACKS.push(still('elnino25', 'The same week in 2025', 'assets/elnino2026/oct2025.jpg', window.ELNINO25_GRID, window.ELNINO26_GRID,
+    'Hear the tropical Pacific on 10 October 2025, a year before the El Niño, as NASA saw it (SVS 5683). A playhead sweeps from west to east.',
+    'A map of the tropical Pacific Ocean on 10 October 2025, from Indonesia and New Guinea on the left to the coast of South America on the right, with the land in grey. The colour shows how much warmer or cooler than normal the sea surface is: blue is cooler, pale cream is normal, and orange is warmer. Along the equator the water is patchy and a little cooler than normal, the pattern that leans towards La Niña, with a few warm spots near the coast of South America. There is no band of dark red.',
+    ["Welcome to the Earth Jukebox. This map shows the tropical Pacific Ocean on October tenth, two thousand and twenty-five, a year before the El Niño, from NASA.", "Colour shows how much warmer or cooler than normal the sea surface is. Blue is cooler, pale cream is normal, and orange to dark red is warmer.", "First, here is what you will see, and then you will hear it."],
+    [{ name: 'the equator in 2025', lon: [-175, -90], lat: [-6, 6], k: 0, say: -175, story: 'Along the equator the water is a little cooler than normal, in patches. This is the opposite of the warm tongue seen a year later.' },
+     { name: 'the Niño 3.4 region', lon: [-170, -120], lat: [-5, 5], k: 0, say: -170, story: 'In this picture the average of the Niño 3.4 box is slightly below normal, a few tenths of a degree. NOAA reported a similar value, about minus 0.3, for the same week.' },
+     { name: 'the coast of Peru', lon: [-90, -78], lat: [-15, 2], k: 2, say: -90, story: 'A few warm patches sit near the coast of Peru and Ecuador, but there is no wide band of warm water.' }]));
+  const yr = TRACKS.find(t => t.id === 'year');
+  TRACKS.push(Object.assign({}, yr, {
+    species: aSpecies(yr), id: 'elninoYear', name: 'El Niño through 2026', emoji: '🔥', grid: window.ELNINO_YEAR_GRID, image: 'assets/elnino2026/t000.jpg', timeAxis: true, startLon: 0,
+    frames: Array.from({ length: 160 }, (_, c) => 'assets/elnino2026/t' + String(Math.round(c * 60 / 159)).padStart(3, '0') + '.jpg'),
+    lonFn: c => c, latFn: r => X.lat_north - (r + 0.5) * (X.lat_north - X.lat_south) / window.ELNINO_YEAR_GRID.rows, rankWith: () => loadsOf(window.ELNINO_YEAR25_GRID),
+    regionFn: lat => lat >= 15 ? 'taiko' : lat <= -10 ? 'samba' : 'conga', load: anLoad, describeValue: aDescribe,
+    headFn: (c, r) => `${dateLabel(T.grid.dates[c])}, ${fmtLat(latOf(r))} (all longitudes in the picture)`,
+    intro: '', alt: 'A time-lapse of the tropical Pacific Ocean from 29 January to 10 October 2026, with Indonesia and New Guinea on the left and the coast of South America on the right, and the land in grey. The colour shows how much warmer or cooler than normal the sea surface is: blue is cooler, pale cream is normal, and orange to dark red is warmer. In January the Pacific is close to normal. Through the months a band of warm water grows along the equator from the east, and by October it is a broad band of very dark red, more than three degrees warmer than normal, reaching from the middle of the Pacific to the coast of Peru and Ecuador.',
+    hotspots: [
+      { name: 'late January', lon: [0, 12], lat: [-90, 90], k: 1, say: 2, story: 'In late January the equator of the Pacific is close to its normal temperature.' },
+      { name: 'early April', lon: [36, 46], lat: [-90, 90], k: 2, say: 40, story: 'By early April the equator is starting to warm. In this picture the Niño 3.4 region is still under one degree above normal.' },
+      { name: 'June', lon: [76, 86], lat: [-90, 90], k: 2, say: 80, story: 'By early June the warm band along the equator is clearly stronger: the Niño 3.4 region is between one and two degrees above normal.' },
+      { name: 'August', lon: [115, 125], lat: [-90, 90], k: 3, say: 119, story: 'By early August the Niño 3.4 region is between two and a half and three degrees above normal, firmly in El Niño territory.' },
+      { name: 'the strong El Niño of October', lon: [150, 159], lat: [-90, 90], k: 3, say: 152, story: 'By 10 October the warm band spans the equatorial Pacific and reaches the South American coast. NOAA reports the Niño 3.4 region at about three degrees above normal for that week.' }],
+    speech: { open: ["Welcome to the Earth Jukebox. This record is the tropical Pacific Ocean from January twenty-ninth to October tenth, two thousand and twenty-six, from NASA, as a strong El Niño develops.", "Colour shows how much warmer or cooler than normal the sea surface is. Blue is cooler, pale cream is normal, and orange to dark red is warmer.", "First, here is what you will see, and then you will hear it."],
+      listen: ["Now, how to listen. This time the sweep travels through time, not across the map. The whole of 2026 so far plays from January to October, and at every moment you hear all of the longitudes in the picture at once.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from a musical scale that changes with the region and its mood.", "That is the whole picture.", "Press Play to start the sweep."] },
+    how: aHow(['Left → right (time)', 'Time. The sweep runs from 29 January to 10 October 2026, so the warm water grows as it plays.'], ['Top → bottom (latitude)', 'Pitch. North (about 30 degrees) is high, south (about 23 degrees) is low. Every latitude band is read across all longitudes in the picture.'], 'One drum for each latitude zone: taiko in the north, congas in the tropics and surdo with tamborim in the south. The warmer and more abnormal the water, the faster the drums.'),
+  }));
+}
+
 
 // ---- Lightning (NASA SVS 5011): events, not a field. All untuned percussion, with timpani rolls where the storms are strongest. ----
 const LSECT = [{ k: 0, bus: 0 }, { k: 1, bus: 1 }, { k: 3, bus: 3 }, { k: 4, bus: 4 }];      // data channel and audio bus of the four parts of the world
@@ -429,16 +485,19 @@ const PALETTE_TEXT = {
   year:     { names: ['Cold water', 'Mild water', 'Warm water', 'Swirling, tangled currents'], how: [2, 3, 4, 5] },
 };
 PALETTE.lightning = { lead: 'bassoon', pad: 'low', drone: 'pedal', strong: 'timpani', light: 'harp' };
+PALETTE.elnino26 = PALETTE.elnino25 = PALETTE.sst; PALETTE.elninoYear = PALETTE.year; PALETTE_TEXT.elnino26 = PALETTE_TEXT.elnino25 = PALETTE_TEXT.elninoYear = { names: ['Cooler than normal', 'Near normal', 'Warmer than normal', 'Strong anomalies'], how: [2, 3, 4, 5] };
 PALETTE.sstVideo = PALETTE.sstEl = PALETTE.sst; PALETTE.sssVideo = PALETTE.sss; PALETTE_TEXT.sstVideo = PALETTE_TEXT.sstEl = PALETTE_TEXT.sst; PALETTE_TEXT.sssVideo = PALETTE_TEXT.sss;
 Object.keys(PALETTE).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.instruments = PALETTE[id]; });
 // Per-track voice balance [drone, chords, high, lead, drums], set from offline renders (A-weighted levels, see PROCESS.md). Multipliers on the global TRIM.
 const TRIMS = { ocean: [4.64, 1.55, 1.33, 1.86, 1.9], year: [4.64, 1.55, 1.33, 1.86, 1.9], aerosols: [5.0, 4.58, 4.74, 0.44, 3.58], sst: [2.86, 2.17, 0.75, 0.43, 3.64], sss: [5.0, 5.73, 1.38, 0.58, 4.27], density: [1.46, 1.34, 1.05, 1.5, 3.82], densityVideo: [2.39, 1.18, 1.1, 3.39, 5.13] };
 TRIMS.lightning = [3.2, 3.2, 2.2, 3.2, 1.9];
+TRIMS.elnino26 = TRIMS.elnino25 = TRIMS.sst; TRIMS.elninoYear = TRIMS.year;
 TRIMS.sstVideo = TRIMS.sstEl = TRIMS.sst; TRIMS.sssVideo = TRIMS.sss;
 Object.keys(TRIMS).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trim = TRIMS[id]; });
 // The same balance for the MuseScore instrument sounds (source "samples"): each voice re-measured offline and scaled to the same A-weighted targets (see PROCESS.md).
 const TRIMS_S = { ocean: [1.34, 0.30, 0.93, 1.64, 1.9], year: [1.34, 0.30, 0.93, 1.64, 1.9], aerosols: [2.6, 1.66, 2.12, 1.12, 3.58], sst: [2.35, 0.27, 0.31, 0.87, 3.64], sss: [1.33, 0.99, 0.68, 0.79, 4.27], density: [0.44, 0.27, 1.14, 1.34, 3.82], densityVideo: [0.74, 0.24, 1.68, 2.79, 5.13] };
 TRIMS_S.lightning = TRIMS.lightning;
+TRIMS_S.elnino26 = TRIMS_S.elnino25 = TRIMS_S.sst; TRIMS_S.elninoYear = TRIMS_S.year;
 TRIMS_S.sstVideo = TRIMS_S.sstEl = TRIMS_S.sst; TRIMS_S.sssVideo = TRIMS_S.sss;
 Object.keys(TRIMS_S).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trimS = TRIMS_S[id]; });
 const INTRO_HEAD = {
@@ -451,13 +510,16 @@ const INTRO_HEAD = {
   densityVideo: 'Watch the Earth turn once in a minute, coloured by the density of the ocean surface (NASA SVS 3652), and hear the strip of ocean running down the middle of the globe. The video and the sound stay in step.',
 };
 INTRO_HEAD.sstEl = 'Hear the average temperature of the ocean surface (NASA SVS 3652), with an El Niño layer: how much warmer or cooler than normal it was in a chosen month. A playhead sweeps from west to east.';
+INTRO_HEAD.elnino26 = 'Hear the tropical Pacific on 10 October 2026, as NASA saw it (SVS 5683): how much warmer or cooler than normal the sea surface was. A playhead sweeps from west to east.';
+INTRO_HEAD.elnino25 = 'Hear the tropical Pacific on 10 October 2025, a year before the El Niño, as NASA saw it (SVS 5683). A playhead sweeps from west to east.';
+INTRO_HEAD.elninoYear = 'Hear the tropical Pacific from 29 January to 10 October 2026 as a strong El Niño develops (NASA SVS 5683). The sweep runs through time, and the pitch is latitude.';
 INTRO_HEAD.sstVideo = 'Watch the Earth turn once in a minute, coloured by the temperature of the ocean surface (NASA SVS 3652), and hear the strip of ocean running down the middle of the globe. The video and the sound stay in step.';
 INTRO_HEAD.sssVideo = 'Watch the Earth turn once in a minute, coloured by the salinity of the ocean surface (NASA SVS 3652), and hear the strip of ocean running down the middle of the globe. The video and the sound stay in step.';
 function applyPaletteText(tr) {                       // rewrite the instrument wording of a track from its palette, so the text always matches the sound
   const P = tr.instruments, X = PALETTE_TEXT[tr.id]; if (!P || !X) return;
   const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
   const d = DRONES[P.drone].name, p = PADS[P.pad].name, hs = `${STRONG_NAME[P.strong]} where it is strong and ${LIGHT_NAME[P.light]} where it is light`, l = LEAD_NAME[P.lead];
-  const plural = /fronts|eddies|currents/i.test(X.names[3]), ex = X.extra0 || '';
+  const plural = /fronts|eddies|currents|anomalies/i.test(X.names[3]), ex = X.extra0 || '';
   tr.species[0].sound = cap1(d) + ex; tr.species[1].sound = cap1(p) + ' that change with latitude'; tr.species[2].sound = cap1(hs); tr.species[3].sound = `Singing ${l.replace(/^an? /, '')} notes with gamakas`;
   const rowText = [cap1(d) + ex + '.', cap1(p) + ', changing with latitude.', cap1(hs) + ', tuned to the latitude.', `Notes on ${l} with gamakas. The stronger the signal, the busier the playing.`];
   X.how.forEach((idx, k) => { if (tr.how[idx]) tr.how[idx] = [tr.how[idx][0], rowText[k]]; });
@@ -482,7 +544,7 @@ const HELP0 = $('help').textContent;
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const dateLabel = iso => { const d = new Date(iso.replace('Z', ':00Z')); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`; };
 const lonOf = c => T.lonFn ? T.lonFn(c) : -180 + (c + 0.5) / V.cols * 360;
-const latOf = r => 90 - (r + 0.5) / V.rows * 180;
+const latOf = r => T.latFn ? T.latFn(r) : 90 - (r + 0.5) / V.rows * 180;       // a track that shows only part of the world (El Niño 2026) gives its own latitude rows
 const fmtLon = l => Math.abs(Math.round(l)) + '°' + (l < 0 ? 'W' : 'E');
 const fmtLat = l => Math.abs(Math.round(l)) + '°' + (l < 0 ? 'S' : 'N');
 const word = v => v > .66 ? 'strong' : v > .33 ? 'moderate' : 'faint';
@@ -965,7 +1027,7 @@ function computeDrumModel() {
     for (let r = 0; r < V.rows; r++) { const x = T.load([0, 1, 2, 3].map(k => V.val(c, r, k))); V.load[r * V.cols + c] = x; if (r < V.rows - 2) s += x; }   // ignore the 2 Antarctic rows
     colLoad.push(s / (V.rows - 2));
   }
-  loadSorted = colLoad.slice().sort((a, b) => a - b);
+  loadSorted = colLoad.concat(T.rankWith ? T.rankWith() : []).sort((a, b) => a - b);     // El Niño 2026: ranked against the other year too, so a normal year sounds calmer than a strong El Niño
   const jumps = colLoad.map((x, c) => Math.max(0, x - colLoad[(c + V.cols - 1) % V.cols])).filter(x => x > 0).sort((a, b) => a - b);
   accentThr = jumps.length ? jumps[Math.floor(jumps.length * 0.85)] : 1;     // the biggest 15% of upward jumps get an accent
 }
@@ -1635,6 +1697,31 @@ const globeInfo = (base, noun, bar) => ({
 });
 DATA_INFO.sstVideo = globeInfo('sst', 'temperature', 'The same temperature colour bar as the map: dark blue is near freezing, red is the warmest water.');
 DATA_INFO.sssVideo = globeInfo('sss', 'salinity', 'The same salinity colour bar as the map: dark teal is fresh, white is the saltiest.');
+// El Niño 2026 (NASA SVS 5683). The numbers in the checks come from tools/validate-elnino2026.py (analysis/elnino2026_validation.json).
+{
+  const common = {
+    source: 'NASA SVS 5683, "Signs of El Niño in 2026" (visualization by Kel Elkins), the sea surface temperature anomaly panels. The SVS page names the data products behind them; I did not check which baseline NASA used.', url: 'https://svs.gsfc.nasa.gov/5683/',
+    colour: 'Sea surface temperature anomaly: the difference from normal, from minus 4 °C (dark blue) through pale cream (normal) to plus 4 °C (dark red). The colour bar stops at 4, so water that is hotter or colder is read as 4.',
+    checks: [
+      'Against NOAA\'s weekly Niño indices (NOAA Climate Prediction Center, analysis/noaa_cpc_weekly_nino_indices.txt; tools/validate-elnino2026.py): the Niño 3.4 box decoded from the pictures follows NOAA\'s weekly index with correlation +0.994 from 29 January to 10 October 2026 (decoded minus NOAA: +0.42 °C on average, RMSE 0.44 °C) and +0.83 over the same dates in 2025 (+0.10 °C, RMSE 0.24 °C). Over both years together the correlation is +0.98. For Niño 3 and Niño 4 in 2026 it is +0.99 and +0.94.',
+      'On 10 October 2026 the Niño 3.4 box decodes to +3.35 °C and NOAA\'s weekly value is +3.2 °C. Always guessing zero would be wrong by 1.80 °C (RMSE) over 2026; the decode is wrong by 0.44 °C.',
+      'Not shown by these checks: that the values are exact. The decode runs warmer than NOAA\'s index in 2026. That could be a different baseline and data product (NASA\'s picture against NOAA\'s OISST and 1991 to 2020 normal), or a difference of up to four weeks in timing (shifting NOAA\'s series by 28 days fits better in 2026, with an RMSE of 0.16 °C, but not in 2025). A steadily rising series cannot tell these apart.',
+      'The Niño 1+2 box, a small strip along the coast, is the weakest match in 2026 (correlation +0.94, RMSE 0.64 °C), partly because the colour bar stops at 4 °C and NOAA\'s value there reaches 5.3 °C.',
+    ],
+  };
+  const dec1 = 'Each ocean pixel is matched to its nearest colour on NASA\'s published colour bar (tools/make-elnino2026.py). Grey pixels are land and make no sound.';
+  const dec2 = 'The picture has no coordinates. Its extent (about 105° E to 40° W and 30° N to 23° S, with slightly different scales in the two directions) was fitted by matching its grey land to a public coastline, so latitudes and longitudes are approximate.';
+  const cav = ['These are estimates decoded from a picture, not NASA\'s numbers. About 38% of the Niño 3.4 box sits at the end of the colour bar in October 2026, so the warmest water is under-read.',
+    'The map covers only the tropical Pacific, with parts of the Atlantic and Indian oceans at its edges. The bottom two rows (about 17 to 23 degrees south) are left out of the drum rhythm and mood, as the bottom rows of the world maps are.',
+    'The El Niño stories need a citation check. The sound mapping is an artistic translation.'];
+  const rank = 'The mood (calm, sad or urgent) is ranked against both years together, so a normal year sounds calmer than a strong El Niño.';
+  const cells = 'The map is cut into 160 columns and 18 rows. In each cell the share of pixels cooler than minus 0.5 °C, within 0.5 °C of normal, warmer than plus 0.5 °C, and more than 2 °C from normal either way become the four voices, scaled so that the strongest 5% of the two years together reach full strength.';
+  DATA_INFO.elnino26 = { ...common, date: '10 October 2026 (the top half of frame 2200 of NASA\'s image sequence).', decode: [dec1, dec2, cells, rank], caveats: cav };
+  DATA_INFO.elnino25 = { ...common, date: '10 October 2025, one year earlier (the bottom half of the same frame). NOAA\'s Niño 3.4 value that week was about minus 0.3 °C.', decode: [dec1, dec2, cells, rank], caveats: cav };
+  DATA_INFO.elninoYear = { ...common, date: '29 January to 10 October 2026: 121 of the movie\'s 1,201 frames (every tenth), blended into 160 moments. The dates were read off the labelled movie (frame 0 is 29 January and frame 1200 is 10 October) and are assumed to be even in between.',
+    decode: [dec1, dec2, 'Each moment is one frame. The pitch is latitude, and each of 18 latitude bands is read across all longitudes in the picture, in the same four ways as the map records (cooler, near normal, warmer, strong).', rank],
+    caveats: [...cav, 'Reading every longitude together blurs where the warm water is: the warming along the equator is mixed with cooler and warmer patches elsewhere in the same latitude band. The map records keep the longitude.'] };
+}
 function renderData() {
   const d = DATA_INFO[T.id], el = $('dataBody'); if (!d) { el.innerHTML = ''; return; }
   const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;'), li = a => '<ul>' + a.map(x => `<li>${esc(x)}</li>`).join('') + '</ul>';
@@ -1769,7 +1856,7 @@ function setTrack(i) {
   setReadout(`Track: ${T.name}. Press play, or click the map.`);
 }
 // El Niño ('sstEl') is switched off for now: its map image does not look good enough. Its code stays, so it can be put back by adding it here and to the sea temperature entry in jukebox.js, and by adding the <script> tags for elnino_grid.js and elnino_fine.js (about 5.8 MB, left out of the page for now) back to index.html.
-const TAB_ORDER = ['year', 'ocean', 'aerosols', 'sst', 'sstVideo', 'sss', 'sssVideo', 'density', 'densityVideo', 'lightning'];        // the single-frame "Ocean currents" track is hidden: the Year track covers the same data and adds time
+const TAB_ORDER = ['year', 'ocean', 'aerosols', 'sst', 'sstVideo', 'sss', 'sssVideo', 'density', 'densityVideo', 'lightning', 'elnino26', 'elnino25', 'elninoYear'];        // the single-frame "Ocean currents" track is hidden: the Year track covers the same data and adds time
 const tabIndex = id => TRACKS.findIndex(t => t.id === id);
 TAB_ORDER.forEach(id => {
   const i = tabIndex(id); if (i < 0) return; const t = TRACKS[i];
