@@ -328,6 +328,7 @@ globeVideoTrack('sss', 'sssVideo', 'Salinity (turning globe)', 'SSS_VIDEO_GRID',
 //      (tools/make-elnino2026.py). The map shows only part of the world, so the tracks give their own latitude and longitude (latFn, lonFn). The mood is ranked against both years (rankWith). ----
 if (window.ELNINO26_GRID && window.ELNINO25_GRID && window.ELNINO_YEAR_GRID && window.ELNINO_YEAR25_GRID && window.ELNINO_EXTENT) {
   const X = window.ELNINO_EXTENT, wrap = l => ((l + 180) % 360 + 360) % 360 - 180;
+  const elSchedule = function (c, t, step, tot, cen, v) { if (deepOff !== 'only') SCALAR.schedule.call(this, c, t, step, tot, cen, v); elDeep(c, t, step); };   // the usual voices, then the two deep reds
   const anLoad = x => 0.15 * x[1] + x[2] + 1.5 * x[3];                      // data strength: warm and strongly abnormal water, not near-normal water
   const loadsOf = g => { const v = mkView(g), out = []; for (let c = 0; c < v.cols; c++) { let s = 0; for (let r = 0; r < v.rows - 2; r++) s += anLoad([0, 1, 2, 3].map(k => v.val(c, r, k))); out.push(s / (v.rows - 2)); } return out; };
   const aNames = ['Cooler than normal', 'Near normal', 'Warmer than normal', 'Strong anomalies'];
@@ -339,7 +340,7 @@ if (window.ELNINO26_GRID && window.ELNINO25_GRID && window.ELNINO_YEAR_GRID && w
   const stillBase = TRACKS.find(t => t.id === 'sst'), listenGeneric = ["Now, how to listen. The sweep will travel from west to east across the tropical Pacific, from Indonesia and New Guinea to the coast of South America.", "Pitch tells you the latitude. Higher notes are further north, lower notes further south, all taken from a musical scale that changes with the region and its mood.", "That is the whole picture.", "Press Play to start the sweep."];
   const still = (id, name, image, grid, other, introHead, alt, open, hotspots) => Object.assign({}, stillBase, {
     species: aSpecies(stillBase), id, name, emoji: '🔥', grid, image, startLon: X.lon_from, lonFn: c => wrap(X.lon_from + (c + 0.5) / grid.cols * (X.lon_to - X.lon_from)),
-    latFn: r => X.lat_north - (r + 0.5) * (X.lat_north - X.lat_south) / grid.rows, rankWith: () => loadsOf(other), load: anLoad, describeValue: aDescribe,
+    latFn: r => X.lat_north - (r + 0.5) * (X.lat_north - X.lat_south) / grid.rows, rankWith: () => loadsOf(other), schedule: elSchedule, load: anLoad, describeValue: aDescribe,
     intro: introHead, alt, hotspots, quiet: 'no ocean data here (land).', legend: aLegend, how: aHow(['Left → right (longitude)', 'Time. One sweep of the tropical Pacific, from Indonesia to South America, is one piece.'],
       ['Top → bottom (latitude)', 'Pitch. North (about 30 degrees) is high, south (about 23 degrees) is low. Notes snap to a scale that changes with the region the sweep is over, in its hopeful or sad form (the tonic is always D).'], percMap),
     speech: { open, listen: listenGeneric },
@@ -363,7 +364,7 @@ if (window.ELNINO26_GRID && window.ELNINO25_GRID && window.ELNINO_YEAR_GRID && w
   TRACKS.push(Object.assign({}, yr, {
     species: aSpecies(yr), id: 'elninoYear', name: 'El Niño through 2026', emoji: '🔥', grid: window.ELNINO_YEAR_GRID, image: 'assets/elnino2026/t000.jpg', timeAxis: true, startLon: 0,
     frames: Array.from({ length: 160 }, (_, c) => 'assets/elnino2026/t' + String(Math.round(c * 60 / 159)).padStart(3, '0') + '.jpg'),
-    lonFn: c => c, latFn: r => X.lat_north - (r + 0.5) * (X.lat_north - X.lat_south) / window.ELNINO_YEAR_GRID.rows, rankWith: () => loadsOf(window.ELNINO_YEAR25_GRID),
+    lonFn: c => c, latFn: r => X.lat_north - (r + 0.5) * (X.lat_north - X.lat_south) / window.ELNINO_YEAR_GRID.rows, rankWith: () => loadsOf(window.ELNINO_YEAR25_GRID), schedule: elSchedule,
     regionFn: lat => lat >= 15 ? 'taiko' : lat <= -10 ? 'samba' : 'conga', load: anLoad, describeValue: aDescribe,
     headFn: (c, r) => `${dateLabel(T.grid.dates[c])}, ${fmtLat(latOf(r))} (all longitudes in the picture)`,
     intro: '', alt: 'A time-lapse of the tropical Pacific Ocean from 29 January to 10 October 2026, with Indonesia and New Guinea on the left and the coast of South America on the right, and the land in grey. The colour shows how much warmer or cooler than normal the sea surface is: blue is cooler, pale cream is normal, and orange to dark red is warmer. In January the Pacific is close to normal. Through the months a band of warm water grows along the equator from the east, and by October it is a broad band of very dark red, more than three degrees warmer than normal, reaching from the middle of the Pacific to the coast of Peru and Ecuador.',
@@ -485,19 +486,20 @@ const PALETTE_TEXT = {
   year:     { names: ['Cold water', 'Mild water', 'Warm water', 'Swirling, tangled currents'], how: [2, 3, 4, 5] },
 };
 PALETTE.lightning = { lead: 'bassoon', pad: 'low', drone: 'pedal', strong: 'timpani', light: 'harp' };
-PALETTE.elnino26 = PALETTE.elnino25 = PALETTE.sst; PALETTE.elninoYear = PALETTE.year; PALETTE_TEXT.elnino26 = PALETTE_TEXT.elnino25 = PALETTE_TEXT.elninoYear = { names: ['Cooler than normal', 'Near normal', 'Warmer than normal', 'Strong anomalies'], how: [2, 3, 4, 5] };
+PALETTE.elnino26 = PALETTE.elnino25 = PALETTE.elninoYear = { lead: 'cello', pad: 'brass', drone: 'pedal', strong: 'timpani', light: 'celesta' };   // El Niño 2026: a cello leads the strong anomalies, brass chords and timpani rolls as the water warms
+PALETTE_TEXT.elnino26 = PALETTE_TEXT.elnino25 = PALETTE_TEXT.elninoYear = { names: ['Cooler than normal', 'Near normal', 'Warmer than normal', 'Strong anomalies'], how: [2, 3, 4, 5] };
 PALETTE.sstVideo = PALETTE.sstEl = PALETTE.sst; PALETTE.sssVideo = PALETTE.sss; PALETTE_TEXT.sstVideo = PALETTE_TEXT.sstEl = PALETTE_TEXT.sst; PALETTE_TEXT.sssVideo = PALETTE_TEXT.sss;
 Object.keys(PALETTE).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.instruments = PALETTE[id]; });
 // Per-track voice balance [drone, chords, high, lead, drums], set from offline renders (A-weighted levels, see PROCESS.md). Multipliers on the global TRIM.
 const TRIMS = { ocean: [4.64, 1.55, 1.33, 1.86, 1.9], year: [4.64, 1.55, 1.33, 1.86, 1.9], aerosols: [5.0, 4.58, 4.74, 0.44, 3.58], sst: [2.86, 2.17, 0.75, 0.43, 3.64], sss: [5.0, 5.73, 1.38, 0.58, 4.27], density: [1.46, 1.34, 1.05, 1.5, 3.82], densityVideo: [2.39, 1.18, 1.1, 3.39, 5.13] };
 TRIMS.lightning = [3.2, 3.2, 2.2, 3.2, 1.9];
-TRIMS.elnino26 = TRIMS.elnino25 = TRIMS.sst; TRIMS.elninoYear = TRIMS.year;
+TRIMS.elnino26 = [1.76, 1.57, 1.31, 0.3, 3.52]; TRIMS.elnino25 = [2.67, 1.33, 1.16, 0.43, 4.1]; TRIMS.elninoYear = [0.84, 1.04, 1.46, 0.29, 1.53];   // measured offline for the cello / brass / pedal / timpani / celesta palette (A-weighted, see PROCESS.md)
 TRIMS.sstVideo = TRIMS.sstEl = TRIMS.sst; TRIMS.sssVideo = TRIMS.sss;
 Object.keys(TRIMS).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trim = TRIMS[id]; });
 // The same balance for the MuseScore instrument sounds (source "samples"): each voice re-measured offline and scaled to the same A-weighted targets (see PROCESS.md).
 const TRIMS_S = { ocean: [1.34, 0.30, 0.93, 1.64, 1.9], year: [1.34, 0.30, 0.93, 1.64, 1.9], aerosols: [2.6, 1.66, 2.12, 1.12, 3.58], sst: [2.35, 0.27, 0.31, 0.87, 3.64], sss: [1.33, 0.99, 0.68, 0.79, 4.27], density: [0.44, 0.27, 1.14, 1.34, 3.82], densityVideo: [0.74, 0.24, 1.68, 2.79, 5.13] };
 TRIMS_S.lightning = TRIMS.lightning;
-TRIMS_S.elnino26 = TRIMS_S.elnino25 = TRIMS_S.sst; TRIMS_S.elninoYear = TRIMS_S.year;
+TRIMS_S.elnino26 = [0.31, 0.2, 0.52, 1.14, 3.35]; TRIMS_S.elnino25 = [0.35, 0.16, 0.52, 1.62, 4.2]; TRIMS_S.elninoYear = [0.19, 0.13, 0.51, 0.79, 1.47];
 TRIMS_S.sstVideo = TRIMS_S.sstEl = TRIMS_S.sst; TRIMS_S.sssVideo = TRIMS_S.sss;
 Object.keys(TRIMS_S).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trimS = TRIMS_S[id]; });
 const INTRO_HEAD = {
@@ -536,6 +538,17 @@ function applyPalette() {                             // set the continuous voic
   A.d1.type = dk.t1; A.d2.type = dk.t2; A.droneLP.frequency.value = dk.lp; A.droneLP.Q.value = dk.q || 0.7; A.droneRatio = dk.ratio; A.droneScale = dk.g;
 }
 TRACKS.forEach(applyPaletteText);
+// El Niño 2026: the two deep reds (see elDeep) are described here, after the palette wording is written, so the screen, the speech and Hear Me all mention them.
+['elnino26', 'elnino25', 'elninoYear'].forEach(id => {
+  const tr = TRACKS.find(t => t.id === id); if (!tr) return;
+  const map = id !== 'elninoYear', bass = 'Where the water is medium-dark red (2.5 to 3.5 degrees above normal), a low, dark double bass chord plays', rum = 'where it is almost black-red (3.5 degrees and above), a low timpani roll and rumble play. Both get louder the more black-red there is' + (map ? ', and they die away at the coast of Central and South America' : '');
+  tr.species[1].sound += '. ' + bass;
+  tr.species[4].sound += '. ' + rum.charAt(0).toUpperCase() + rum.slice(1);
+  if (tr.how[3]) tr.how[3][1] += ' ' + bass + '.';
+  if (tr.how[6]) tr.how[6][1] += ' ' + rum.charAt(0).toUpperCase() + rum.slice(1) + '.';
+  tr.speech.listen.splice(tr.speech.listen.length - 2, 0, bass + '.', rum.charAt(0).toUpperCase() + rum.slice(1) + '.');
+  tr.intro += ' ' + bass + ', and ' + rum + '.';
+});
 
 // ================= STATE / VIEW =================
 let T = TRACKS[0], V = null;                       // current track and its grid view
@@ -1013,6 +1026,71 @@ function strike(t, g, comps, busIdx) {
   });
 }
 function hit(id, stroke, t, g, busIdx) { noteLog(4, t, 0, 0.12, stroke, id); const I = INSTR[id]; if (I && stroke) strike(t, g, STROKES[I.kit][stroke], busIdx); }
+// ---- El Niño 2026: the two deep reds ----
+// Medium-dark red water (2.5 to 3.5 degrees above normal) plays a low, dark double bass chord, and almost black-red water (3.5 degrees and above) plays a low timpani
+// roll with a rumble under it. Both get louder the more black-red there is in the column. On the map records both die away, over a few seconds, when the beam reaches the coast of Central and
+// South America. The two bands are counted per cell in the grids (`deep`, from tools/make-elnino2026.py). The bass chord goes through the chords voice and the rumble through
+// the percussion voice, so their mute boxes and volume balance apply. Both are synthesised: the MuseScore sounds in this app have no double bass.
+function bassNote(t, m, dur, gain) {                  // one bowed double bass note: two slightly detuned saws and a triangle, rounded off by a low-pass, with a breath of bow noise
+  const { ctx, bus, nb } = A, f = mtof(m), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = 620; lp.Q.value = 0.9;
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(gain, t + 0.22); g.gain.setValueAtTime(gain, t + dur); g.gain.exponentialRampToValueAtTime(0.001, t + dur + 0.45);
+  [[1, 'sawtooth', 0.5, -5], [1, 'sawtooth', 0.5, 5], [2, 'triangle', 0.3, 0], [3, 'sine', 0.1, 0]].forEach(([mul, type, a, det]) => {
+    const o = ctx.createOscillator(), og = ctx.createGain(); o.type = type; o.frequency.value = f * mul; o.detune.value = det; og.gain.value = a;
+    o.connect(og); og.connect(lp); o.start(t); o.stop(t + dur + 0.5);
+  });
+  const s = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), ng = ctx.createGain(); bp.type = 'bandpass'; bp.frequency.value = 260; bp.Q.value = 0.7; ng.gain.value = 0.05;
+  s.buffer = nb; s.connect(bp); bp.connect(ng); ng.connect(lp); s.start(t, Math.random() * 1.2, 0.8);
+  lp.connect(g); g.connect(bus[1]);
+}
+function rumbleHit(t, f, gain) {                      // one dark stroke on a big, low timpani
+  const { ctx, bus, nb } = A, g = ctx.createGain();
+  g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+  [[1, 1, 0.85], [1.5, 0.5, 0.6], [2, 0.42, 0.45], [2.44, 0.2, 0.3]].forEach(([m, a, d]) => {       // not quite harmonic, with the upper partials that carry the note on small speakers
+    const o = ctx.createOscillator(), og = ctx.createGain(); o.frequency.setValueAtTime(f * m * 1.06, t); o.frequency.exponentialRampToValueAtTime(f * m, t + 0.1);
+    og.gain.setValueAtTime(a, t); og.gain.exponentialRampToValueAtTime(0.001, t + d); o.connect(og); og.connect(g); o.start(t); o.stop(t + d + 0.02);
+  });
+  const s = ctx.createBufferSource(), lp = ctx.createBiquadFilter(), ng = ctx.createGain(); lp.type = 'lowpass'; lp.frequency.value = 320;
+  ng.gain.setValueAtTime(gain * 0.6, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.05); s.buffer = nb; s.connect(lp); lp.connect(ng); ng.connect(g); s.start(t, Math.random() * 1.5, 0.07);
+  g.connect(bus[4]);
+}
+function rumbleBed(t, dur, gain) {                    // a low rumble of filtered noise under the roll, swelling and fading with the column
+  const { ctx, bus, nb } = A, s = ctx.createBufferSource(), lp = ctx.createBiquadFilter(), g = ctx.createGain(); lp.type = 'lowpass'; lp.frequency.value = 130; lp.Q.value = 0.6;
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(gain, t + dur * 0.5); g.gain.linearRampToValueAtTime(0.0001, t + dur * 1.3);
+  s.buffer = nb; s.loop = true; s.connect(lp); lp.connect(g); g.connect(bus[4]); s.start(t, Math.random() * 1.2); s.stop(t + dur * 1.35);
+}
+function deepData() {                                 // per column: how much medium-dark red and black-red there is (0 to 1, against the strongest column of the pair of years), and where to stop
+  const g = T.grid; if (!g.deep || !g.deepRef) return null; if (T._deep && T._deep.g === g) return T._deep;
+  const n = g.cols, rows = g.rows, mid = new Float32Array(n), blk = new Float32Array(n);
+  for (let c = 0; c < n; c++) for (let r = 0; r < rows; r++) { mid[c] += g.deep[(r * n + c) * 2] / 255 / rows; blk[c] += g.deep[(r * n + c) * 2 + 1] / 255 / rows; }
+  const sm = (a, ref) => Float32Array.from(a, (_, c) => { let s = 0, k = 0; for (let d = -2; d <= 2; d++) { const x = a[c + d]; if (x !== undefined) { s += x; k++; } } return Math.min(1, s / k / ref); });
+  let stop = Infinity;
+  if (!T.timeAxis) {                                  // the coast of Central and South America: the first column in the eastern Pacific where land fills the band from 15 S to 12 N
+    const rs = []; for (let r = 0; r < rows; r++) { const la = latOf(r); if (la <= 12 && la >= -15) rs.push(r); }
+    for (let c = 0; c < n; c++) { const lo = lonOf(c); if (lo < -125 || lo > -60) continue; if (rs.reduce((s, r) => s + g.land[r * n + c] / 255, 0) / rs.length >= 0.3) { stop = c; break; } }
+  }
+  return (T._deep = { g, mid: sm(mid, g.deepRef[0]), blk: sm(blk, g.deepRef[1]), stop });
+}
+let deepNext = 0;
+let deepOff = false;                                  // debug only (?debug): true switches the two deep reds off, 'only' plays only them, to measure what they add
+function elDeep(c, t, step) {
+  const D = deepOff === true ? null : deepData(); if (!D) return;
+  const cb = Math.min(c, D.stop - 1), fade = c < D.stop ? 1 : Math.exp(-(c - D.stop + 1) * step / 1.4);     // past the coast the last level dies away over a few seconds (about 1.4 s per e-fold), not an abrupt stop
+  if (fade < 0.04) return;
+  const mid = D.mid[cb] * fade, blk = D.blk[cb] * fade;
+  if (t + 4 < deepNext) deepNext = t;                                                              // the sweep was restarted
+  if ((mid > 0.04 || blk > 0.02) && t >= deepNext - 0.02) {                                         // the double bass chord, bowed again about every second
+    const L = Math.min(1, 0.2 * Math.sqrt(mid) + Math.pow(blk, 0.85)), ch = chordFor(0), r0 = ch[0] % 12, fi = [6, 7, 8].includes(((ch[2] - ch[0]) % 12 + 12) % 12) ? ((ch[2] - ch[0]) % 12 + 12) % 12 : 7;
+    const ti = ((ch[1] - ch[0]) % 12 + 12) % 12, root = 36 + ((r0 - 36 % 12 + 12) % 12), top = root + 12 + (ti === 3 || ti === 4 ? ti : 3), notes = [root, root + fi, top > 58 ? top - 12 : top];
+    deepNext = t + 1.0; notes.forEach(m => { noteLog(1, t, m, 1.2); bassNote(t, m, 1.2, 0.008 + 0.13 * L * L); });
+  }
+  if (blk > 0.03) {                                                                                 // the low timpani roll and its rumble
+    const n = Math.max(3, Math.round(step / 0.07)), f = mtof(38), lv = Math.pow(blk, 0.7);
+    noteLog(2, t, 38, step, 'low timpani rumble');
+    for (let i = 0; i < n; i++) rumbleHit(t + i * step / n, f, (0.075 * lv * lv * lv) * (0.7 + 0.5 * i / n) * (0.85 + Math.random() * 0.3));
+    rumbleBed(t, step, 0.12 * lv * lv * lv);
+  }
+}
 
 // Data-driven rhythm. The stronger the data in the sweep beam, the faster the drums play, in four musical steps only:
 //   crotchets (1 per beat) -> quavers (2) -> semiquavers (4) -> demisemiquavers (8, rare).
@@ -1715,7 +1793,7 @@ DATA_INFO.sssVideo = globeInfo('sss', 'salinity', 'The same salinity colour bar 
     'The map covers only the tropical Pacific, with parts of the Atlantic and Indian oceans at its edges. The bottom two rows (about 17 to 23 degrees south) are left out of the drum rhythm and mood, as the bottom rows of the world maps are.',
     'The El Niño stories need a citation check. The sound mapping is an artistic translation.'];
   const rank = 'The mood (calm, sad or urgent) is ranked against both years together, so a normal year sounds calmer than a strong El Niño.';
-  const cells = 'The map is cut into 160 columns and 18 rows. In each cell the share of pixels cooler than minus 0.5 °C, within 0.5 °C of normal, warmer than plus 0.5 °C, and more than 2 °C from normal either way become the four voices, scaled so that the strongest 5% of the two years together reach full strength.';
+  const cells = 'The map is cut into 160 columns and 18 rows. In each cell the share of pixels cooler than minus 0.5 °C, within 0.5 °C of normal, warmer than plus 0.5 °C, and more than 2 °C from normal either way become the four voices, scaled so that the strongest 5% of the two years together reach full strength. Two more counts, medium-dark red (2.5 to 3.5 °C above normal) and almost black-red (3.5 °C and above), drive the double bass chord and the low timpani rumble.';
   DATA_INFO.elnino26 = { ...common, date: '10 October 2026 (the top half of frame 2200 of NASA\'s image sequence).', decode: [dec1, dec2, cells, rank], caveats: cav };
   DATA_INFO.elnino25 = { ...common, date: '10 October 2025, one year earlier (the bottom half of the same frame). NOAA\'s Niño 3.4 value that week was about minus 0.3 °C.', decode: [dec1, dec2, cells, rank], caveats: cav };
   DATA_INFO.elninoYear = { ...common, date: '29 January to 10 October 2026: 121 of the movie\'s 1,201 frames (every tenth), blended into 160 moments. The dates were read off the labelled movie (frame 0 is 29 January and frame 1200 is 10 October) and are assumed to be even in between.',
@@ -1875,15 +1953,16 @@ $('dur').addEventListener('input', e => { $('durOut').textContent = e.target.val
 document.addEventListener('visibilitychange', () => { if (document.hidden && playing) pause(); });
 window.addEventListener('pagehide', () => { stopSpeech(); if (playing) pause(); if (A) { try { A.ctx.close(); } catch (e) {} A = null; } });
 // Offline render for measuring the mix (debug only): plays the sweep into an OfflineAudioContext and reports levels.
-async function renderOffline(i, seconds, solo) {
+async function renderOffline(i, seconds, solo, winSec) {          // solo: one bus, or a list of buses; win: also return the level of each window of that many seconds
   const keep = A; A = null; setTrack(i); clearTimeout(idleTimer);        // setTrack arms the idle shut-down timer, which would mute this offline graph
   const sr = 22050, ctx = new OfflineAudioContext(2, Math.round(sr * seconds), sr);
   initAudio(ctx);
-  A.bus.forEach((g, k) => { g.gain.value = (solo === undefined || solo === k) ? busGain(k) : 0; });
+  A.bus.forEach((g, k) => { g.gain.value = (solo === undefined || solo === k || (Array.isArray(solo) && solo.includes(k))) ? busGain(k) : 0; });
   const step = 0.25, n = Math.floor(seconds / step); gridOrigin = 0.05; timpFreq = null;
-  for (let c = 0; c < n; c++) { const cc = Math.floor(c * V.cols / n), { tot, cen } = colStats(cc); setScaleFor(cc); T.schedule(cc, 0.05 + c * step, step, tot, cen, V); urgentFx(cc, 0.05 + c * step, step); }
+  for (let c = 0; c < n; c++) { const cc = Math.floor(c * V.cols / n), { tot, cen } = colStats(cc); setScaleFor(cc); T.schedule(cc, 0.05 + c * step, step, tot, cen, V); if (deepOff !== 'only') urgentFx(cc, 0.05 + c * step, step); }
   const buf = await ctx.startRendering(); A = keep;
-  const d = buf.getChannelData(0), win = Math.round(sr * 0.5); let sum = 0, peak = 0, aSum = 0, aN = 0, nw = 0;
+  const d = buf.getChannelData(0), win = Math.round(sr * 0.5), wins = []; let sum = 0, peak = 0, aSum = 0, aN = 0, nw = 0;
+  if (winSec) { const w = Math.round(sr * winSec); for (let k = 0; k + w <= d.length; k += w) { let s2 = 0; for (let j = k; j < k + w; j++) s2 += d[j] * d[j]; wins.push(+(10 * Math.log10(s2 / w + 1e-12)).toFixed(1)); } }
   for (let w = 0; w + win <= d.length; w += win) { let s2 = 0; for (let j = w; j < w + win; j++) { const x = d[j]; s2 += x * x; if (Math.abs(x) > peak) peak = Math.abs(x); } sum += s2; nw++; if (s2 / win > 1e-7) { aSum += s2 / win; aN++; } }
   // A-weighted level of the active parts: closer to what a listener hears, because very low notes count for little on ordinary speakers
   const act = []; for (let w = 0; w + win <= d.length; w += win) { let s2 = 0; for (let j = w; j < w + win; j++) s2 += d[j] * d[j]; if (s2 / win > 1e-7) for (let j = w; j < w + win; j++) act.push(d[j]); }
@@ -1895,7 +1974,7 @@ async function renderOffline(i, seconds, solo) {
     aw = 10 * Math.log10(2 * ms / (N * N) * (N / act.length) / 1) ;
   }
   const db = v => v > 0 ? 20 * Math.log10(v) : -120;
-  return { aw: +aw.toFixed(1), rms: +db(Math.sqrt(sum / (nw * win))).toFixed(1), active: aN ? +db(Math.sqrt(aSum / aN)).toFixed(1) : -120, peak: +db(peak).toFixed(1), activeShare: +(aN / nw).toFixed(2) };
+  return { aw: +aw.toFixed(1), rms: +db(Math.sqrt(sum / (nw * win))).toFixed(1), active: aN ? +db(Math.sqrt(aSum / aN)).toFixed(1) : -120, peak: +db(peak).toFixed(1), activeShare: +(aN / nw).toFixed(2), wins };
 }
 
 window.EJ = { get A() { return A; }, get T() { return T; }, get playing() { return playing; }, scoreOn, INSTR,
@@ -1925,6 +2004,6 @@ window.EJ = { get A() { return A; }, get T() { return T; }, get playing() { retu
     urgentAt(t, step, t0) { gridOrigin = t0; urgentFx(0, t, step); },
     droneHz: () => T.droneHz, lightKind: () => T.instruments.light,
   } };   // read-only view for the scrolling sheet music (sheet.js)
-if (location.search.includes("debug")) window.__jb = { loadSamples, SM, TRACKS, musicBuffers, scoreBuffers, startMusic, setTrack, renderOffline, wake, colStats, get T() { return T; }, get V() { return V; }, get A() { return A; } };   // test hook, only with ?debug in the address
+if (location.search.includes("debug")) window.__jb = { setDeepOff: v => { deepOff = v; }, loadSamples, SM, TRACKS, musicBuffers, scoreBuffers, startMusic, setTrack, renderOffline, wake, colStats, get T() { return T; }, get V() { return V; }, get A() { return A; } };   // test hook, only with ?debug in the address
 setTrack(tabIndex('year') >= 0 ? tabIndex('year') : 0);
 })();
