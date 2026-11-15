@@ -1479,7 +1479,7 @@ function capBegin(u, text) {                         // call just before speakin
     capClear(); CAPS.u = u; CAPS.chunks = capChunks(text); capShow(0);
     CAPS.timers.push(setTimeout(() => { if (CAPS.sync || CAPS.u !== u) return; CAPS.chunks.forEach((c, k) => { if (k) CAPS.timers.push(setTimeout(() => { if (!CAPS.sync && CAPS.u === u) capShow(k); }, c.i * 68 / (u.rate || 1))); }); }, 700));   // no word events from this voice: time the captions by length
   });
-  u.addEventListener('boundary', e => { if (CAPS.u !== u) return; CAPS.sync = true; let k = 0; CAPS.chunks.forEach((c, j) => { if (c.i <= e.charIndex) k = j; }); capShow(k); });
+  u.addEventListener('boundary', e => { if (CAPS.u !== u) return; CAPS.sync = true; const at = e.charIndex * text.length / Math.max(1, (u.text || text).length); let k = 0; CAPS.chunks.forEach((c, j) => { if (c.i <= at) k = j; }); capShow(k); });   // the spoken copy can differ in length from the caption text
   const end = () => { if (CAPS.u === u) capClear(); };
   u.addEventListener('end', end); u.addEventListener('error', end);
 }
@@ -1491,7 +1491,7 @@ function speak(text, interrupt) {
 }
 function nextSpeech() {
   if (speaking || !speechQ.length) return;
-  const text = speechQ.shift(), u = new SpeechSynthesisUtterance(text); curUtt = u;
+  const text = speechQ.shift(), u = new SpeechSynthesisUtterance(window.EJ_PRON ? window.EJ_PRON(text) : text); curUtt = u;
   const v = speechSynthesis.getVoices().find(x => x.name === $('voice').value);
   if (v) { u.voice = v; u.lang = v.lang; }
   u.rate = 0.95; capBegin(u, text);
@@ -1513,7 +1513,7 @@ function guideSentences() {
 }
 function say(text) {                                 // speak one sentence and resolve when it has finished (or after a safety timeout)
   return new Promise(res => {
-    const u = new SpeechSynthesisUtterance(text); curUtt = u;
+    const u = new SpeechSynthesisUtterance(window.EJ_PRON ? window.EJ_PRON(text) : text); curUtt = u;
     const v = speechSynthesis.getVoices().find(x => x.name === $('voice').value);
     if (v) { u.voice = v; u.lang = v.lang; }
     u.rate = 0.95; capBegin(u, text);
