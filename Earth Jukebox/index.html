@@ -369,7 +369,7 @@
       <canvas id="followLayer" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
       <div id="captionBar" class="cap-bar" aria-hidden="true" hidden><span></span></div>
     </div>
-    <div id="toggleRail" class="toggle-rail rail-l" role="group" aria-label="Sound and score switches"><button id="demoAll" type="button" class="rail-btn rail-act" title="Hear the instruments, one after another"><span class="ic" aria-hidden="true">🎧</span><span class="lb">Hear instruments</span><span class="st" aria-hidden="true"></span></button></div>
+    <div id="toggleRail" class="toggle-rail rail-l" role="group" aria-label="Sound and score switches"><button id="demoAll" type="button" class="rail-btn rail-act" title="Hear the voices (instruments), one after another"><span class="ic" aria-hidden="true">🎧</span><span class="lb">Hear voices</span><span class="st" aria-hidden="true"></span></button></div>
     <div id="toggleRailR" class="toggle-rail rail-r" role="group" aria-label="Speech and caption switches"><button id="skip" type="button" class="rail-btn rail-act" title="Skip the spoken introduction and go straight to the sweep" hidden><span class="ic" aria-hidden="true">⏭</span><span class="lb">Skip intro</span><span class="st" aria-hidden="true"></span></button></div>
     </div>
     <div class="panel where-strip" aria-labelledby="whereH"><h2 id="whereH">Where you are</h2><span id="whereNow" class="where-now" aria-hidden="true"></span><div id="readout" role="status" aria-live="polite">Press play, or click the map.</div></div>
@@ -457,7 +457,7 @@
   <ol>
     <li>Press a <b>red button</b> to choose a record: ocean currents, aerosols, sea temperature, salinity, density or lightning.</li>
     <li>Press <b>Play</b> to hear one sweep, or click the picture to hear a single spot.</li>
-    <li>Press <b>Hear instruments</b> to learn what each sound means.</li>
+    <li>Press <b>Hear voices</b> to learn what each sound means.</li>
   </ol>
   <p>Prefer to listen? <b>Hear Me</b> reads every screen aloud.</p>
   <label class="toggle compact"><input type="checkbox" id="welcomeSeen"><span class="t">Do not show this again</span></label>
@@ -468,12 +468,12 @@
   <p>This turns NASA pictures of Earth's oceans and atmosphere into music. Pitch is the latitude, each kind of data has its own instrument, and the drums play faster where the data is stronger.</p>
   <ol>
     <li>Press <b>Play</b> to hear one sweep.</li>
-    <li>Press <b>Hear the instruments</b> to learn what each voice means.</li>
+    <li>Press <b>Hear voices</b> to learn what each voice means.</li>
     <li>Click or tap the picture to hear a single spot.</li>
   </ol>
   <label class="toggle compact"><input type="checkbox" role="switch" id="startSpeak"><span class="t">Read a spoken guide aloud before each sweep</span></label>
   <label class="toggle compact"><input type="checkbox" role="switch" id="startSeen"><span class="t">Do not show this again</span></label>
-  <p><button id="startGo" type="button">Begin</button> <button id="startDemo" type="button" class="secondary">Hear the instruments first</button></p>
+  <p><button id="startGo" type="button">Begin</button> <button id="startDemo" type="button" class="secondary">Hear the voices first</button></p>
 </dialog>
 <script src="grid.js"></script>
 <script src="ocean_grid.js"></script>

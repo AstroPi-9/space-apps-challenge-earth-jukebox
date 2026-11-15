@@ -1506,7 +1506,7 @@ function guideSentences() {
   if ($('introLen').value === 'short') {              // about 20 seconds: what it shows, how to listen, then play
     const what = T.speech.open[0].replace(/^Welcome to the Earth Jukebox\.\s*/, '').trim();
     const travel = T.timeAxis ? 'The sweep runs through the year.' : T.video ? 'The sweep follows the line down the middle of the turning globe.' : 'The sweep travels from west to east.';
-    return [what, travel + ' Pitch tells you the latitude: higher notes are further north.', 'Each kind of data has its own instrument, and the drums speed up where the data is stronger. Use the Hear the instruments button to learn them.', 'The sweep will now play once, and then stop.'];
+    return [what, travel + ' Pitch tells you the latitude: higher notes are further north.', 'Each kind of data has its own instrument, and the drums speed up where the data is stronger. Use the Hear voices button to learn them.', 'The sweep will now play once, and then stop.'];
   }
   const sl = T.startLon === undefined ? -180 : T.startLon, hs = [...T.hotspots].sort((a, b) => (((a.say - sl) % 360) + 360) % 360 - (((b.say - sl) % 360) + 360) % 360);
   return [...T.speech.open, ...hs.map(h => `${cap(h.name)}. ${h.story}`), 'That is the whole picture.', ...T.speech.listen];
@@ -1793,7 +1793,7 @@ async function demoOne(k) {
   if (playing) pause(); cancelGuide(); stopDemo(true); const tok = ++demoTok; demoRunning = true; demoBtn(true);
   await demoVoice(k, tok); if (tok === demoTok) { stopDemo(true); $('demoStatus').textContent = 'Done. Press Hear on another voice, or Play to hear them all together.'; }
 }
-function demoBtn(on) { const b = $('demoAll'); b.innerHTML = '<span class="ic" aria-hidden="true">' + (on ? '⏹' : '🎧') + '</span><span class="lb">' + (on ? 'Stop demo' : 'Hear instruments') + '</span><span class="st" aria-hidden="true"></span>'; b.removeAttribute('aria-label'); b.classList.toggle('running', on); b.title = on ? 'Stop the instruments demo' : 'Hear the instruments, one after another'; }
+function demoBtn(on) { const b = $('demoAll'); b.innerHTML = '<span class="ic" aria-hidden="true">' + (on ? '⏹' : '🎧') + '</span><span class="lb">' + (on ? 'Stop demo' : 'Hear voices') + '</span><span class="st" aria-hidden="true"></span>'; b.removeAttribute('aria-label'); b.classList.toggle('running', on); b.title = on ? 'Stop the instruments demo' : 'Hear the instruments, one after another'; }
 async function demoAll() {
   if (demoRunning) { stopDemo(); return; }
   if (playing) pause(); cancelGuide(); stopSpeech(); stopDemo(true); const tok = ++demoTok; demoRunning = true; demoBtn(true);

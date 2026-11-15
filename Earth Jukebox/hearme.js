@@ -43,7 +43,7 @@
     p.push(clean($('dataBarNow').textContent).replace(/^([A-D]\d)\s*Now playing:/, 'Record $1. Now showing:') + '.');
     p.push(clean($('trackIntro').textContent));
     if (T && T.alt) p.push('The picture: ' + clean(T.alt));
-    p.push(`The main buttons are: ${clean($('play').textContent)}, Restart, and Hear the instruments, which plays each voice on its own. The volume is ${$('vol').value} out of 100, and the tour length is ${$('dur').value} seconds.${E && E.playing ? ' Music is playing now.' : ' Nothing is playing yet.'}`);
+    p.push(`The main buttons are: ${clean($('play').textContent)}, Restart, and Hear voices, which plays each voice on its own. The volume is ${$('vol').value} out of 100, and the tour length is ${$('dur').value} seconds.${E && E.playing ? ' Music is playing now.' : ' Nothing is playing yet.'}`);
     if (T && T.species) p.push('The voices: ' + T.species.map(s => `${clean(s.name)}, ${clean(s.sound)}`).join('. ') + '.');
     if (!$('followPanel').hidden) p.push('This record also has Follow a current: press one of the named currents, such as the Gulf Stream, or type a longitude and latitude and press Follow. The sound then travels along that current, and its pitch is the water temperature.');
     if (!$('elPanel').hidden) p.push(`This record also has an El Niño layer. Choose a month, currently ${clean($('elMonthOut').textContent)}, with the slider or a preset such as December 1997, and press Play, or press Play the years to hear the Niño 3.4 index from 1982 to the latest month.`);
