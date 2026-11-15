@@ -19,6 +19,10 @@
     density: { code: 'C1', title: 'Density', icon: '⚖️', blurb: 'How heavy is the water at the surface? Choose how to hear it.', items: [
       { track: 'density', title: 'Still map', dsc: "NASA's sea surface density map, a long-term average. A beam sweeps from west to east." },
       { track: 'densityVideo', title: 'Turning globe', dsc: 'The same density field as a globe turning once in a minute. The sound follows the beam.' } ] },
+    elnino: { code: 'D1', title: 'El Niño 2026', icon: '🔥', blurb: 'NASA pictures of the tropical Pacific in 2026, coloured by how much warmer or cooler than normal the sea surface is. Choose the map of 10 October 2026, the same week a year earlier, or the whole of 2026 so far.', items: [
+      { track: 'elninoYear', title: 'Through 2026', dsc: 'From 29 January to 10 October 2026. Hear the warm water grow along the equator as a strong El Niño develops.' },
+      { track: 'elnino26', title: '10 October 2026', dsc: 'A strong El Niño: a band of very warm water along the equator. A beam sweeps from west to east.' },
+      { track: 'elnino25', title: 'The same week in 2025', dsc: 'A year earlier, with no El Niño: the equator is slightly cooler than normal. A beam sweeps from west to east.' } ] },
   };
   const NAMES = {}; home.querySelectorAll('.rec[data-track]').forEach(b => { NAMES[b.dataset.track] = { code: b.dataset.code, name: b.querySelector('.ttl').textContent.replace(/^\S+\s/, '') }; });
   Object.values(GROUPS).forEach(g => g.items.forEach((it, i) => { NAMES[it.track] = { code: g.code, name: g.title + ', ' + it.title }; }));

@@ -277,7 +277,7 @@
       </div>
       <section class="jb-card" aria-labelledby="jbSummaryH">
         <h2 id="jbSummaryH">What is going on</h2>
-        <p>Six records, each one a NASA picture of Earth's oceans or atmosphere; some open a second page where you choose between the still map and a turning globe. The jukebox reads the colours as data and plays them live, while the picture stays on screen: a beam sweeps across the world and every kind of data has its own instrument. Choose a record, and the doors will open.</p>
+        <p>Seven records, each one a NASA picture of Earth's oceans or atmosphere; some open a second page where you choose between versions, such as a still map, a turning globe or a time-lapse. The jukebox reads the colours as data and plays them live, while the picture stays on screen: a beam sweeps across the world and every kind of data has its own instrument. Choose a record, and the doors will open.</p>
         <ul class="jb-badges">
           <li>Pitch is latitude</li><li>Each kind of data has an instrument</li><li>Drums follow the region</li><li>Sad and urgent where the data is strong</li>
         </ul>
@@ -289,6 +289,7 @@
         <button class="rec" type="button" data-group="sss" data-code="B2" aria-label="B2. Salinity. Opens a page where you choose the still map or the turning globe."><span class="knob" aria-hidden="true">B2</span><span class="card"><span class="ttl">🧂 Salinity</span><span class="dsc">Still map or turning globe: fresher and saltier water around the world.</span></span></button>
         <button class="rec" type="button" data-group="density" data-code="C1" aria-label="C1. Density. Opens a page where you choose the still map or the turning globe."><span class="knob" aria-hidden="true">C1</span><span class="card"><span class="ttl">⚖️ Density</span><span class="dsc">Still map or turning globe: heavy cold water to light warm water.</span></span></button>
         <button class="rec" type="button" data-track="lightning" data-code="C2" aria-label="C2. Lightning. Flashes seen from the International Space Station from 2017 to 2023, played as untuned drums with timpani in the strongest storms."><span class="knob" aria-hidden="true">C2</span><span class="card"><span class="ttl">⚡ Lightning</span><span class="dsc">Space-station lightning flashes, 2017 to 2023, as drums, with timpani in the strongest storms.</span></span></button>
+        <button class="rec" type="button" data-group="elnino" data-code="D1" aria-label="D1. El Niño 2026. Opens a page where you choose the map of 10 October 2026, the same week a year earlier, or the whole of 2026 so far."><span class="knob" aria-hidden="true">D1</span><span class="card"><span class="ttl">🔥 El Niño 2026</span><span class="dsc">A strong El Niño in the tropical Pacific: this year against last year, and how it grew.</span></span></button>
       </div>
       <div class="jb-foot">
         <span id="jbPrompt">Press a red button to choose a record.</span>
@@ -404,7 +405,7 @@
       <p id="elStatus" class="sub" aria-live="polite">Tick "Add the El Niño layer", choose a month, and press Play, or press "Play the years" to hear the Niño 3.4 index from 1982 to the latest month while the maps change.</p>
     </section>
     <p id="vcap" class="sub" style="display:none"></p>
-    <div id="tlineWrap" style="display:none;margin:6px 0"><label>Time in the year <input id="tline" type="range" min="0" max="159" value="0" style="width:min(520px,70vw)"> <span id="tlineOut" aria-hidden="true"></span></label></div>
+    <div id="tlineWrap" style="display:none;margin:6px 0"><label style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px">Time in the year <input id="tline" type="range" min="0" max="159" value="0" style="width:min(520px,70vw)"> <span id="tlineOut" aria-hidden="true"></span></label></div>
     <p id="help" class="sub">Click or tap the map to hear that spot. With a keyboard: arrow keys move (Shift = bigger steps), Home/End jump to the west/east edge, Enter replays the spot, Space plays or pauses.</p>
 
     <p class="sub" id="speakHelp">With spoken narration on, pressing play first has a voice describe the image from west to east, then explain how to listen. Then the sweep plays once, with no talking over the music, and stops at the end. Clicking a spot also describes it aloud. If you use a screen reader, you may prefer to leave narration off and use the descriptions below.</p>
@@ -476,6 +477,7 @@
 <script src="sss_video_grid.js"></script>
 <script src="year_grid.js"></script>
 <script src="lightning_grid.js"></script>
+<script src="elnino_grids.js"></script>
 <script src="score_notes.js"></script>
 <script src="flow_field.js"></script>
 <script src="nino34_index.js"></script>

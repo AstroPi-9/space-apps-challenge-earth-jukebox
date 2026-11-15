@@ -4,7 +4,7 @@
 
 Built for the NASA Space Apps Challenge 2026 challenge *The Earth Information Jukebox*. It is an independent project and is **not an official NASA product**.
 
-**The jukebox.** Sea temperature, salinity and density each open a second wooden page first, where you choose between versions (the still map and the turning globe; the El Niño version is switched off for now, see below). The page opens on a wooden jukebox with a short summary and seven large red buttons (A1 to D1), one for each record. Pressing a button picks that record, and the home page swings open like double doors to show its page (picture, sound settings, sheet music and any extras). When a song ends, or when you press **Back to the jukebox**, the doors close and you choose another record. The *Return to the jukebox when a song ends* switch (in Display and narration) turns the automatic closing off. With reduced-motion settings the doors do not animate. Add `?nohome` to the address to skip the home page.
+**The jukebox.** Sea temperature, salinity and density each open a second wooden page first, where you choose between versions (the still map and the turning globe). El Niño 2026 (record D1) opens a second page too, with three versions (see below). The page opens on a wooden jukebox with a short summary and seven large red buttons (A1 to D1), one for each record. Pressing a button picks that record, and the home page swings open like double doors to show its page (picture, sound settings, sheet music and any extras). When a song ends, or when you press **Back to the jukebox**, the doors close and you choose another record. The *Return to the jukebox when a song ends* switch (in Display and narration) turns the automatic closing off. With reduced-motion settings the doors do not animate. Add `?nohome` to the address to skip the home page.
 
 **Settings and switches.** Every record page has the same wooden jukebox look. The settings that apply to every record (sound source, harmonious mode, gamakas, regional scales and emotion, composed music underneath, sheet music, descriptions, spoken narration and its voice, returning to the jukebox after a song) are in the small **Settings** tab at the top right of the home and second pages. Settings that belong to one record stay on its page: Follow a current and the voice mute switches. Every setting is an old flick switch: up is on, down is off.
 
@@ -25,6 +25,7 @@ Each track takes a NASA visualization, reads the colours in it as data, and play
 | **Ocean currents** | NASA SVS 3912: one frame (19 June 2007) | Sweeps the globe west to east, **or** use *Follow a current* (below). |
 | **Aerosols** | NASA SVS 5669: smoke, dust, sea salt and sulfate, 19 August 2025 | Sweeps the globe from west to east. |
 | **Sea temperature**, **Salinity**, **Density** (three records, each with a second page to choose a version) | NASA SVS 3652 | **Still map:** the provided average ocean surface map; a beam sweeps from west to east. **Turning globe:** the provided movie of the Earth turning once in 60 seconds; the sound follows the line down the middle of the globe, in step with the video. Sea temperature also has **El Niño through the years** (see below). The still map is a long-term average, not one year. |
+| **El Niño 2026** (record D1, a second page with three versions) | NASA SVS 5683, "Signs of El Niño in 2026": sea surface temperature *anomaly* (how much warmer or cooler than normal) over the tropical Pacific | **Through 2026:** runs through time, 29 January to 10 October 2026, as the warm water grows along the equator. **10 October 2026** and **the same week in 2025:** a beam sweeps the Pacific map from Indonesia to South America. See *El Niño 2026* below. |
 
 How the picture becomes sound:
 
@@ -88,9 +89,20 @@ On the Ocean currents track, a panel under the map lets you follow one current a
 
 How it works and its limits: `tools/make-flow-field.ps1` measures the direction of the lines in each 16-pixel tile of the frame (`flow_field.js`). The tracing follows those directions. **A flow line has an orientation but no arrow**, so the picture alone cannot say which way the water flows. The named currents use their well-known direction; a start you choose heads east unless you tick *Reverse direction*. The path follows the drawn lines at 2.8-degree tile resolution, so it is a sketch of the current, not a measured track, and traces can wander across a basin. The temperature is decoded from line colour (see below).
 
-## El Niño layer (switched off for now)
+## El Niño 2026 (record D1)
 
-*This version is hidden: its map image does not look good enough yet. The code and data are still in the project. To bring it back, add `'sstEl'` to `TAB_ORDER` in `app.js`, restore its entry in the sea temperature group in `jukebox.js`, and add the `<script>` tags for `elnino_grid.js` and `elnino_fine.js` back to `index.html`.*
+The sea temperature maps are long-term averages, so they cannot show an El Niño. This record uses NASA's 2026 pictures of the tropical Pacific (SVS 5683, "Signs of El Niño in 2026", visualization by Kel Elkins), which show the **anomaly**: how much warmer or cooler than normal the sea surface is (colour bar from minus 4 °C, blue, through pale cream, normal, to plus 4 °C, dark red). It has three versions:
+- **Through 2026:** a sweep through time, 29 January to 10 October 2026 (121 frames of NASA's movie, blended into 160 moments). The picture changes with the sweep and the pitch is latitude, read across all longitudes in the picture, as in the Year of the ocean.
+- **10 October 2026:** the map at the peak of the event. A band of very warm water, more than three degrees above normal, runs along the equator to the coast of Peru. A beam sweeps from west to east.
+- **The same week in 2025:** a year earlier, when the equator was slightly cooler than normal. The mood of the music is ranked against both years together, so this one sounds calmer.
+
+The four voices are cooler than normal, near normal, warmer than normal, and strong anomalies (more than 2 °C from normal either way). The grids are built by `tools/make-elnino2026.py` from the NASA files (`elnino_grids.js`, `assets/elnino2026/`). The map has no coordinates, so its extent (about 105° E to 40° W, 30° N to 23° S) was **fitted** by matching its land to a public coastline; latitudes and longitudes are approximate.
+
+**Check against NOAA** (`tools/validate-elnino2026.py`, results in `analysis/elnino2026_validation.json`): the Niño 3.4 box decoded from NASA's pictures follows NOAA's weekly Niño 3.4 index with correlation **+0.994** over 29 January to 10 October 2026 and +0.83 over the same dates in 2025 (+0.98 over both). On 10 October 2026 it decodes to +3.35 °C against NOAA's +3.2 °C. The decode runs about **0.4 °C warmer** than NOAA's index in 2026. That may be a different baseline and data product, or a timing difference of up to four weeks (shifting NOAA's series by 28 days fits better in 2026, but not in 2025), and a steadily rising series cannot tell these apart. The colour bar stops at 4 °C, so 38% of the Niño 3.4 box is read as exactly 4 in October 2026, and the warmest water is under-read. The small Niño 1+2 coastal box matches least well in 2026 (correlation +0.94, RMSE 0.64 °C). This tests that the decode behaves like the real thing, not that every value is exact.
+
+## Earlier El Niño layer (SVS 4695, switched off)
+
+*This earlier version, built on the SVS 4695 movie (1982 to 2017), is hidden: its map image did not look good enough. It was replaced by El Niño 2026 above. The code and data are still in the project. To bring it back, add `'sstEl'` to `TAB_ORDER` in `app.js`, restore its entry in the sea temperature group in `jukebox.js`, and add the `<script>` tags for `elnino_grid.js` and `elnino_fine.js` back to `index.html`.*
 
 The sea temperature map is a long-term average, so it cannot show warming or El Niño. This add-on brings in two real time series so the music can respond to **change from normal** (an anomaly):
 
@@ -130,6 +142,7 @@ The numbers are decoded from rendered pictures, so these checks test that the de
 | **Seasonal cycle** of the decoded Year-track temperature, by latitude band | `tools/seasonal-cycle.py` | Warmest in late Aug to early Sep at 60 to 30 N and in late Feb to early Mar at 30 to 60 S; amplitude about 4.5 to 4.8 °C at 30 to 50 degrees and under 1 °C in the tropics; the two hemispheres correlate **-0.95**. One partial year, so it checks behaviour, not accuracy. |
 | **Robust rate of change** of the index (differences scaled by the median absolute deviation) | `elnino.js`, `tools/validate-elnino.py` | Used for the "rapid onset" part of the urgent mood in *Play the years*. Descriptive, not a forecast. |
 | **Naive baselines** | `tools/validate-elnino.py` | Predicting next month's index by repeating this month gives an average error of 0.18 °C, against 0.65 °C for the long-term mean. The app makes no predictions; any future one must beat these. |
+| **Comparison with NOAA's weekly Niño indices** (El Niño 2026) | `tools/validate-elnino2026.py` | The Niño 3.4 box decoded from NASA's 2026 pictures follows NOAA's weekly index with correlation **+0.994** (2026) and +0.83 (2025); the decode runs about 0.4 °C warmer in 2026, and is clipped at +4 °C. See *El Niño 2026*. |
 
 These methods were chosen after reviewing the team's earlier project RAM AVATAR, which also showed why baselines matter: in its run on the 2,001 ocean frames, both models predicting next-frame brightness (best error 0.00198) did worse than simply repeating the current frame (0.00143). Our code is written independently and no code was copied. The same results are in each track's *Data and limits* panel.
 
@@ -161,6 +174,7 @@ All imagery is from the NASA Scientific Visualization Studio (SVS). Full creator
 | Sea surface currents and temperature (ECCO2), 2,001 frames, 25 Mar 2007 to 3 Mar 2008 | NASA SVS 3912, <https://svs.gsfc.nasa.gov/3912/> (frame dates from NASA's `flat_ecco2_dates.txt`; temperature colour bar `sst_ecco2_cbar.png`) | Year of the ocean track |
 | Lightning events detected from the ISS, 2017 to 2023 | NASA SVS 5011, <https://svs.gsfc.nasa.gov/5011/> (visualizer Michala Garrison; Greg Shirah, Kel Elkins, Alex Kekesi; NASA SVS). Raw movie kept out of the repo; frames and counts made by `tools/analyse-lightning.html` | Lightning track |
 | Sea surface temperature, salinity and density maps and movies (released 9 Oct 2009) | NASA SVS 3652, <https://svs.gsfc.nasa.gov/3652/> | Sea temperature, Salinity, Density, Density (video) |
+| Sea surface temperature anomaly, tropical Pacific, 29 Jan to 10 Oct 2026 and the same dates in 2025 (visualization by Kel Elkins; the SVS page lists the data products, and I did not check NASA's baseline) | NASA SVS 5683, <https://svs.gsfc.nasa.gov/5683/> | El Niño 2026 (three versions). NOAA CPC weekly Niño indices (<https://www.cpc.ncep.noaa.gov/data/indices/wksst9120.for>, a public NOAA product) are used only for the check, in `analysis/` |
 
 The ECCO2 model is described on the SVS page as the MIT general circulation model combining satellite and in-situ ocean data. The frames used here are the rendered visualization, **not** the raw model arrays.
 
@@ -179,6 +193,7 @@ Each track's page section **Data and limits** gives its source, date, what the c
 - These are **estimates decoded from rendered pictures**, not the underlying numeric data. The temperature decoding was checked against the colour bar (round trip about 0.05 °C), not against the ECCO2 model. About a third of the pixels in the currents frames carry a usable colour.
 - The **sound mapping is an artistic translation**. Pitch, instruments, scale and drums do not measure anything in the ocean or atmosphere.
 - The Year track covers **one year**. It shows the seasons, not a climate trend.
+- **El Niño 2026** is decoded from NASA's pictures, not numbers: the map extent is a fit, the colour bar stops at ±4 °C, the anomaly baseline is NASA's (the decode runs about 0.4 °C warmer than NOAA's Niño 3.4 index in 2026), and "Through 2026" reads every longitude together. Its stories need a citation check. See *El Niño 2026*.
 - NASA's salinity and density colour bars are not evenly spaced, so "thirds" are thirds of the colour scale.
 - The turning-globe versions (temperature, salinity and density) assume the globe starts at 90° W and turns 6° a second (read off the frames by eye); the globe is tilted and shaded, so latitudes are approximate. Agreement with the flat density map is modest (about 63% of cells agree on ocean or land).
 - The named hotspots and their stories use hand-drawn boxes and facts written during development. They need a citation check.
@@ -197,12 +212,15 @@ Each track's page section **Data and limits** gives its source, date, what the c
 | `music_data.js` | The composed music loops (12 mp3 files, base64), built by `tools/make-music.ps1` with MuseScore 4. The phrases were written by the AI assistant, not a human composer; the MS Basic sound font's licence has not been checked. |
 | `samples_data.js` | Loaded only when needed (like `music_data.js` and `score_data.js`, so the first page load stays small). The MuseScore instrument sounds (18 instruments, base64 mp3), built by `tools/make-samples.ps1`. The sound font's licence has not been checked. |
 | `sheet.js`, `score_notes.js`, `score_data.js` | The scrolling sheet music; the notes of the MuseScore composition; the composition's five audio stems. |
+| `elnino_grids.js`, `assets/elnino2026/` | The El Niño 2026 grids (four of them: the two maps and the two timelines, the 2025 timeline used only to set the mood), the map extent, and NASA's pictures used (two maps, 61 movie frames, the colour bar). Built by `tools/make-elnino2026.py`. |
 | `*_grid.js` | Precomputed sound grids for each track (`year_grid.js`, `grid.js` for aerosols, `sst_grid.js`, `sss_grid.js`, `density_grid.js`, `video_grid.js`, `ocean_grid.js`). |
 | `assets/` | Pictures, colour bars, the density video (`assets/video`) and 160 time-lapse frames (`assets/year`). |
 | `tools/` | Scripts that rebuild the grids from the source images (see below). |
 | `PROCESS.md` | Why each design choice was made, what went wrong and how it was fixed. |
 
 ## Rebuilding the data
+
+El Niño 2026 is built with Python (numpy, scipy, Pillow, ffmpeg) from three files downloaded from <https://svs.gsfc.nasa.gov/5683/> into one folder `SRC` (named in the script's header): `python tools/make-elnino2026.py SRC`, and checked with `python tools/validate-elnino2026.py SRC`. The scripts below are for the other records.
 
 The grids are already included, so you only need these if you change the source images. They are Windows PowerShell scripts.
 

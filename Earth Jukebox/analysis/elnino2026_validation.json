@@ -1,0 +1,118 @@
+{
+ "note": "Decoded from the NASA SVS 5683 pictures (every 10th frame) against NOAA CPC weekly Nino indices. Offsets are decoded minus NOAA. Not a check of exactness.",
+ "frames": 121,
+ "first_day": "2026-01-29",
+ "last_day": "2026-10-10",
+ "regions": {
+  "nino12_2025": {
+   "correlation": 0.86,
+   "mean_offset_c": 0.63,
+   "rmse_c": 0.74,
+   "mean_decoded_c": 1.08,
+   "mean_noaa_c": 0.44,
+   "best_lag_days": -4,
+   "rmse_at_best_lag_c": 0.73,
+   "fit_decoded_equals": "1.21 x NOAA + +0.54"
+  },
+  "nino3_2025": {
+   "correlation": 0.926,
+   "mean_offset_c": 0.27,
+   "rmse_c": 0.36,
+   "mean_decoded_c": 0.21,
+   "mean_noaa_c": -0.06,
+   "best_lag_days": -2,
+   "rmse_at_best_lag_c": 0.36,
+   "fit_decoded_equals": "1.54 x NOAA + +0.30"
+  },
+  "nino34_2025": {
+   "correlation": 0.829,
+   "mean_offset_c": 0.1,
+   "rmse_c": 0.24,
+   "mean_decoded_c": -0.08,
+   "mean_noaa_c": -0.18,
+   "best_lag_days": 0,
+   "rmse_at_best_lag_c": 0.24,
+   "fit_decoded_equals": "1.35 x NOAA + +0.17"
+  },
+  "nino4_2025": {
+   "correlation": 0.876,
+   "mean_offset_c": -0.04,
+   "rmse_c": 0.16,
+   "mean_decoded_c": -0.23,
+   "mean_noaa_c": -0.19,
+   "best_lag_days": 0,
+   "rmse_at_best_lag_c": 0.16,
+   "fit_decoded_equals": "1.05 x NOAA + -0.03"
+  },
+  "nino12_2026": {
+   "correlation": 0.937,
+   "mean_offset_c": 0.22,
+   "rmse_c": 0.64,
+   "mean_decoded_c": 2.92,
+   "mean_noaa_c": 2.7,
+   "best_lag_days": 12,
+   "rmse_at_best_lag_c": 0.62,
+   "fit_decoded_equals": "0.65 x NOAA + +1.16"
+  },
+  "nino3_2026": {
+   "correlation": 0.986,
+   "mean_offset_c": 0.36,
+   "rmse_c": 0.45,
+   "mean_decoded_c": 2.08,
+   "mean_noaa_c": 1.72,
+   "best_lag_days": 20,
+   "rmse_at_best_lag_c": 0.33,
+   "fit_decoded_equals": "0.87 x NOAA + +0.59"
+  },
+  "nino34_2026": {
+   "correlation": 0.994,
+   "mean_offset_c": 0.42,
+   "rmse_c": 0.44,
+   "mean_decoded_c": 1.78,
+   "mean_noaa_c": 1.37,
+   "best_lag_days": 28,
+   "rmse_at_best_lag_c": 0.16,
+   "fit_decoded_equals": "0.96 x NOAA + +0.47"
+  },
+  "nino4_2026": {
+   "correlation": 0.943,
+   "mean_offset_c": 0.34,
+   "rmse_c": 0.37,
+   "mean_decoded_c": 1.18,
+   "mean_noaa_c": 0.84,
+   "best_lag_days": 24,
+   "rmse_at_best_lag_c": 0.32,
+   "fit_decoded_equals": "0.93 x NOAA + +0.40"
+  }
+ },
+ "pooled_2025_and_2026": {
+  "nino12": {
+   "correlation": 0.945,
+   "mean_offset_c": 0.43,
+   "rmse_c": 0.69
+  },
+  "nino3": {
+   "correlation": 0.981,
+   "mean_offset_c": 0.31,
+   "rmse_c": 0.41
+  },
+  "nino34": {
+   "correlation": 0.984,
+   "mean_offset_c": 0.26,
+   "rmse_c": 0.35
+  },
+  "nino4": {
+   "correlation": 0.973,
+   "mean_offset_c": 0.15,
+   "rmse_c": 0.28
+  }
+ },
+ "nino34_2026_rmse_if_always_zero_c": 1.8,
+ "nino34_2026_rmse_decoded_c": 0.44,
+ "share_of_nino34_box_at_colour_bar_end_late_2026": 0.38,
+ "final_frame": {
+  "date": "2026-10-10",
+  "nino34_decoded_c": 3.35,
+  "nino34_noaa_c": 3.2
+ }
+}
