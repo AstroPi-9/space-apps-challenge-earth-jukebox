@@ -1631,7 +1631,7 @@ const dwait = ms => new Promise(res => { demoTimers.push(setTimeout(res, ms)); }
 function demoLabel(text, k) {
   $('demoStatus').textContent = text;
   document.querySelectorAll('.voice').forEach((e, i) => e.classList.toggle('demo-on', i === k));
-  if ($('speak').checked && SPEECH) speak(text, true);
+  return ($('speak').checked && SPEECH) ? say(text) : Promise.resolve(false);   // with spoken narration on, resolves only when the description has been read out in full
 }
 function stopDemo(quiet) {
   demoTok++; demoTimers.forEach(clearTimeout); demoTimers = []; demoRunning = false;
@@ -1641,40 +1641,42 @@ function stopDemo(quiet) {
 }
 async function demoVoice(k, tok) {
   const P = T.instruments, rows = V.rows, mid = Math.round(rows * 0.45), sp = T.species;
-  await wake(); if (tok !== demoTok) return; const t = A.ctx.currentTime + 0.15;
+  await wake(); if (tok !== demoTok) return; let t = A.ctx.currentTime + 0.15;
+  // Show the description, wait until it has been read out in full (if narration is on), and only then play the sound
+  const lab = async (text, kk) => { await demoLabel(text, kk); if (tok !== demoTok) return false; t = A.ctx.currentTime + 0.15; return true; };
   if (T.percussionOnly) {                              // lightning: the voices are families of untuned drums, and the timpani
-    demoLabel(`${sp[k].name}: ${sp[k].sound}.`, k);
+    if (!await lab(`${sp[k].name}: ${sp[k].sound}.`, k)) return;
     if (k === 2) { const f = mtof(scNote(38, 3)); for (let i = 0; i < 7; i++) timpStrike(t + i * 0.09, f, f, 0.14); }
     else { const S = LSECT.find(s => s.bus === k), id = lightningDrum(S.k, 10), st = INSTR[id].pat.filter(Boolean); for (let i = 0; i < 8; i++) hit(id, st[i % st.length], t + i * 0.25, 0.45, S.bus); }
     await dwait(3200); return;
   }
   if (k === 0) {
-    demoLabel(`${sp[0].name}: ${sp[0].sound}.`, 0); drone(t, T.droneHz, 0.25);
+    if (!await lab(`${sp[0].name}: ${sp[0].sound}.`, 0)) return; drone(t, T.droneHz, 0.25);
     if (T.id === 'aerosols') for (let i = 0; i < 8; i++) crackle(t + 0.2 + i * 0.35, 0.18);
     await dwait(3400); if (tok === demoTok) drone(A.ctx.currentTime, T.droneHz, 0);
   } else if (k === 1) {
-    demoLabel(`${sp[1].name}: ${sp[1].sound}.`, 1); pad(t, chordFor(0), 0.4, 1400); await dwait(1700); if (tok !== demoTok) return;
+    if (!await lab(`${sp[1].name}: ${sp[1].sound}.`, 1)) return; pad(t, chordFor(0), 0.4, 1400); await dwait(1700); if (tok !== demoTok) return;
     pad(A.ctx.currentTime, chordFor(2), 0.4, 1400); await dwait(1700); if (tok === demoTok) pad(A.ctx.currentTime, chordFor(2), 0, 1000);
   } else if (k === 2) {
-    demoLabel(`${sp[2].name}, where it is strong: ${STRONG_NAME[P.strong]}.`, 2);
+    if (!await lab(`${sp[2].name}, where it is strong: ${STRONG_NAME[P.strong]}.`, 2)) return;
     for (let i = 0; i < 10; i++) strongPlay(i * 3, t + i * 0.25, 0.25, 0.8, mid, rows);
     await dwait(3000); if (tok !== demoTok) return;
-    demoLabel(`${sp[2].name}, where it is light: ${LIGHT_NAME[P.light]}.`, 2); const t2 = A.ctx.currentTime + 0.1;
+    if (!await lab(`${sp[2].name}, where it is light: ${LIGHT_NAME[P.light]}.`, 2)) return; const t2 = A.ctx.currentTime + 0.1;
     for (let i = 0; i < 6; i++) lightArp(i * 2, t2 + i * 0.5, 0.25, 0.28, mid + (i % 3), rows);
     await dwait(3400);
   } else if (k === 3) {
-    demoLabel(`${sp[3].name}: ${LEAD_NAME[P.lead]}, with gamakas (ornaments) on the notes.`, 3);
+    if (!await lab(`${sp[3].name}: ${LEAD_NAME[P.lead]}, with gamakas (ornaments) on the notes.`, 3)) return;
     [9, 7, 5, 6, 3, 5].forEach((r, i) => lead(t + i * 0.6, bellMidi(T, r, V), 0.2, 0, 1.2));
     await dwait(4300);
   } else {
     for (const id of ['tabla', 'djembe', 'kit']) {
       if (tok !== demoTok) return; const I = INSTR[id];
-      demoLabel(`${sp[4].name}: ${I.name}, the drum of ${I.where}.`, 4); const tt = A.ctx.currentTime + 0.1;
+      if (!await lab(`${sp[4].name}: ${I.name}, the drum of ${I.where}.`, 4)) return; const tt = A.ctx.currentTime + 0.1;
       for (let i = 0; i < 8; i++) hit(id, I.pat[i % I.pat.length] || I.filler, tt + i * 0.25, 0.5);
       await dwait(2500);
     }
-    if (tok === demoTok) demoLabel('Every region has its own drum, and the drums play faster where the data is stronger.', 4);
-    await dwait(1500);
+    if (tok === demoTok) await demoLabel('Every region has its own drum, and the drums play faster where the data is stronger.', 4);
+    if (tok === demoTok) await dwait(1500);
   }
 }
 async function demoOne(k) {

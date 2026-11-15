@@ -1,3 +1,21 @@
+# Baseline: 15 Nov 2026 (submission day)
+
+The current baseline. The 14 Nov baseline is kept below for comparison.
+
+- **Git tag:** `baseline-2026-11-15`, on the commit "Welcome pop-up, and Hear instruments waits for each description". Compare with `git diff baseline-2026-11-14 baseline-2026-11-15`.
+- **Size:** app folder about 87 MB; app.js 1,820 lines.
+
+## Changed since the 14 Nov baseline
+Switches rail beside the map and a slimmer layout; Susan as the default voice; captions on the picture and a live "Where you are" strip that describes what is under the beam; Stop demo cuts the voice; map keyboard role and quieter live regions; "Quiet the music while I read"; Lightning record with sector lights on the map; Hear Me; the El Nino option hidden for now; a welcome pop-up on opening (with "Do not show this again"); and "Hear instruments" now waits until each description has been read aloud before playing that sound.
+
+## Verified at this point
+The welcome pop-up opens and closes with no console errors (built-in browser). The instrument demo order (speak, then sound, then next) was checked with a simulated voice only.
+
+## Not verified at this point
+Everything in the 14 Nov "Not verified" list still stands, and in addition: the instrument demo has not been tried with a real browser voice, and the 30-second pitch video (`../earth-jukebox-30s.mp4`, made from screenshots) is not part of the repository.
+
+---
+
 # Baseline: 14 Nov 2026 (evening, the day before the submission deadline)
 
 This marks the project as it stood after the interface redesign and the knowledge graph. It is the point to compare against or return to.

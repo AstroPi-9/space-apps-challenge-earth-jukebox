@@ -440,6 +440,18 @@
     Sound generated live in your browser with the Web Audio API. A first version made for the NASA Space Apps "Earth Jukebox" challenge. Region labels are approximate.
   </footer>
 </div>
+<dialog id="welcome" aria-labelledby="welcomeH">
+  <h2 id="welcomeH">Welcome to the Earth Jukebox 🌍🎶</h2>
+  <p>This jukebox turns real NASA pictures of Earth into live music. A beam sweeps across the world, and every kind of data it finds plays its own instrument: pitch tells you the latitude, and the drums play faster where the data is stronger.</p>
+  <ol>
+    <li>Press a <b>red button</b> to choose a record: ocean currents, aerosols, sea temperature, salinity, density or lightning.</li>
+    <li>Press <b>Play</b> to hear one sweep, or click the picture to hear a single spot.</li>
+    <li>Press <b>Hear instruments</b> to learn what each sound means.</li>
+  </ol>
+  <p>Prefer to listen? <b>Hear Me</b> reads every screen aloud.</p>
+  <label class="toggle compact"><input type="checkbox" id="welcomeSeen"><span class="t">Do not show this again</span></label>
+  <p><button id="welcomeGo" type="button">Let's begin</button></p>
+</dialog>
 <dialog id="start" aria-labelledby="startH">
   <h2 id="startH">Welcome to the Earth Jukebox</h2>
   <p>This turns NASA pictures of Earth's oceans and atmosphere into music. Pitch is the latitude, each kind of data has its own instrument, and the drums play faster where the data is stronger.</p>

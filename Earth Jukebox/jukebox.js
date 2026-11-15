@@ -105,4 +105,13 @@
 
   if (skip) { home.hidden = true; home.inert = true; sub.hidden = true; sub.inert = true; app.inert = false; lock(false); state = 'data'; $('dataBarNow').textContent = 'Direct page (no jukebox home).'; setTabVisible(true); }
   else show('home');
+
+  // welcome pop-up: opens when the jukebox is first opened (unless "Do not show this again" was ticked)
+  const wel = $('welcome'); let off = false; try { off = localStorage.getItem('ej_welcome_off') === '1'; } catch (e) {}
+  if (wel && !skip && !off) {
+    const closeWel = () => { try { if ($('welcomeSeen').checked) localStorage.setItem('ej_welcome_off', '1'); } catch (e) {} if (wel.open) wel.close(); };
+    $('welcomeGo').addEventListener('click', closeWel); wel.addEventListener('cancel', () => { try { if ($('welcomeSeen').checked) localStorage.setItem('ej_welcome_off', '1'); } catch (e) {} });
+    if (typeof wel.showModal === 'function') wel.showModal(); else wel.setAttribute('open', '');
+    $('welcomeGo').focus();
+  }
 })();
