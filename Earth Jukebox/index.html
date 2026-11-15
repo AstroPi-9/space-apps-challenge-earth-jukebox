@@ -90,14 +90,18 @@
   .rail-btn .ic{font-size:1.1rem;line-height:1;display:grid;place-items:center;width:1.5rem;height:1.5rem;border-radius:50%;background:rgba(255,233,166,.2)}.rail-btn .lb{font-size:.74rem;font-weight:700;line-height:1.05;text-align:center}.rail-btn .st{font-size:.64rem;letter-spacing:.1em;opacity:.8;line-height:1}
   .rail-btn[aria-pressed=true]{background:linear-gradient(180deg,#ffe27a,#ffc93a);color:#1a1400;border-color:#ffd54a;box-shadow:0 0 0 2px #5a3d0c,0 0 12px rgba(255,200,60,.7)}
   .rail-btn[aria-pressed=true] .st{opacity:1;font-weight:800}
+  .toggle-rail::before{flex:none;text-align:center;font:700 .62rem/1 Georgia,serif;letter-spacing:.16em;color:#e9c46a;text-shadow:0 1px 0 #1a0d04;padding:1px 0 2px;border-bottom:1px solid rgba(233,196,106,.45);margin-bottom:1px}
+  .rail-l::before{content:"SOUND";content:"SOUND" / ""}.rail-r::before{content:"VOICE";content:"VOICE" / ""}
   .rail-btn:disabled{opacity:.3;cursor:not-allowed}
+  .rail-btn.key-btn{border-color:#ffd54a;box-shadow:0 3px 0 #1a0d04,0 0 0 2px #5a3d0c,0 0 14px rgba(255,200,60,.55);background:linear-gradient(180deg,#6b3d1c,#3a1f0d)}
+  .rail-btn.key-btn .lb{color:#fff1c2}.rail-btn.key-btn[aria-pressed=true],.rail-btn.key-btn.running{background:linear-gradient(180deg,#ffe27a,#ffc93a);color:#1a1400}.rail-btn.key-btn[aria-pressed=true] .lb,.rail-btn.key-btn.running .lb{color:#1a1400}
   .cap-bar{position:absolute;left:50%;bottom:9%;transform:translateX(-50%);max-width:88%;text-align:center;pointer-events:none;z-index:7}
   .cap-bar span{display:inline;background:rgba(8,8,8,.84);color:#fff;font:600 clamp(.95rem,1.8vw,1.4rem)/1.5 Arial,Helvetica,sans-serif;padding:.12em .5em;border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone;text-shadow:0 1px 2px #000}
   .rail-btn.running{background:linear-gradient(180deg,#ffe27a,#ffc93a);color:#1a1400;border-color:#ffd54a;box-shadow:0 0 0 2px #5a3d0c,0 0 12px rgba(255,200,60,.7)}
   .rail-act:disabled{opacity:.3}
   .rail-btn.rail-act[hidden]{display:flex!important}
   .rail-blank{opacity:.3;background:linear-gradient(180deg,#3a2210,#24130a);box-shadow:none;cursor:default}
-  @media(max-width:760px){.map-row{grid-template-columns:minmax(0,1fr);grid-template-areas:"map" "railL" "railR"}.toggle-rail{flex-direction:row;flex-wrap:wrap;height:auto;min-height:0;overflow:visible}.rail-btn{flex:none;height:62px;width:calc(25% - 6px);min-width:66px}.rail-blank{display:none}}
+  @media(max-width:760px){.map-row{grid-template-columns:minmax(0,1fr);grid-template-areas:"map" "railL" "railR"}.toggle-rail{flex-direction:row;flex-wrap:wrap;height:auto;min-height:0;overflow:visible}.rail-btn{flex:none;height:62px;width:calc(25% - 6px);min-width:66px}.rail-blank{display:none}.toggle-rail::before{flex:0 0 100%;text-align:left;padding-left:4px}}
   .ctl-card{background:linear-gradient(180deg,var(--panel),#0f161e);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
   .ctl-card h3{margin:0 0 12px;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .ctl-card .stack{display:flex;flex-direction:column;gap:9px}
@@ -281,7 +285,7 @@
       </div>
       <section class="jb-card" aria-labelledby="jbSummaryH">
         <h2 id="jbSummaryH">What is going on</h2>
-        <p>Seven records, each one a NASA picture of Earth's oceans or atmosphere; some open a second page where you choose between versions, such as a still map, a turning globe or a time-lapse. The jukebox reads the colours as data and plays them live, while the picture stays on screen: a beam sweeps across the world and every kind of data has its own instrument. Choose a record, and the doors will open.</p>
+        <p>Six records, each one a NASA picture of Earth's oceans or atmosphere; some open a second page where you choose between versions, such as a still map, a turning globe or a time-lapse. The jukebox reads the colours as data and plays them live, while the picture stays on screen: a beam sweeps across the world and every kind of data has its own instrument. Choose a record, and the doors will open.</p>
         <ul class="jb-badges">
           <li>Pitch is latitude</li><li>Each kind of data has an instrument</li><li>Drums follow the region</li><li>Sad and urgent where the data is strong</li>
         </ul>
@@ -289,7 +293,7 @@
       <div class="jb-records" role="group" aria-label="Records">
         <button class="rec" type="button" data-group="ocean" data-code="A1" aria-label="A1. Ocean currents. Opens a page where you choose the year of the ocean or a single frame where you can follow a current."><span class="knob" aria-hidden="true">A1</span><span class="card"><span class="ttl">🌊 Ocean currents</span><span class="dsc">A year of the ocean, or one frame where you can follow a current.</span></span></button>
         <button class="rec" type="button" data-track="aerosols" data-code="A2" aria-label="A2. Aerosols. Smoke, dust, sea salt and sulfate over the whole world on 19 August 2025."><span class="knob" aria-hidden="true">A2</span><span class="card"><span class="ttl">🌫️ Aerosols</span><span class="dsc">Smoke, dust, sea salt and sulfate over the whole world on 19 August 2025.</span></span></button>
-        <button class="rec" type="button" data-group="sst" data-code="B1" aria-label="B1. Sea temperature. Opens a page where you choose the still map or the turning globe."><span class="knob" aria-hidden="true">B1</span><span class="card"><span class="ttl">🌡️ Sea temperature</span><span class="dsc">Still map or turning globe.</span></span></button>
+        <button class="rec" type="button" data-group="sst" data-code="B1" aria-label="B1. Sea temperature. Opens a page where you choose the still map, the turning globe, or El Niño with a switch between a week in 2025 and a week in 2026."><span class="knob" aria-hidden="true">B1</span><span class="card"><span class="ttl">🌡️ Sea temperature</span><span class="dsc">Still map, turning globe, or El Niño 2025 against 2026.</span></span></button>
         <button class="rec" type="button" data-group="sss" data-code="B2" aria-label="B2. Salinity. Opens a page where you choose the still map or the turning globe."><span class="knob" aria-hidden="true">B2</span><span class="card"><span class="ttl">🧂 Salinity</span><span class="dsc">Still map or turning globe: fresher and saltier water around the world.</span></span></button>
         <button class="rec" type="button" data-group="density" data-code="C1" aria-label="C1. Density. Opens a page where you choose the still map or the turning globe."><span class="knob" aria-hidden="true">C1</span><span class="card"><span class="ttl">⚖️ Density</span><span class="dsc">Still map or turning globe: heavy cold water to light warm water.</span></span></button>
         <button class="rec" type="button" data-track="lightning" data-code="C2" aria-label="C2. Lightning. Flashes seen from the International Space Station from 2017 to 2023, played as untuned drums with timpani in the strongest storms."><span class="knob" aria-hidden="true">C2</span><span class="card"><span class="ttl">⚡ Lightning</span><span class="dsc">Space-station lightning flashes, 2017 to 2023, as drums, with timpani in the strongest storms.</span></span></button>

@@ -20,6 +20,7 @@
   });
   // the action buttons live in the rails too: Hear instruments last on the left, Skip intro last on the right (it is only enabled while the spoken intro plays)
   const skip = $('skip'); rails.L.appendChild($('demoAll')); rails.R.appendChild(skip);
+  $('demoAll').classList.add('key-btn'); btns.forEach(([b, cb]) => { if (cb.id === 'speak') b.classList.add('key-btn'); });      // the two buttons that make the page understandable (Hear instruments, Narration) get a gold rim, so they stand out among the many
   const n = Math.max(rails.L.children.length, rails.R.children.length);      // same number of buttons on both sides: pad the shorter side with blank, disabled ones
   [rails.L, rails.R].forEach(side => { while (side.children.length < n) { const b = document.createElement('button'); b.type = 'button'; b.className = 'rail-btn rail-blank'; b.disabled = true; b.tabIndex = -1; b.setAttribute('aria-hidden', 'true'); side.appendChild(b); } });
   function sync() {
