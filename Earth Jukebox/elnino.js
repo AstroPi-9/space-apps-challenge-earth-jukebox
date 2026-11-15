@@ -49,7 +49,7 @@
   let FD = null, off = null;
   const fine = () => { const F = window.ELNINO_FINE; if (!F) return null; if (!FD) { const b = atob(F.b64); FD = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) FD[i] = b.charCodeAt(i); } return F; };
   function draw() {
-    if (!layer) return; const st = $('stage'), w = st.clientWidth, h = st.clientHeight, dpr = window.devicePixelRatio || 1, mapEl = $('map');
+    if (!layer) return; const st = $('mapBox'), w = st.clientWidth, h = st.clientHeight, dpr = window.devicePixelRatio || 1, mapEl = $('map');
     if (layer.width !== Math.round(w * dpr) || layer.height !== Math.round(h * dpr)) { layer.width = Math.round(w * dpr); layer.height = Math.round(h * dpr); }
     const c = layer.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
     const show = on && onSST() && month < MONTHS; layer.style.display = show ? 'block' : 'none';

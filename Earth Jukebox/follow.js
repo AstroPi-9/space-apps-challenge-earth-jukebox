@@ -51,7 +51,7 @@
   // ---- drawing ----
   const layer = $('followLayer'), tcol = t => { const h = 240 - 240 * Math.max(0, Math.min(1, t / 32)); return `hsl(${h},90%,58%)`; };
   function draw(idx) {
-    if (!layer) return; const st = $('stage'), w = st.clientWidth, h = st.clientHeight, dpr = window.devicePixelRatio || 1;
+    if (!layer) return; const st = $('mapBox'), w = st.clientWidth, h = st.clientHeight, dpr = window.devicePixelRatio || 1;
     if (layer.width !== Math.round(w * dpr) || layer.height !== Math.round(h * dpr)) { layer.width = Math.round(w * dpr); layer.height = Math.round(h * dpr); }
     const c = layer.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
     if (!path || !onOcean()) return; const P = path.pts, X = p => p.x / cols * w, Y = p => p.y / rows * h;
@@ -115,7 +115,7 @@
   $('fGo').addEventListener('click', go);
   $('stage').addEventListener('click', e => {           // with "Click the map to choose the start" ticked, a click starts a current instead of playing that spot
     if (!$('fPick').checked || !onOcean()) return; e.stopImmediatePropagation(); e.preventDefault();
-    const r = $('stage').getBoundingClientRect(); $('fLon').value = Math.round(((e.clientX - r.left) / r.width) * 360 - 180); $('fLat').value = Math.round(90 - ((e.clientY - r.top) / r.height) * 180);
+    const r = $('mapBox').getBoundingClientRect(); $('fLon').value = Math.round(((e.clientX - r.left) / r.width) * 360 - 180); $('fLat').value = Math.round(90 - ((e.clientY - r.top) / r.height) * 180);
     hint = [1, 0]; label = ''; if (run) stop(); go();
   }, true);
   setInterval(() => { const on = onOcean(); if ($('followPanel').hidden === on) { $('followPanel').hidden = !on; if (!on) { if (run) stop(); path = null; draw(-1); } } }, 250);

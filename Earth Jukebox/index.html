@@ -86,7 +86,9 @@
   .voices-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px}.voices-head #demoStatus{margin:0;flex:1}
   #demoStatus:empty{margin:0}
   .toggle-rail{display:flex;flex-direction:column;gap:4px;height:0;min-height:100%;overflow-y:auto;padding:2px;justify-content:space-between}
-  .rail-btn{max-height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:62px;min-height:49px;flex:1 1 0;padding:2px;border-radius:10px;border:2px solid #8a6a2a;background:linear-gradient(180deg,#4a2810,#2c1709);color:#ffe9a6;cursor:pointer;box-shadow:0 3px 0 #1a0d04,inset 0 0 0 1px rgba(0,0,0,.4)}
+  #mapBox{position:relative}   /* holds the picture and everything drawn on it, so percentages and clicks mean the picture, not the black space around it */
+  #stage.letterbox{aspect-ratio:1.98/1;display:flex;flex-direction:column;justify-content:center}   /* a wide, short picture (El Niño) sits in a screen of the same size as the others, with empty black space above and below */
+  .rail-btn{max-height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:62px;min-height:56px;flex:1 1 0;padding:2px;border-radius:10px;border:2px solid #8a6a2a;background:linear-gradient(180deg,#4a2810,#2c1709);color:#ffe9a6;cursor:pointer;box-shadow:0 3px 0 #1a0d04,inset 0 0 0 1px rgba(0,0,0,.4)}
   .rail-btn .ic{font-size:1.1rem;line-height:1;display:grid;place-items:center;width:1.5rem;height:1.5rem;border-radius:50%;background:rgba(255,233,166,.2)}.rail-btn .lb{font-size:.74rem;font-weight:700;line-height:1.05;text-align:center}.rail-btn .st{font-size:.64rem;letter-spacing:.1em;opacity:.8;line-height:1}
   .rail-btn[aria-pressed=true]{background:linear-gradient(180deg,#ffe27a,#ffc93a);color:#1a1400;border-color:#ffd54a;box-shadow:0 0 0 2px #5a3d0c,0 0 12px rgba(255,200,60,.7)}
   .rail-btn[aria-pressed=true] .st{opacity:1;font-weight:800}
@@ -203,10 +205,11 @@
   #tracks{display:none}
   .data-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin:0 0 16px;padding:10px 14px;border-radius:14px;border:2px solid #b08a3c;background:var(--grain),linear-gradient(180deg,#6b3d1c,#3a1f0d);background-color:#4a2810;box-shadow:0 8px 20px -10px #000,inset 0 0 0 3px rgba(0,0,0,.25)}
   .data-bar button{background:linear-gradient(180deg,#ff8d7c,#d11d15);color:#fff1d6;border:2px solid #d5d9de;box-shadow:0 3px 0 #4d0604,0 6px 12px rgba(0,0,0,.5)}
-  .week-switch{display:inline-flex;gap:6px}
+  .week-switch{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px;padding:8px 14px;border-radius:14px;border:2px solid #b08a3c;background:var(--grain),linear-gradient(180deg,#6b3d1c,#3a1f0d);background-color:#4a2810;box-shadow:0 8px 20px -10px #000,inset 0 0 0 3px rgba(0,0,0,.25)}
   .week-switch[hidden]{display:none}
-  .data-bar .week-switch button{background:linear-gradient(180deg,#5a3a1e,#34200f);color:#f3dfae;border:2px solid #b08a3c;box-shadow:none;font-weight:600}
-  .data-bar .week-switch button[aria-pressed=true]{background:linear-gradient(180deg,#ffe27a,#ffc93a);color:#1a1400;border-color:#ffd54a;box-shadow:0 0 14px -2px rgba(255,200,60,.8)}
+  .week-switch .ws-label{font:italic 1.05rem Georgia,serif;color:#ffe9a6;margin-right:6px}
+  .week-switch button{background:linear-gradient(180deg,#5a3a1e,#34200f);color:#f3dfae;border:2px solid #b08a3c;box-shadow:none;font-weight:600}
+  .week-switch button[aria-pressed=true]{background:linear-gradient(180deg,#ffe27a,#ffc93a);color:#1a1400;border-color:#ffd54a;box-shadow:0 0 14px -2px rgba(255,200,60,.8)}
   #dataBarNow{font:italic 1.1rem Georgia,serif;color:#ffe9a6;flex:1;min-width:200px}
   .data-bar .code{display:inline-grid;place-items:center;min-width:2.2em;margin-right:8px;padding:0 .4em;border-radius:999px;background:radial-gradient(circle at 34% 26%,#ff8d7c,#c91b14 60%,#7e0b07);color:#fff1d6;font:700 .95rem Georgia,serif;font-style:normal}
   @media (max-width:560px){.jb-cabinet{padding:18px 14px 18px;border-radius:120px 120px 18px 18px/70px 70px 18px 18px}.rec .knob{width:70px;height:70px;font-size:1.25rem}.jb-card{padding:12px 14px}}
@@ -353,13 +356,15 @@
   </header>
 
   <main>
-    <div id="dataBar" class="data-bar" role="group" aria-label="Jukebox"><button id="backHome" type="button">↩ Back to the jukebox</button><span id="dataBarNow"></span><span id="weekSwitch" class="week-switch" role="group" aria-label="Choose the week" hidden><button type="button" data-week="elnino25" aria-pressed="false">10 Oct 2025</button><button type="button" data-week="elnino26" aria-pressed="true">10 Oct 2026</button></span><button id="restart" type="button" class="secondary" aria-label="Restart" title="Restart"><span aria-hidden="true">⏮</span></button><button id="play" type="button"><span aria-hidden="true">▶</span> Play</button></div>
+    <div id="weekSwitch" class="week-switch" role="group" aria-label="Choose the week" hidden><span class="ws-label">Choose the week</span><button type="button" data-week="elnino25" aria-pressed="false">10 Oct 2025</button><button type="button" data-week="elnino26" aria-pressed="true">10 Oct 2026</button></div>
+    <div id="dataBar" class="data-bar" role="group" aria-label="Jukebox"><button id="backHome" type="button">↩ Back</button><span id="dataBarNow"></span><button id="restart" type="button" class="secondary" aria-label="Restart" title="Restart"><span aria-hidden="true">⏮</span></button><button id="play" type="button"><span aria-hidden="true">▶</span> Play</button></div>
     <div class="controls" id="tracks" role="group" aria-label="Choose a track"></div>
     <div id="sliderStrip" class="slider-strip" role="group" aria-label="Volume and tour length"><label class="field"><span>Volume</span><input id="vol" type="range" min="0" max="100" value="70"></label><label class="field"><span>Tour length <b id="durOut">40 s</b></span><input id="dur" type="range" min="20" max="90" value="40" aria-describedby="durOut"></label></div>
     <div id="mapRow" class="map-row">
     <div id="stage" tabindex="0" role="application" aria-roledescription="map explorer"
          aria-label="Aerosol map of Earth. Use arrow keys to explore, Enter to hear a spot, Space to play or pause."
          aria-describedby="help">
+      <div id="mapBox">
       <img id="map" src="assets/aerosols.png" alt="">
       <video id="vid" muted playsinline preload="auto" role="img" style="display:none"></video>
       <div id="playhead"></div>
@@ -367,6 +372,7 @@
       <div id="lightLayer" aria-hidden="true"><i class="lb" data-k="0" style="left:2.78%;width:38.89%"><b>Americas</b></i><i class="lb" data-k="1" style="left:41.67%;width:20.83%"><b>Africa, Europe</b></i><i class="lb" data-k="3" style="left:62.5%;width:15.28%"><b>S and C Asia</b></i><i class="lb" data-k="4" style="left:77.78%;width:22.22%"><b>E Asia, Oceania</b></i><i class="lb" data-k="4" style="left:0;width:2.78%"></i></div>
       <canvas id="elLayer" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none"></canvas>
       <canvas id="followLayer" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+      </div>
       <div id="captionBar" class="cap-bar" aria-hidden="true" hidden><span></span></div>
     </div>
     <div id="toggleRail" class="toggle-rail rail-l" role="group" aria-label="Sound and score switches"><button id="demoAll" type="button" class="rail-btn rail-act" title="Hear the voices (instruments), one after another"><span class="ic" aria-hidden="true">🎧</span><span class="lb">Hear voices</span><span class="st" aria-hidden="true"></span></button></div>

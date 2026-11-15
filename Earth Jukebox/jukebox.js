@@ -1,7 +1,7 @@
 // ================= THE JUKEBOX: home page, second pages and doors =================
 // A home page (wooden cabinet, one big red button for each record) covers the app. Some records (sea temperature, salinity, density) open a second
 // "home-like" page where you choose between versions (still map, turning globe, El Nino). Choosing a version picks the track and the page swings open
-// like double doors to show it. When the song ends (or the "Back to the jukebox" button is pressed) the doors close again and another record must be
+// like double doors to show it. When the song ends (or the "Back" button is pressed) the doors close again and another record must be
 // chosen. The app underneath is untouched: this only shows, hides and animates it. Open the page with ?nohome (or ?debug) to skip the home page.
 (() => {
   const $ = id => document.getElementById(id), home = $('jukebox'), sub = $('jbSub'), app = document.querySelector('.wrap'); if (!home || !sub || !app) return;
@@ -69,8 +69,9 @@
     try { if (window.EJ_followStop) window.EJ_followStop(); } catch (e) {}
     try { window.EJ.follow.stopAll(); } catch (e) {}
   }
+  let curGroup = null, returnKey = null, openedId = null;                    // curGroup: the second page last opened; returnKey: the second page this record was opened from (null when opened straight from the home page)
   function openRecord(id) {
-    if (state !== 'home') return; state = 'busy'; const source = page();
+    if (state !== 'home') return; state = 'busy'; const source = page(); returnKey = view === 'sub' ? curGroup : null; openedId = id;
     const tab = [...document.querySelectorAll('#tracks button')].find(b => b.dataset.track === id); if (tab) tab.click();
     syncWeek(id); window.scrollTo(0, 0); const info = NAMES[id] || { code: '', name: id };
     $('dataBarNow').innerHTML = `<span class="code" aria-hidden="true">${info.code}</span>Now playing: ${info.name}`;
@@ -80,11 +81,17 @@
     if (!doors) { done(); return; }
     requestAnimationFrame(() => requestAnimationFrame(() => doors.classList.add('open'))); setTimeout(done, 1650);
   }
-  function closeRecord(message) {
+  function closeRecord(message, back) {                                      // back: the Back button was pressed, so return to the second page the record came from (if any), not the home page
     if (state !== 'data') return; state = 'busy'; stopEverything();
-    home.scrollTop = 0; $('jbPrompt').textContent = message || 'Press a red button to choose a record.';
-    const doors = reduce() ? null : halves(true, home); lock(true);
-    const done = () => { if (doors) doors.remove(); show('home'); window.scrollTo(0, 0); const first = home.querySelector('.rec'); if (first) first.focus({ preventScroll: true }); live((message || '') + ' The doors are closed. Choose a record.'); pageChanged(); };
+    const toSub = !!(back && returnKey && GROUPS[returnKey]), source = toSub ? sub : home;
+    source.scrollTop = 0; if (!toSub) $('jbPrompt').textContent = message || 'Press a red button to choose a record.';
+    const doors = reduce() ? null : halves(true, source); lock(true);
+    const done = () => {
+      if (doors) doors.remove(); window.scrollTo(0, 0);
+      if (toSub) { show('sub'); const keep = WEEKS.includes(openedId) ? 'elnino26' : openedId, first = sub.querySelector('.rec[data-track="' + keep + '"]') || sub.querySelector('.rec'); if (first) first.focus({ preventScroll: true }); live(`The doors are closed. ${GROUPS[returnKey].title}. Choose a version.`); }
+      else { show('home'); const first = home.querySelector('.rec'); if (first) first.focus({ preventScroll: true }); live((message || '') + ' The doors are closed. Choose a record.'); }
+      pageChanged();
+    };
     if (!doors) { done(); return; }
     void doors.offsetWidth; doors.classList.remove('notrans'); requestAnimationFrame(() => requestAnimationFrame(() => doors.classList.remove('open'))); setTimeout(done, 1650);
   }
@@ -102,11 +109,11 @@
     $('jbSubInner').querySelector('[data-back]').addEventListener('click', () => { show('home'); const f = home.querySelector('.rec[data-group="' + key + '"]') || home.querySelector('.rec'); if (f) f.focus({ preventScroll: true }); live('Back to all records.'); pageChanged(); });
   }
   function openGroup(key) {
-    if (state !== 'home') return; buildSub(key); show('sub'); sub.scrollTop = 0; sub.classList.remove('jb-fade'); void sub.offsetWidth; sub.classList.add('jb-fade');
+    if (state !== 'home') return; curGroup = key; buildSub(key); show('sub'); sub.scrollTop = 0; sub.classList.remove('jb-fade'); void sub.offsetWidth; sub.classList.add('jb-fade');
     const first = sub.querySelector('.rec'); if (first) first.focus({ preventScroll: true }); live(`${GROUPS[key].title}. Choose a version.`); pageChanged();
   }
   home.querySelectorAll('.rec').forEach(b => b.addEventListener('click', () => { if (b.dataset.group) openGroup(b.dataset.group); else openRecord(b.dataset.track); }));
-  $('backHome').addEventListener('click', () => closeRecord('Press a red button to choose a record.'));
+  $('backHome').addEventListener('click', () => closeRecord('Press a red button to choose a record.', true));
   $('jbHelp').addEventListener('click', () => { const h = $('helpBtn'); if (h) h.click(); });
 
   // when a song ends, the doors close after the last notes have rung out

@@ -48,7 +48,7 @@
     if (!$('followPanel').hidden) p.push('This record also has Follow a current: press one of the named currents, such as the Gulf Stream, or type a longitude and latitude and press Follow. The sound then travels along that current, and its pitch is the water temperature.');
     if (!$('elPanel').hidden) p.push(`This record also has an El Niño layer. Choose a month, currently ${clean($('elMonthOut').textContent)}, with the slider or a preset such as December 1997, and press Play, or press Play the years to hear the Niño 3.4 index from 1982 to the latest month.`);
     p.push(`A scrolling sheet music strip shows every note that plays. ${clean($('readout').textContent)}`);
-    p.push('Press Space to play or pause. Click the map or use the arrow keys to hear a single spot. Press Back to the jukebox to choose another record, and H to hear this screen again.');
+    p.push('Press Space to play or pause. Click the map or use the arrow keys to hear a single spot. Press Back to close the doors and choose another record or version, and H to hear this screen again.');
     return p;
   }
   function parts() { const k = kind(); return k === 'home' ? homeParts() : k === 'sub' ? subParts() : k === 'settings' ? settingsParts() : dataParts(); }

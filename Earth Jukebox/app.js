@@ -1681,7 +1681,8 @@ async function explore(c, r, jump) {
   if (jump || (T.timeAxis && !playing)) seek(cur.c);
 }
 stage.addEventListener('pointerdown', e => {
-  const b = stage.getBoundingClientRect();
+  const b = $('mapBox').getBoundingClientRect();
+  if (e.clientY < b.top || e.clientY > b.bottom) return;                    // the empty black space above and below a short picture makes no sound
   const c = T.timeAxis ? Math.min(V.cols - 1, Math.floor(pos)) : Math.floor((e.clientX - b.left) / b.width * V.cols);   // on the time-lapse the x position means nothing, so use the current time step
   explore(c, Math.floor((e.clientY - b.top) / b.height * V.rows), !T.timeAxis);
 });
@@ -1902,7 +1903,7 @@ function buildVoices() {
     const d = document.createElement('div');
     d.className = 'voice'; d.style.borderLeftColor = s.color;
     d.innerHTML = `<label><input type="checkbox" checked> <strong style="color:${s.color}">${s.name}</strong></label>
-      <small>${s.sound}</small>${k === 4 ? '<small id="drumNow" style="color:var(--text)">Drums now: silent</small>' : ''}<button type="button" class="hear secondary" aria-label="Hear ${s.name} on its own"><span aria-hidden="true">▶</span> Hear</button><div class="meter" aria-hidden="true"><i style="color:${s.color}"></i></div>`;
+      ${k === 4 ? '<small id="drumNow" style="color:var(--text)">Drums now: silent</small>' : ''}<button type="button" class="hear secondary" aria-label="Hear ${s.name} on its own"><span aria-hidden="true">▶</span> Hear</button><div class="meter" aria-hidden="true"><i style="color:${s.color}"></i></div>`;
     $('voices').appendChild(d);
     const cb = d.querySelector('input');
     cb.setAttribute('aria-label', `${s.name} voice on: ${s.sound}`);
@@ -1920,6 +1921,7 @@ function setTrack(i) {
   if (T.video) { $('map').style.display = 'none'; vid.style.display = 'block'; vid.setAttribute('aria-label', T.alt); vid.src = T.video; $('vcap').style.display = 'block'; $('vcap').textContent = ''; }
   else { vid.pause(); vid.removeAttribute('src'); vid.load(); vid.style.display = 'none'; $('vcap').style.display = 'none'; $('map').style.display = 'block'; $('map').src = T.image; $('map').alt = T.alt; }
   if ($('lightLayer')) $('lightLayer').style.display = T.id === 'lightning' ? 'block' : 'none';
+  stage.classList.toggle('letterbox', /^elnino/.test(T.id));          // the El Niño picture is wide and short: it sits in a screen the same size as the others, with empty black space above and below
   $('vcap').style.display = (T.video || T.timeAxis) ? 'block' : 'none'; $('tlineWrap').style.display = T.timeAxis ? 'block' : 'none';
   $('help').textContent = T.timeAxis ? 'Drag the time slider to move through the year. Click or tap the picture to hear the latitude you click, at the current time. With a keyboard: left and right arrows move through time, up and down change latitude, Enter replays the spot, Space plays or pauses.' : HELP0;
   if (T.timeAxis) { T._pre = T._pre || T.frames.map(s => { const i = new Image(); i.src = s; return i; }); lastFrameIdx = -1; $('tline').max = V.cols - 1; $('vcap').textContent = dateLabel(T.grid.dates[0]); }
