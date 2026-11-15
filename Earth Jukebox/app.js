@@ -1306,6 +1306,7 @@ function updateMeters(c) {
     else { const reg = V.emo.reg[c], d = SCALES[reg] || SCALES.ocean, ov = colMoodOverride(c), trb = ov ? ov.trb : V.emo.tro[c], u = ov ? ov.urg : V.emo.urg[c]; sn.textContent = ov ? `Scale: ${(trb ? d.sad : d.calm)[0]}, for ${d.place}. Mood (from the El Nino layer): ${ov.text}.` : `Scale: ${(trb ? d.sad : d.calm)[0]}, for ${d.place}. Mood: ${u > 0.3 ? 'urgent, because the data is at its strongest and rising: something is wrong' : trb ? 'troubled and sad, because the data is strong' : 'calm and hopeful, because the data is light'}.`; }
   }
   if (T.video) $('vcap').textContent = `Video time ${Math.round((c + 0.5) * T.grid.dur / V.cols)} s: the beam is at about ${fmtLon(lonOf(c))}`;
+  { const wn = $('whereNow'), lab = T.timeAxis ? dateLabel(T.grid.dates[c]) : 'Longitude ' + fmtLon(lonOf(c)); if (wn && wn.textContent !== lab) wn.textContent = lab; }   // the strip under the map always shows where the beam is now
   if (T.timeAxis) { const d = dateLabel(T.grid.dates[c]); $('vcap').textContent = d; $('tlineOut').textContent = d; $('tline').setAttribute('aria-valuetext', d); }
   tot.slice(0, 4).forEach((t, k) => { meters[k].bar.style.width = Math.min(100, t / V.rows * 400) + '%'; });
   meters[4].bar.style.width = Math.round(colRank(c) * 100) + '%';           // drum meter = data strength rank
@@ -1323,14 +1324,28 @@ function describeCell(c, r) {
   txt += sp ? ` Drums: ${I.name} (${I.where}), playing ${sp.name}.` : ' The drums are silent here.';
   return txt;
 }
+// The captions under the map ("Where you are"). Two kinds of line: an event (a landmark is passed, the drums move to another region) and, between events, the current
+// state (which drums, how fast, how strong the data is). A drum change is only announced once that drum has led for a few steps, so the text does not flip back and
+// forth, and the wording rotates. Lines are spaced out in time, and the same line is never written twice in a row.
+const CHANGE_WORDS = [i => `the drums change to ${i.name}, from ${i.where}`, i => `now ${i.name} drums take over, from ${i.where}`, i => `${i.name}, the drum of ${i.where}, leads the beat`, i => `the beat moves to ${i.name}, from ${i.where}`];
+const narr = { cand: null, since: 0, n: 0, pending: [], at: -99, key: '' };
 function narrateTour(c) {
-  const lon = lonOf(c), msgs = [], hits = [];
-  T.hotspots.forEach(h => { if (lonOf(c - 1) < h.say && lon >= h.say) { msgs.push(h.name); hits.push(h); } });
-  if (c === 0) msgs.push('starting at the dateline in the Pacific');
+  const lon = lonOf(c), now = performance.now() / 1000;
+  T.hotspots.forEach(h => { if (lonOf(c - 1) < h.say && lon >= h.say) narr.pending.push(h.name); });
+  if (c === 0) narr.pending.push('starting at the dateline in the Pacific');
   const sp = speedOf(c), id = sp ? dominantRegion(c) : null;
-  if (id && id !== lastInstr) msgs.push('the drums change to ' + INSTR[id].name + ', from ' + INSTR[id].where);
-  if (id) lastInstr = id;
-  if (msgs.length && $('narrate').checked) { const m = (T.timeAxis ? dateLabel(T.grid.dates[c]) : 'Longitude ' + fmtLon(lon)) + ': ' + msgs.join(' and ') + '.'; if (m !== lastSpoken) { lastSpoken = m; setReadout(m); } }
+  if (id !== narr.cand) { narr.cand = id; narr.since = c; }
+  if (id && id !== lastInstr && Math.abs(c - narr.since) >= 6) { lastInstr = id; narr.pending.push(CHANGE_WORDS[narr.n++ % CHANGE_WORDS.length](INSTR[id])); }
+  const rank = colRank(c), strength = rank < 0.15 ? 'quiet' : rank < 0.4 ? 'light' : rank < 0.75 ? 'moderate' : 'strong';
+  const cur = lastInstr && INSTR[lastInstr], key = (cur ? cur.name : '') + '|' + (sp ? sp.name : 'silent') + '|' + strength;
+  let text = null;
+  if (narr.pending.length && now - narr.at >= 1.5) { text = narr.pending.splice(0, 2).join(' and ') + '.'; narr.key = key; }
+  else if (!narr.pending.length && key !== narr.key && now - narr.at >= 3) {
+    text = sp ? `${cur ? cur.name + ' drums, ' : 'Drums '}playing ${sp.name}; the data here is ${strength}.` : 'The drums are silent: the data here is quiet.'; narr.key = key;
+  }
+  if (!text || text === lastSpoken) return;
+  lastSpoken = text; narr.at = now;
+  setReadoutEvent((T.timeAxis ? dateLabel(T.grid.dates[c]) : 'Longitude ' + fmtLon(lon)) + ': ', text);
 }
 
 // ================= SPOKEN NARRATION (browser speech synthesis) =================
@@ -1353,6 +1368,30 @@ document.addEventListener('keydown', e => {
   const t = e.target; if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && t.type !== 'checkbox' && t.type !== 'range' || t.isContentEditable)) return;
   setQuiet(!$('quietRead').checked, true);
 });
+// ---- Captions: while the narrator speaks, the words also appear as text near the bottom of the picture (needs Spoken narration on) ----
+const CAPS = { u: null, chunks: [], timers: [], sync: false, shown: -1 };
+const captionsActive = () => $('captions').checked && $('speak').checked;
+function capChunks(text) {                           // sentences, split further at commas so each caption stays short
+  const out = []; let pos = 0;
+  for (let p of (text.match(/[^.!?]+[.!?]*\s*/g) || [text])) {
+    let start = pos; pos += p.length;
+    while (p.length > 90) { let cut = Math.max(p.lastIndexOf(', ', 84), p.lastIndexOf('; ', 84)); if (cut < 30) cut = p.lastIndexOf(' ', 84); if (cut < 30) cut = 84; out.push({ i: start, t: p.slice(0, cut + 1).trim() }); p = p.slice(cut + 1); start += cut + 1; }
+    if (p.trim()) out.push({ i: start, t: p.trim() });
+  }
+  return out;
+}
+function capShow(k) { const bar = $('captionBar'); if (!bar || k === CAPS.shown || !CAPS.chunks[k]) return; CAPS.shown = k; bar.firstElementChild.textContent = CAPS.chunks[k].t; bar.hidden = false; }
+function capClear() { CAPS.timers.forEach(clearTimeout); CAPS.timers = []; CAPS.u = null; CAPS.chunks = []; CAPS.shown = -1; CAPS.sync = false; const bar = $('captionBar'); if (bar) { bar.hidden = true; bar.firstElementChild.textContent = ''; } }
+function capBegin(u, text) {                         // call just before speaking an utterance
+  if (!captionsActive()) return;
+  u.addEventListener('start', () => {
+    capClear(); CAPS.u = u; CAPS.chunks = capChunks(text); capShow(0);
+    CAPS.timers.push(setTimeout(() => { if (CAPS.sync || CAPS.u !== u) return; CAPS.chunks.forEach((c, k) => { if (k) CAPS.timers.push(setTimeout(() => { if (!CAPS.sync && CAPS.u === u) capShow(k); }, c.i * 68 / (u.rate || 1))); }); }, 700));   // no word events from this voice: time the captions by length
+  });
+  u.addEventListener('boundary', e => { if (CAPS.u !== u) return; CAPS.sync = true; let k = 0; CAPS.chunks.forEach((c, j) => { if (c.i <= e.charIndex) k = j; }); capShow(k); });
+  const end = () => { if (CAPS.u === u) capClear(); };
+  u.addEventListener('end', end); u.addEventListener('error', end);
+}
 function speak(text, interrupt) {
   if (!SPEECH || !$('speak').checked) return;
   if (interrupt) { speechQ = []; curUtt = null; speechSynthesis.cancel(); speaking = false; }
@@ -1361,15 +1400,15 @@ function speak(text, interrupt) {
 }
 function nextSpeech() {
   if (speaking || !speechQ.length) return;
-  const u = new SpeechSynthesisUtterance(speechQ.shift()); curUtt = u;
+  const text = speechQ.shift(), u = new SpeechSynthesisUtterance(text); curUtt = u;
   const v = speechSynthesis.getVoices().find(x => x.name === $('voice').value);
   if (v) { u.voice = v; u.lang = v.lang; }
-  u.rate = 0.95;
+  u.rate = 0.95; capBegin(u, text);
   const done = () => { if (curUtt !== u) return; speaking = false; applyVolume(); nextSpeech(); };
   u.onend = done; u.onerror = done;
   speaking = true; applyVolume(); speechSynthesis.speak(u);
 }
-function stopSpeech() { speechQ = []; curUtt = null; if (SPEECH) speechSynthesis.cancel(); speaking = false; applyVolume(); }
+function stopSpeech() { capClear(); speechQ = []; curUtt = null; if (SPEECH) speechSynthesis.cancel(); speaking = false; applyVolume(); }
 
 // ---- Guided tour: 1) describe the image west to east, 2) explain how to listen, 3) the sweep plays once in silence from the narrator ----
 function guideSentences() {
@@ -1386,7 +1425,7 @@ function say(text) {                                 // speak one sentence and r
     const u = new SpeechSynthesisUtterance(text); curUtt = u;
     const v = speechSynthesis.getVoices().find(x => x.name === $('voice').value);
     if (v) { u.voice = v; u.lang = v.lang; }
-    u.rate = 0.95;
+    u.rate = 0.95; capBegin(u, text);
     let done = false, started = false, to = null, startCheck = null;
     const fin = () => { if (done) return; done = true; clearTimeout(to); clearTimeout(startCheck); if (curUtt === u) { curUtt = null; speaking = false; applyVolume(); } res(started); };
     u.onstart = () => { started = true; clearTimeout(startCheck); };
@@ -1433,12 +1472,17 @@ try { $('introLen').value = localStorage.getItem('ej_intro') === 'full' ? 'full'
 $('introLen').addEventListener('change', () => { try { localStorage.setItem('ej_intro', $('introLen').value); } catch (e) {} });
 try { $('skipAnt').checked = localStorage.getItem('ej_skipant') === '1'; } catch (e) {}
 $('skipAnt').addEventListener('change', () => { try { localStorage.setItem('ej_skipant', $('skipAnt').checked ? '1' : '0'); } catch (e) {} if (V) updateMeters(Math.max(0, Math.min(V.cols - 1, Math.floor(pos)))); });
+try { $('captions').checked = localStorage.getItem('ej_captions') === '1'; } catch (e) {}
+$('captions').addEventListener('change', () => { try { localStorage.setItem('ej_captions', $('captions').checked ? '1' : '0'); } catch (e) {} if (!$('captions').checked) capClear(); });
 $('speak').addEventListener('change', () => {
   try { localStorage.setItem('ej_speak', $('speak').checked ? '1' : '0'); } catch (e) {}
   if (!$('speak').checked) stopSpeech(); else speak('Spoken narration is on.', true);
 });
 $('voice').addEventListener('change', () => { if ($('speak').checked) speak('This is how I sound.', true); });
 const setReadout = t => { $('readout').textContent = t; };
+function setReadoutEvent(prefix, text) {      // the visible label beside it already shows the current date or longitude, so the prefix is only for screen readers
+  const e = $('readout'), p = document.createElement('span'); p.className = 'sr-only'; p.textContent = prefix; e.textContent = ''; e.append(p, document.createTextNode(text));
+}
 
 // ================= EXPLORE =================
 function showCursor() { cursorEl.style.display = 'block'; cursorEl.style.left = (T.timeAxis ? 50 : (cur.c + .5) / V.cols * 100) + '%'; cursorEl.style.top = ((cur.r + .5) / V.rows * 100) + '%'; }
@@ -1571,7 +1615,7 @@ function demoLabel(text, k) {
 function stopDemo(quiet) {
   demoTok++; demoTimers.forEach(clearTimeout); demoTimers = []; demoRunning = false;
   document.querySelectorAll('.voice.demo-on').forEach(e => e.classList.remove('demo-on'));
-  if (!quiet) hardStop();                           // the Stop button: silence now
+  if (!quiet) { hardStop(); stopSpeech(); }         // the Stop button: silence now, and cut off the voice if it is still reading a description
   silenceContinuous(); if (!quiet) $('demoStatus').textContent = ''; demoBtn(false); sleepSoon(300);
 }
 async function demoVoice(k, tok) {
@@ -1660,7 +1704,7 @@ function buildVoices() {
 function setTrack(i) {
   if (window.EJ_followStop) window.EJ_followStop();
   if (playing) pause(); stopSpeech(); lastNarrCol = -1;
-  T = TRACKS[i]; V = mkView(T.grid); computeRegions(); computeDrumModel(); computeEmotion(); lastInstr = null; pos = 0; cur = null; queue = []; lastSpoken = '';
+  T = TRACKS[i]; V = mkView(T.grid); computeRegions(); computeDrumModel(); computeEmotion(); lastInstr = null; narr.cand = null; narr.pending = []; narr.key = ''; narr.at = -99; pos = 0; cur = null; queue = []; lastSpoken = '';
   const vid = $('vid');
   if (T.video) { $('map').style.display = 'none'; vid.style.display = 'block'; vid.setAttribute('aria-label', T.alt); vid.src = T.video; $('vcap').style.display = 'block'; $('vcap').textContent = ''; }
   else { vid.pause(); vid.removeAttribute('src'); vid.load(); vid.style.display = 'none'; $('vcap').style.display = 'none'; $('map').style.display = 'block'; $('map').src = T.image; $('map').alt = T.alt; }

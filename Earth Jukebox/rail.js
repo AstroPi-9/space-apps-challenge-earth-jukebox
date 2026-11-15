@@ -8,15 +8,15 @@
     ['showSheet', '🎼', 'Sheet music', 'Show the scrolling sheet music', 'L'],
     ['speak', '🗣️', 'Narration', 'Spoken narration: a voice describes the map, then the sweep plays once', 'R'],
     ['introLen', '📖', 'Full intro', 'Full spoken introduction: on gives the long version of the intro, off gives the short one', 'R'],
-    ['narrate', '💬', 'Captions', 'Show descriptions while playing: text about what the beam is passing over', 'R']
+    ['captions', '💬', 'Captions', 'Captions: the words the narrator speaks also appear as text near the bottom of the map. Needs Narration on', 'R', 'speak']
   ];
   const btns = [];
-  ITEMS.forEach(([id, icon, label, tip, side]) => {
+  ITEMS.forEach(([id, icon, label, tip, side, needs]) => {
     const cb = $(id); if (!cb) return;
     const b = document.createElement('button'); b.type = 'button'; b.className = 'rail-btn'; b.title = tip; b.dataset.for = id;
     b.innerHTML = `<span class="ic" aria-hidden="true">${icon}</span><span class="lb">${label}</span><span class="st" aria-hidden="true"></span>`;
     b.addEventListener('click', () => { if (cb.disabled) return; if (cb.tagName === 'SELECT') { cb.value = cb.value === 'full' ? 'short' : 'full'; cb.dispatchEvent(new Event('change', { bubbles: true })); } else cb.click(); sync(); });
-    rails[side].appendChild(b); btns.push([b, cb]);
+    b.dataset.needs = needs || ''; rails[side].appendChild(b); btns.push([b, cb]);
   });
   // the action buttons live in the rails too: Hear instruments last on the left, Skip intro last on the right (it is only enabled while the spoken intro plays)
   const skip = $('skip'); rails.L.appendChild($('demoAll')); rails.R.appendChild(skip);
@@ -26,7 +26,7 @@
     if (skip) { skip.disabled = skip.hidden; skip.setAttribute('aria-hidden', String(skip.hidden)); skip.tabIndex = skip.hidden ? -1 : 0; }
     btns.forEach(([b, cb]) => {
       const on = cb.tagName === 'SELECT' ? cb.value === 'full' : !!cb.checked; if (b.getAttribute('aria-pressed') !== String(on)) { b.setAttribute('aria-pressed', String(on)); b.querySelector('.st').textContent = on ? 'ON' : 'OFF'; }
-      if (b.disabled !== cb.disabled) b.disabled = cb.disabled;
+      const off = cb.disabled || (b.dataset.needs && !$(b.dataset.needs).checked); if (b.disabled !== off) b.disabled = off;      // a switch that depends on another one is greyed out while that one is off
     });
   }
   document.addEventListener('change', sync);

@@ -81,6 +81,7 @@
   .toggle-rail:empty{display:none}
   .where-strip{display:flex;align-items:baseline;gap:10px;margin:0 0 8px;padding:3px 12px;border-radius:10px}
   .where-strip h2{margin:0;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:#e9c46a;white-space:nowrap;flex:none}
+  .where-now{flex:none;font-weight:700;color:#ffe9a6;font-size:.84rem;white-space:nowrap}.where-now:empty{display:none}.where-now:not(:empty)::after{content:":";font-weight:400;margin-left:1px}
   .where-strip #readout{font-size:.82rem;line-height:1.3;min-width:0;min-height:0}
   .voices-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px}.voices-head #demoStatus{margin:0;flex:1}
   #demoStatus:empty{margin:0}
@@ -89,7 +90,9 @@
   .rail-btn .ic{font-size:.95rem;line-height:1;display:grid;place-items:center;width:1.5rem;height:1.5rem;border-radius:50%;background:rgba(255,233,166,.2)}.rail-btn .lb{font-size:.62rem;font-weight:700;line-height:1.05;text-align:center}.rail-btn .st{font-size:.52rem;letter-spacing:.1em;opacity:.8;line-height:1}
   .rail-btn[aria-pressed=true]{background:linear-gradient(180deg,#ffe27a,#ffc93a);color:#1a1400;border-color:#ffd54a;box-shadow:0 0 0 2px #5a3d0c,0 0 12px rgba(255,200,60,.7)}
   .rail-btn[aria-pressed=true] .st{opacity:1;font-weight:800}
-  .rail-btn:disabled{opacity:.45;cursor:not-allowed}
+  .rail-btn:disabled{opacity:.3;cursor:not-allowed}
+  .cap-bar{position:absolute;left:50%;bottom:9%;transform:translateX(-50%);max-width:88%;text-align:center;pointer-events:none;z-index:7}
+  .cap-bar span{display:inline;background:rgba(8,8,8,.84);color:#fff;font:600 clamp(.95rem,1.8vw,1.4rem)/1.5 Arial,Helvetica,sans-serif;padding:.12em .5em;border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone;text-shadow:0 1px 2px #000}
   .rail-btn.running{background:linear-gradient(180deg,#ffe27a,#ffc93a);color:#1a1400;border-color:#ffd54a;box-shadow:0 0 0 2px #5a3d0c,0 0 12px rgba(255,200,60,.7)}
   .rail-act:disabled{opacity:.3}
   .rail-btn.rail-act[hidden]{display:flex!important}
@@ -319,6 +322,7 @@
             <label class="toggle"><input id="showSheet" type="checkbox" role="switch" checked><span><span class="t">Show sheet music</span><small>A staff for every voice, scrolling past a fixed line</small></span></label>
             <label class="toggle"><input id="narrate" type="checkbox" role="switch"><span><span class="t">Show descriptions while playing</span><small>Text about what the beam is passing over</small></span></label>
             <label class="toggle"><input id="quietRead" type="checkbox" role="switch"><span><span class="t">Quiet the music while I read</span><small>The sound drops to a whisper whenever new text appears, so a screen reader can be heard. Press M to switch this on or off</small></span></label>
+            <label class="toggle"><input id="captions" type="checkbox" role="switch"><span><span class="t">Captions on the picture</span><small>While the narrator speaks, the words also appear as text near the bottom of the map, like subtitles. Needs spoken narration to be on</small></span></label>
             <label class="toggle"><input id="speak" type="checkbox" role="switch"><span><span class="t">Spoken narration</span><small>A voice describes the map, then the sweep plays once</small></span></label>
             <label class="toggle"><input id="autoClose" type="checkbox" role="switch" checked><span><span class="t">Return to the jukebox when a song ends</span><small>The doors close and you choose another record</small></span></label>
             <div class="sliders" style="margin-top:2px">
@@ -352,11 +356,12 @@
       <div id="lightLayer" aria-hidden="true"><i class="lb" data-k="0" style="left:2.78%;width:38.89%"><b>Americas</b></i><i class="lb" data-k="1" style="left:41.67%;width:20.83%"><b>Africa, Europe</b></i><i class="lb" data-k="3" style="left:62.5%;width:15.28%"><b>S and C Asia</b></i><i class="lb" data-k="4" style="left:77.78%;width:22.22%"><b>E Asia, Oceania</b></i><i class="lb" data-k="4" style="left:0;width:2.78%"></i></div>
       <canvas id="elLayer" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none"></canvas>
       <canvas id="followLayer" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+      <div id="captionBar" class="cap-bar" aria-hidden="true" hidden><span></span></div>
     </div>
     <div id="toggleRail" class="toggle-rail rail-l" role="group" aria-label="Sound and score switches"><button id="demoAll" type="button" class="rail-btn rail-act" title="Hear the instruments, one after another"><span class="ic" aria-hidden="true">🎧</span><span class="lb">Hear instruments</span><span class="st" aria-hidden="true"></span></button></div>
     <div id="toggleRailR" class="toggle-rail rail-r" role="group" aria-label="Speech and caption switches"><button id="skip" type="button" class="rail-btn rail-act" title="Skip the spoken introduction and go straight to the sweep" hidden><span class="ic" aria-hidden="true">⏭</span><span class="lb">Skip intro</span><span class="st" aria-hidden="true"></span></button></div>
     </div>
-    <div class="panel where-strip" aria-labelledby="whereH"><h2 id="whereH">Where you are</h2><div id="readout" role="status" aria-live="polite">Press play, or click the map.</div></div>
+    <div class="panel where-strip" aria-labelledby="whereH"><h2 id="whereH">Where you are</h2><span id="whereNow" class="where-now" aria-hidden="true"></span><div id="readout" role="status" aria-live="polite">Press play, or click the map.</div></div>
     <section class="panel" id="voicesPanel" aria-labelledby="voicesH">
       <h2 id="voicesH" class="sr-only">The voices</h2>
       <div class="voices-head"><p id="demoStatus" role="status" aria-live="polite"></p></div>
