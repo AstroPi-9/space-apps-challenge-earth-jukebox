@@ -108,7 +108,7 @@
   const box = $('followPresets');
   PRESETS.forEach(p => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'secondary'; b.textContent = p.name;
-    b.addEventListener('click', () => { $('fLon').value = p.lon; $('fLat').value = p.lat; $('fRev').checked = false; hint = p.hint; label = 'the ' + p.name; if (run) stop(); go(); });
+    b.addEventListener('click', () => { box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); $('fLon').value = p.lon; $('fLat').value = p.lat; $('fRev').checked = false; hint = p.hint; label = 'the ' + p.name; if (run) stop(); go(); });
     box.appendChild(b);
   });
   ['fLon', 'fLat'].forEach(id => $(id).addEventListener('change', () => { hint = [1, 0]; label = ''; }));
@@ -118,6 +118,6 @@
     const r = $('mapBox').getBoundingClientRect(); $('fLon').value = Math.round(((e.clientX - r.left) / r.width) * 360 - 180); $('fLat').value = Math.round(90 - ((e.clientY - r.top) / r.height) * 180);
     hint = [1, 0]; label = ''; if (run) stop(); go();
   }, true);
-  setInterval(() => { const on = onOcean(); if ($('followPanel').hidden === on) { $('followPanel').hidden = !on; if (!on) { if (run) stop(); path = null; draw(-1); } } }, 250);
+  setInterval(() => { const on = onOcean(); if ($('followPanel').hidden === on) { $('followPanel').hidden = !on; box.hidden = !on; if (!on) { if (run) stop(); path = null; draw(-1); } } }, 250);
   window.addEventListener('resize', () => draw(-1));
 })();

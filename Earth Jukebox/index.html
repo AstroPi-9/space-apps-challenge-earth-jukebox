@@ -356,7 +356,8 @@
   </header>
 
   <main>
-    <div id="weekSwitch" class="week-switch" role="group" aria-label="Choose the week" hidden><span class="ws-label">Choose the week</span><button type="button" data-week="elnino25" aria-pressed="false">10 Oct 2025</button><button type="button" data-week="elnino26" aria-pressed="true">10 Oct 2026</button></div>
+    <div id="followPresets" class="week-switch" role="group" aria-label="Choose a current" hidden><span class="ws-label">Choose a current</span></div>
+    <div id="weekSwitch"class="week-switch" role="group" aria-label="Choose the week" hidden><span class="ws-label">Choose the week</span><button type="button" data-week="elnino25" aria-pressed="false">10 Oct 2025</button><button type="button" data-week="elnino26" aria-pressed="true">10 Oct 2026</button></div>
     <div id="dataBar" class="data-bar" role="group" aria-label="Jukebox"><button id="backHome" type="button">↩ Back</button><span id="dataBarNow"></span><button id="restart" type="button" class="secondary" aria-label="Restart" title="Restart"><span aria-hidden="true">⏮</span></button><button id="play" type="button"><span aria-hidden="true">▶</span> Play</button></div>
     <div class="controls" id="tracks" role="group" aria-label="Choose a track"></div>
     <div id="sliderStrip" class="slider-strip" role="group" aria-label="Volume and tour length"><label class="field"><span>Volume</span><input id="vol" type="range" min="0" max="100" value="70"></label><label class="field"><span>Tour length <b id="durOut">40 s</b></span><input id="dur" type="range" min="20" max="90" value="40" aria-describedby="durOut"></label></div>
@@ -393,7 +394,6 @@
     <section id="followPanel" class="panel" hidden aria-label="Follow a current">
       <h2>Follow a current</h2>
       <p class="sub">Instead of sweeping every column, follow one current along its own flow lines. Pitch is the water temperature under the moving point (warmer is higher), the stereo position is where it is on the map, and the scale follows the region it passes through. Warm water turns the music sad, and very warm water urgent. The picture shows only the direction of the lines, not an arrow: the named currents use their known direction, and a start you choose heads east unless you tick Reverse.</p>
-      <div class="controls" id="followPresets" role="group" aria-label="Named currents"></div>
       <div class="controls">
         <label>Start longitude <input id="fLon" type="number" min="-180" max="180" value="-80" style="width:5.5em"></label>
         <label>latitude <input id="fLat" type="number" min="-80" max="80" value="26" style="width:5em"></label>
