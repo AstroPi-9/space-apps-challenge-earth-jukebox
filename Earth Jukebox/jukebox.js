@@ -37,6 +37,8 @@
     const data = s === 'data'; state = data ? 'data' : 'home'; if (!data) view = s;
     home.hidden = data || s !== 'home'; home.inert = home.hidden; sub.hidden = data || s !== 'sub'; sub.inert = sub.hidden;
     app.inert = !data; app.setAttribute('aria-hidden', data ? 'false' : 'true'); lock(!data); setTabVisible(!data);
+    const sh = s === 'sub' && sub.querySelector('.jb-title');                // the tab title follows the page, so a screen reader announces where you are
+    document.title = s === 'home' ? 'Earth Jukebox' : sh ? 'Earth Jukebox – ' + sh.textContent.replace(/^[^A-Za-z]+/, '').trim() : 'Earth Jukebox – ' + ((window.EJ && window.EJ.T && window.EJ.T.name) || 'record');
   }
   function halves(open, source) {                                            // two copies of a page, each showing one half, for the swing
     const wrap = document.createElement('div'); wrap.className = 'jb-doors' + (open ? ' open notrans' : ''); wrap.setAttribute('aria-hidden', 'true');

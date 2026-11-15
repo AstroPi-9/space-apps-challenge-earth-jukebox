@@ -4,9 +4,11 @@
 
 Built for the NASA Space Apps Challenge 2026 challenge *The Earth Information Jukebox*. It is an independent project and is **not an official NASA product**.
 
-**The jukebox.** Sea temperature, salinity and density each open a second wooden page first, where you choose between versions (the still map, the turning globe, and for temperature the El Niño page). The page opens on a wooden jukebox with a short summary and seven large red buttons (A1 to D1), one for each record. Pressing a button picks that record, and the home page swings open like double doors to show its page (picture, sound settings, sheet music and any extras). When a song ends, or when you press **Back to the jukebox**, the doors close and you choose another record. The *Return to the jukebox when a song ends* switch (in Display and narration) turns the automatic closing off. With reduced-motion settings the doors do not animate. Add `?nohome` to the address to skip the home page.
+**The jukebox.** Sea temperature, salinity and density each open a second wooden page first, where you choose between versions (the still map and the turning globe; the El Niño version is switched off for now, see below). The page opens on a wooden jukebox with a short summary and seven large red buttons (A1 to D1), one for each record. Pressing a button picks that record, and the home page swings open like double doors to show its page (picture, sound settings, sheet music and any extras). When a song ends, or when you press **Back to the jukebox**, the doors close and you choose another record. The *Return to the jukebox when a song ends* switch (in Display and narration) turns the automatic closing off. With reduced-motion settings the doors do not animate. Add `?nohome` to the address to skip the home page.
 
-**Settings and switches.** Every record page has the same wooden jukebox look. The settings that apply to every record (sound source, harmonious mode, gamakas, regional scales and emotion, composed music underneath, sheet music, descriptions, spoken narration and its voice, returning to the jukebox after a song) are in the small **Settings** tab at the top right of the home and second pages. Settings that belong to one record stay on its page: volume, tour length and the Antarctic drone, the El Niño layer controls, Follow a current, and the voice mute switches. Every setting is an old flick switch: up is on, down is off.
+**Settings and switches.** Every record page has the same wooden jukebox look. The settings that apply to every record (sound source, harmonious mode, gamakas, regional scales and emotion, composed music underneath, sheet music, descriptions, spoken narration and its voice, returning to the jukebox after a song) are in the small **Settings** tab at the top right of the home and second pages. Settings that belong to one record stay on its page: Follow a current and the voice mute switches. Every setting is an old flick switch: up is on, down is off.
+
+**Controls on a record's page.** The top bar has *Back to the jukebox*, the current record, an icon-only **Restart** button and **Play**. Under it, a thin strip holds the **Volume** and **Tour length** sliders. Two columns of square buttons sit either side of the map, the same number on each side, and each is a quick front for a setting that also lives in Settings: on the left **Skip Antarctic**, **Quiet music**, **Sheet music** and **Hear instruments** (plays each voice alone); on the right **Narration**, **Full intro** (long or short spoken introduction), **Captions** and **Skip intro** (only active while the intro plays). Captions needs Narration on and is greyed out without it. Harmony, Music bed, Gamakas and Regional scales stay in Settings only. On a phone the buttons move into rows under the map. Below the map are a thin *Where you are* strip, the five voices in one row of small cards, the sheet music, the note-trace export and the *Data and limits* panel.
 
 Open `index.html` in a modern browser (developed and tested in a Chromium-based browser; Firefox and Safari are untested). There is nothing to install and no server is needed. Press **Play** to hear one sweep, or **Hear the instruments** to learn what each voice means.
 
@@ -86,7 +88,9 @@ On the Ocean currents track, a panel under the map lets you follow one current a
 
 How it works and its limits: `tools/make-flow-field.ps1` measures the direction of the lines in each 16-pixel tile of the frame (`flow_field.js`). The tracing follows those directions. **A flow line has an orientation but no arrow**, so the picture alone cannot say which way the water flows. The named currents use their well-known direction; a start you choose heads east unless you tick *Reverse direction*. The path follows the drawn lines at 2.8-degree tile resolution, so it is a sketch of the current, not a measured track, and traces can wander across a basin. The temperature is decoded from line colour (see below).
 
-## El Niño layer (the third version of the Sea temperature record)
+## El Niño layer (switched off for now)
+
+*This version is hidden: its map image does not look good enough yet. The code and data are still in the project. To bring it back, add `'sstEl'` to `TAB_ORDER` in `app.js`, restore its entry in the sea temperature group in `jukebox.js`, and add the `<script>` tags for `elnino_grid.js` and `elnino_fine.js` back to `index.html`.*
 
 The sea temperature map is a long-term average, so it cannot show warming or El Niño. This add-on brings in two real time series so the music can respond to **change from normal** (an anomaly):
 
@@ -134,6 +138,10 @@ These methods were chosen after reviewing the team's earlier project RAM AVATAR,
 - **Hear Me** (for blind and low-vision people): a large glowing **Hear Me** button on the home page, next to *How it works*. It is off until pressed. Once on, it speaks a summary of what is on the screen: the home page and its six records, a second page and its versions, the settings panel (each setting and whether it is on or off), or a record's page (the picture described in words, the controls and their values, the voices, and any extra panels such as Follow a current or the El Niño layer). It reads each new page as you move, and a small bar at the bottom left (or the **H** key) hears the screen again or turns Hear Me off. Playback is paused when it starts to talk. It uses the browser's speech voice chosen in Settings and is off again whenever the page is loaded. It is a summary, not a replacement for a screen reader, and has not been tested with blind users.
 - **Spoken guided tour** (off by default; tick "Spoken narration"). It describes the image, explains how to listen, plays the sweep once with no talking over it, and stops. There is a **short** (about 20 seconds) and a **full** version of the intro, and a Skip button.
 - **Hear the instruments:** plays each voice alone with its label, so the mapping can be learned and checked. Each voice also has its own "Hear" button.
+- **Captions:** with *Spoken narration* on, the words the narrator speaks also appear as subtitles just above the bottom edge of the picture (a switch in Settings and a button beside the map; off by default).
+- **Quiet the music while I read:** when new text appears, the sound drops to about a tenth of its volume for a few seconds so a screen reader can be heard. Press **M** to switch it on or off. **Hear Me** turns it on, and turns the sheet music off, while it is running, and puts both back afterwards.
+- **A live description under the map.** *Where you are* shows the date or longitude, updated at every step, and beside it a description of what is under the beam (the kind of data, the part of the world, the latitude, a value such as a temperature, and landmark stories as the beam nears them). It looks about three seconds ahead so the words arrive with the beam, changes every few seconds, and never repeats a line. Dragging the time slider updates it at once.
+- **Page and map names for screen readers:** the browser tab title follows the page (home, version page, or record), and the map's spoken name carries the current record's name.
 - **Scrolling sheet music:** under the map, one staff for every voice (drone, chords, high voice, lead, drums) scrolls past a fixed line, in the key of D major (Mohanam uses D, E, F♯, A, B). The notes are the ones the app is actually playing (or, in MuseScore mode, the composition's notes, fainter when their data is quiet). Rhythm is shown by note shape and position, not full engraving. A words-only line under it says what is sounding now. It can be hidden with *Show sheet music*.
 - **Gamakas on or off.** The *Gamakas* box turns the melody's pitch ornaments (shakes, slides and touches borrowed from Carnatic music) on or off; off gives steady notes. There is no vibrato oscillator in either case.
 - **Full keyboard use:** arrow keys explore the picture, Enter replays a spot, Space plays or pauses, Home and End jump to the edges.
@@ -141,7 +149,7 @@ These methods were chosen after reviewing the team's earlier project RAM AVATAR,
 - **Per-voice mute** and a volume slider; an option to skip the Antarctic drone.
 - **Data and limits** panel under every track (see below).
 
-**Not yet tested:** use with a screen reader (NVDA, VoiceOver), colour contrast, phones, Safari, and any study with blind or low-vision listeners. See *Limits*.
+**Checked in a browser pane (by the author, not by blind users):** every record opens and plays without script errors, the map answers the arrow keys, text contrast measured high on the main text, and the page has no sideways scrolling at 375 pixels wide. **Not yet tested:** use with a screen reader (NVDA, JAWS, VoiceOver), Firefox, Safari, a real phone, whether the Hear Me voice is clear on other devices, and any study with blind or low-vision listeners. See *Limits*.
 
 ## Data sources and credits
 
@@ -177,7 +185,7 @@ Each track's page section **Data and limits** gives its source, date, what the c
 - The aerosol land and haze separation is by colour, so dense haze over land is partly missed.
 - Region borders for the drums are approximate (cells are about 2° by 10°).
 - **The mix was balanced by measurement, not by ear.** Each voice of each track was rendered offline and its A-weighted level set against the others, with a limiter to prevent clipping (see `PROCESS.md`). Nobody has yet judged it by listening, so please listen and report problems. Very low notes (the drone and the lowest bassoon notes) will be faint or inaudible on laptop speakers and small headphones.
-- Not tested with screen readers, on phones, in Safari, or with blind or low-vision users.
+- Not tested with screen readers, on a real phone, in Firefox or Safari, or with blind or low-vision users.
 - This is not a measurement tool and not a certified assistive device.
 
 ## Files
@@ -185,8 +193,9 @@ Each track's page section **Data and limits** gives its source, date, what the c
 | Path | What it is |
 |---|---|
 | `index.html`, `app.js` | The whole application. |
+| `rail.js`, `hearme.js`, `jukebox.js` | The buttons beside the map, the Hear Me reader, and the jukebox home pages. |
 | `music_data.js` | The composed music loops (12 mp3 files, base64), built by `tools/make-music.ps1` with MuseScore 4. The phrases were written by the AI assistant, not a human composer; the MS Basic sound font's licence has not been checked. |
-| `samples_data.js` | The MuseScore instrument sounds (18 instruments, base64 mp3), built by `tools/make-samples.ps1`. The sound font's licence has not been checked. |
+| `samples_data.js` | Loaded only when needed (like `music_data.js` and `score_data.js`, so the first page load stays small). The MuseScore instrument sounds (18 instruments, base64 mp3), built by `tools/make-samples.ps1`. The sound font's licence has not been checked. |
 | `sheet.js`, `score_notes.js`, `score_data.js` | The scrolling sheet music; the notes of the MuseScore composition; the composition's five audio stems. |
 | `*_grid.js` | Precomputed sound grids for each track (`year_grid.js`, `grid.js` for aerosols, `sst_grid.js`, `sss_grid.js`, `density_grid.js`, `video_grid.js`, `ocean_grid.js`). |
 | `assets/` | Pictures, colour bars, the density video (`assets/video`) and 160 time-lapse frames (`assets/year`). |

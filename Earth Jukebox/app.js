@@ -1088,9 +1088,17 @@ function sleepSoon(ms) {                             // mute right away, then te
     idleTimer = setTimeout(() => { if (!playing && !starting && !guiding && !holdAudio) shutdownAudio(); }, 150);
   }, ms);
 }
+// The big sound files (instrument samples, the MuseScore composition, the composed music bed) are only fetched when a setting needs them, so the first page load stays light.
+const DATA_LOADS = {};
+function loadScript(src) { return DATA_LOADS[src] || (DATA_LOADS[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { delete DATA_LOADS[src]; rej(new Error(src)); }; document.head.appendChild(s); })); }
+async function ensureData() {
+  const need = []; if ($('source').value === 'samples' && !window.SAMPLES) need.push('samples_data.js'); if ($('source').value === 'score' && !window.SCORE_B64) need.push('score_data.js'); if ($('music').checked && !window.MUSIC_B64) need.push('music_data.js');
+  if (!need.length) return; setReadout('Loading the extra sound data…');
+  try { await Promise.all(need.map(loadScript)); setReadout('The extra sound data is ready.'); } catch (e) { setReadout('The extra sound data could not be loaded, so the live synthesis is used.'); }
+}
 async function play() {
   if (playing || starting) return; if (window.EJ_followStop) window.EJ_followStop(); curBar = -1; barChord = null; heldBarFor = -2; lastLeadT = -9; lastPluckT = -9; starting = true;
-  try { await wake(); } finally { starting = false; }
+  try { await ensureData(); await wake(); } finally { starting = false; }
   if (SPEECH && $('speak').checked && pos < 1.5) { const ok = await runGuide(); if (!ok) return; }   // spoken overview + listening guide first
   clearInterval(timer); playing = true; sweepEnded = false; timpFreq = null; nextTime = A.ctx.currentTime + 0.1; gridOrigin = nextTime; nextCol = Math.floor(pos); if (nextCol >= V.cols) nextCol = 0; queue = [];
   timer = setInterval(scheduler, 50); scheduler();
@@ -1140,8 +1148,8 @@ function musicFollow(c) {                          // the tune comes forward whe
   p.bed.g.gain.setTargetAtTime(p.bed.norm * (0.7 + 0.3 * r), t, 0.8);
   p.tune.g.gain.setTargetAtTime(p.tune.norm * (0.25 + 0.75 * r), t, 0.8);
 }
-$('music').addEventListener('change', () => {
-  if (!A) return;
+$('music').addEventListener('change', async () => {
+  await ensureData(); if (!A) return;
   if (!$('music').checked) fadeMusic(0.1);
   else if (playing) { if (A.music && A.music.out) A.music.out.gain.setTargetAtTime(1, A.ctx.currentTime, 0.3); else startMusic(); }
 });
@@ -1158,8 +1166,8 @@ function fadeMusic(tc) {
 // its tone opens up), and the drums follow the data strength rank. The live voices are muted while this plays.
 const SCORE = { buf: null, loop: 32, lead: 0.075, names: ['drone', 'pad', 'high', 'lead', 'drums'], rms: [0.03, 0.028, 0.022, 0.03, 0.03] };
 const scoreOn = () => $('source').value === 'score' && !!window.SCORE_B64;
-$('source').addEventListener('change', () => {                    // the source is chosen at the start of a sweep: stop, and say what will play next
-  const s = scoreOn(); $('music').disabled = s; if (playing) pause();
+$('source').addEventListener('change', async () => {                    // the source is chosen at the start of a sweep: stop, and say what will play next
+  await ensureData(); const s = scoreOn(); $('music').disabled = s; if (playing) pause();
   setReadout(s ? 'Sound source: the MuseScore composition. Press play: its five instruments rise and fall with the data. The live voices are off.' : $('source').value === 'samples' ? 'Sound source: MuseScore instrument sounds playing the data. The first play loads the sounds, which takes a few seconds.' : 'Sound source: live synthesis. Press play.');
 });
 async function scoreBuffers(ctx) {
@@ -1727,7 +1735,7 @@ function buildVoices() {
 function setTrack(i) {
   if (window.EJ_followStop) window.EJ_followStop();
   if (playing) pause(); stopSpeech(); lastNarrCol = -1;
-  T = TRACKS[i]; V = mkView(T.grid); computeRegions(); computeDrumModel(); computeEmotion(); lastInstr = null; narrReset(); pos = 0; cur = null; queue = []; lastSpoken = '';
+  T = TRACKS[i]; document.title = 'Earth Jukebox – ' + T.name; $('stage').setAttribute('aria-label', `${T.name}: the picture. Use arrow keys to explore, Enter to hear a spot, Space to play or pause.`); V = mkView(T.grid); computeRegions(); computeDrumModel(); computeEmotion(); lastInstr = null; narrReset(); pos = 0; cur = null; queue = []; lastSpoken = '';
   const vid = $('vid');
   if (T.video) { $('map').style.display = 'none'; vid.style.display = 'block'; vid.setAttribute('aria-label', T.alt); vid.src = T.video; $('vcap').style.display = 'block'; $('vcap').textContent = ''; }
   else { vid.pause(); vid.removeAttribute('src'); vid.load(); vid.style.display = 'none'; $('vcap').style.display = 'none'; $('map').style.display = 'block'; $('map').src = T.image; $('map').alt = T.alt; }
@@ -1745,7 +1753,7 @@ function setTrack(i) {
   document.querySelectorAll('#tracks button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.track === T.id)));
   setReadout(`Track: ${T.name}. Press play, or click the map.`);
 }
-// El Niño ('sstEl') is switched off for now: its map image does not look good enough. Its code stays, so it can be put back by adding it here and to the sea temperature entry in jukebox.js.
+// El Niño ('sstEl') is switched off for now: its map image does not look good enough. Its code stays, so it can be put back by adding it here and to the sea temperature entry in jukebox.js, and by adding the <script> tags for elnino_grid.js and elnino_fine.js (about 5.8 MB, left out of the page for now) back to index.html.
 const TAB_ORDER = ['year', 'ocean', 'aerosols', 'sst', 'sstVideo', 'sss', 'sssVideo', 'density', 'densityVideo', 'lightning'];        // the single-frame "Ocean currents" track is hidden: the Year track covers the same data and adds time
 const tabIndex = id => TRACKS.findIndex(t => t.id === id);
 TAB_ORDER.forEach(id => {
