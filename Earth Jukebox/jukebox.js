@@ -12,7 +12,8 @@
       { track: 'ocean', title: 'One frame: follow a current', dsc: "One frame of NASA's ocean currents. Follow a current and hear its temperature." } ] },
     sst: { code: 'B1', title: 'Sea temperature', icon: '🌡️', blurb: 'How warm is the surface of the ocean? Choose how to hear it.', items: [
       { track: 'sst', title: 'Still map', dsc: "NASA's sea surface temperature map, a long-term average. A beam sweeps from west to east." },
-      { track: 'sstVideo', title: 'Turning globe', dsc: 'The same temperature field as a globe turning once in a minute. The sound follows the beam.' } ] },
+      { track: 'sstVideo', title: 'Turning globe', dsc: 'The same temperature field as a globe turning once in a minute. The sound follows the beam.' },
+      { track: 'elnino26', title: 'El Niño', dsc: 'The tropical Pacific in October 2025 and October 2026: how much warmer or cooler than normal the sea is. Switch between the two weeks on the page.' } ] },
     sss: { code: 'B2', title: 'Salinity', icon: '🧂', blurb: 'How salty is the surface of the ocean? Choose how to hear it.', items: [
       { track: 'sss', title: 'Still map', dsc: "NASA's sea surface salinity map, a long-term average. A beam sweeps from west to east." },
       { track: 'sssVideo', title: 'Turning globe', dsc: 'The same salinity field as a globe turning once in a minute. The sound follows the beam.' } ] },
@@ -26,6 +27,15 @@
   };
   const NAMES = {}; home.querySelectorAll('.rec[data-track]').forEach(b => { NAMES[b.dataset.track] = { code: b.dataset.code, name: b.querySelector('.ttl').textContent.replace(/^\S+\s/, '') }; });
   Object.values(GROUPS).forEach(g => g.items.forEach((it, i) => { NAMES[it.track] = { code: g.code, name: g.title + ', ' + it.title }; }));
+  NAMES.elnino25 = { code: 'B1', name: 'Sea temperature, El Niño, week of 10 October 2025' }; NAMES.elnino26 = { code: 'B1', name: 'Sea temperature, El Niño, week of 10 October 2026' };
+  const weekBox = $('weekSwitch'), WEEKS = ['elnino25', 'elnino26'];
+  function syncWeek(id) { weekBox.hidden = !WEEKS.includes(id); weekBox.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.week === id))); }
+  weekBox.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    const id = b.dataset.week; if (b.getAttribute('aria-pressed') === 'true' || state !== 'data') return; stopEverything();
+    const tab = [...document.querySelectorAll('#tracks button')].find(t => t.dataset.track === id); if (tab) tab.click(); syncWeek(id);
+    const info = NAMES[id]; $('dataBarNow').innerHTML = `<span class="code" aria-hidden="true">${info.code}</span>Now playing: ${info.name}`; document.title = 'Earth Jukebox – ' + info.name;
+    live(`Switched to ${info.name}. Press Play to hear it.`); window.dispatchEvent(new Event('resize')); pageChanged();
+  }));
   let state = 'home', view = 'home';                                         // state: 'home' | 'data' | 'busy'; view: which page is showing while not in 'data'
   const live = t => { const e = $('jbLive'); e.textContent = ''; setTimeout(() => { e.textContent = t; }, 60); };
   const lock = on => { document.body.style.overflow = on ? 'hidden' : ''; };
@@ -62,7 +72,7 @@
   function openRecord(id) {
     if (state !== 'home') return; state = 'busy'; const source = page();
     const tab = [...document.querySelectorAll('#tracks button')].find(b => b.dataset.track === id); if (tab) tab.click();
-    window.scrollTo(0, 0); const info = NAMES[id] || { code: '', name: id };
+    syncWeek(id); window.scrollTo(0, 0); const info = NAMES[id] || { code: '', name: id };
     $('dataBarNow').innerHTML = `<span class="code" aria-hidden="true">${info.code}</span>Now playing: ${info.name}`;
     app.inert = false; app.setAttribute('aria-hidden', 'false');
     setTabVisible(false); const doors = reduce() ? null : halves(false, source); source.hidden = true; source.inert = true; lock(false);

@@ -199,6 +199,10 @@
   #tracks{display:none}
   .data-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin:0 0 16px;padding:10px 14px;border-radius:14px;border:2px solid #b08a3c;background:var(--grain),linear-gradient(180deg,#6b3d1c,#3a1f0d);background-color:#4a2810;box-shadow:0 8px 20px -10px #000,inset 0 0 0 3px rgba(0,0,0,.25)}
   .data-bar button{background:linear-gradient(180deg,#ff8d7c,#d11d15);color:#fff1d6;border:2px solid #d5d9de;box-shadow:0 3px 0 #4d0604,0 6px 12px rgba(0,0,0,.5)}
+  .week-switch{display:inline-flex;gap:6px}
+  .week-switch[hidden]{display:none}
+  .data-bar .week-switch button{background:linear-gradient(180deg,#5a3a1e,#34200f);color:#f3dfae;border:2px solid #b08a3c;box-shadow:none;font-weight:600}
+  .data-bar .week-switch button[aria-pressed=true]{background:linear-gradient(180deg,#ffe27a,#ffc93a);color:#1a1400;border-color:#ffd54a;box-shadow:0 0 14px -2px rgba(255,200,60,.8)}
   #dataBarNow{font:italic 1.1rem Georgia,serif;color:#ffe9a6;flex:1;min-width:200px}
   .data-bar .code{display:inline-grid;place-items:center;min-width:2.2em;margin-right:8px;padding:0 .4em;border-radius:999px;background:radial-gradient(circle at 34% 26%,#ff8d7c,#c91b14 60%,#7e0b07);color:#fff1d6;font:700 .95rem Georgia,serif;font-style:normal}
   @media (max-width:560px){.jb-cabinet{padding:18px 14px 18px;border-radius:120px 120px 18px 18px/70px 70px 18px 18px}.rec .knob{width:70px;height:70px;font-size:1.25rem}.jb-card{padding:12px 14px}}
@@ -289,7 +293,7 @@
         <button class="rec" type="button" data-group="sss" data-code="B2" aria-label="B2. Salinity. Opens a page where you choose the still map or the turning globe."><span class="knob" aria-hidden="true">B2</span><span class="card"><span class="ttl">🧂 Salinity</span><span class="dsc">Still map or turning globe: fresher and saltier water around the world.</span></span></button>
         <button class="rec" type="button" data-group="density" data-code="C1" aria-label="C1. Density. Opens a page where you choose the still map or the turning globe."><span class="knob" aria-hidden="true">C1</span><span class="card"><span class="ttl">⚖️ Density</span><span class="dsc">Still map or turning globe: heavy cold water to light warm water.</span></span></button>
         <button class="rec" type="button" data-track="lightning" data-code="C2" aria-label="C2. Lightning. Flashes seen from the International Space Station from 2017 to 2023, played as untuned drums with timpani in the strongest storms."><span class="knob" aria-hidden="true">C2</span><span class="card"><span class="ttl">⚡ Lightning</span><span class="dsc">Space-station lightning flashes, 2017 to 2023, as drums, with timpani in the strongest storms.</span></span></button>
-        <button class="rec" type="button" data-group="elnino" data-code="D1" aria-label="D1. El Niño 2026. Opens a page where you choose the map of 10 October 2026, the same week a year earlier, or the whole of 2026 so far."><span class="knob" aria-hidden="true">D1</span><span class="card"><span class="ttl">🔥 El Niño 2026</span><span class="dsc">A strong El Niño in the tropical Pacific: this year against last year, and how it grew.</span></span></button>
+        <button class="rec" type="button" hidden data-group="elnino" data-code="D1" aria-label="D1. El Niño 2026. Opens a page where you choose the map of 10 October 2026, the same week a year earlier, or the whole of 2026 so far."><span class="knob" aria-hidden="true">D1</span><span class="card"><span class="ttl">🔥 El Niño 2026</span><span class="dsc">A strong El Niño in the tropical Pacific: this year against last year, and how it grew.</span></span></button>
       </div>
       <div class="jb-foot">
         <span id="jbPrompt">Press a red button to choose a record.</span>
@@ -345,7 +349,7 @@
   </header>
 
   <main>
-    <div id="dataBar" class="data-bar" role="group" aria-label="Jukebox"><button id="backHome" type="button">↩ Back to the jukebox</button><span id="dataBarNow"></span><button id="restart" type="button" class="secondary" aria-label="Restart" title="Restart"><span aria-hidden="true">⏮</span></button><button id="play" type="button"><span aria-hidden="true">▶</span> Play</button></div>
+    <div id="dataBar" class="data-bar" role="group" aria-label="Jukebox"><button id="backHome" type="button">↩ Back to the jukebox</button><span id="dataBarNow"></span><span id="weekSwitch" class="week-switch" role="group" aria-label="Choose the week" hidden><button type="button" data-week="elnino25" aria-pressed="false">10 Oct 2025</button><button type="button" data-week="elnino26" aria-pressed="true">10 Oct 2026</button></span><button id="restart" type="button" class="secondary" aria-label="Restart" title="Restart"><span aria-hidden="true">⏮</span></button><button id="play" type="button"><span aria-hidden="true">▶</span> Play</button></div>
     <div class="controls" id="tracks" role="group" aria-label="Choose a track"></div>
     <div id="sliderStrip" class="slider-strip" role="group" aria-label="Volume and tour length"><label class="field"><span>Volume</span><input id="vol" type="range" min="0" max="100" value="70"></label><label class="field"><span>Tour length <b id="durOut">40 s</b></span><input id="dur" type="range" min="20" max="90" value="40" aria-describedby="durOut"></label></div>
     <div id="mapRow" class="map-row">
