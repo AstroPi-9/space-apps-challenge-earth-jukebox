@@ -184,6 +184,7 @@ window.SOURCE_HASHES = {
   "elnino_grid.js": "63c2910395758771be81de3782ef5d18f12ac2b54ace250738d0cbad57d8be83",
   "flow_field.js": "09f748def4bf617eb3a858f8879fa631ad388a93ec125f3b0efa79eab81826a0",
   "grid.js": "c802efb66869c09c662a5b417c49ed53e43410a5e49eed9f54593f869812a94e",
+  "lightning_grid.js": "5d81c69dc5e41a1fffa228967f68fa29aa3188e114613f0f48101cd8590d3049",
   "nino34_index.js": "22e9cc97349ac37bc6788e6afab657a590a88167e69b1d5a3f27f6ef065478a9",
   "ocean_grid.js": "4a9e2856dee55055dd75ea79128a3c14986d0ea4d6d854c0fe6359d43f54be3d",
   "sss_grid.js": "5ced8bd364fe4c7646eedd7d74b75871a01cb45b0ab9579a923e98e57987d5a2",

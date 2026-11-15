@@ -4,7 +4,7 @@
 $root = Split-Path $PSScriptRoot -Parent
 $files = @()
 foreach ($pattern in 'assets\*.jpg', 'assets\*.png', 'assets\video\*', 'assets\elnino\*', 'assets\year\*.jpg') { $files += Get-ChildItem (Join-Path $root $pattern) -File }
-foreach ($name in 'grid.js', 'ocean_grid.js', 'sst_grid.js', 'sss_grid.js', 'density_grid.js', 'video_grid.js', 'sst_video_grid.js', 'sss_video_grid.js', 'year_grid.js', 'flow_field.js', 'elnino_grid.js', 'elnino_fine.js', 'nino34_index.js') { $files += Get-Item (Join-Path $root $name) }
+foreach ($name in 'grid.js', 'ocean_grid.js', 'sst_grid.js', 'sss_grid.js', 'density_grid.js', 'video_grid.js', 'sst_video_grid.js', 'sss_video_grid.js', 'year_grid.js', 'lightning_grid.js', 'flow_field.js', 'elnino_grid.js', 'elnino_fine.js', 'nino34_index.js') { $files += Get-Item (Join-Path $root $name) }
 $lines = foreach ($f in ($files | Sort-Object FullName)) {
   $rel = $f.FullName.Substring($root.Length + 1).Replace('\', '/')
   '  "' + $rel + '": "' + (Get-FileHash $f.FullName -Algorithm SHA256).Hash.ToLower() + '"'

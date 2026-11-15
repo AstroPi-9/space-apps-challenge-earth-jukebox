@@ -3,3 +3,4 @@ salinity and density/
 
 # Raw El Nino downloads (NASA SVS 4695 movie, NOAA index); the app uses assets/elnino and the generated .js files
 El Nino data/
+/Lightning/

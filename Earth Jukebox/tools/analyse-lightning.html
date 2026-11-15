@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Analyse the ISS lightning movie</title>
+<style>body{font:14px system-ui;background:#111;color:#eee;padding:16px} pre{white-space:pre-wrap}</style></head>
+<body>
+<h1>Analyse the ISS lightning movie (NASA SVS 5011)</h1>
+<p>Reads the flat-map movie of lightning detected from the International Space Station (March 2017 to July 2023, 100 s). For 160 evenly spaced moments it counts the yellow flash pixels in each of 18 latitude bands, in four longitude sectors, and saves <code>lightning_grid.js</code>; it also saves 160 small pictures of the frames into <code>assets/lightning/</code>.
+Run it from the workspace server (<code>preview_start workspace-root</code>, port 8766) because a page cannot read the pixels of a video opened from a file: <code>http://localhost:8766/Earth%20Jukebox/tools/analyse-lightning.html?run=1</code></p>
+<button id="go">Run analysis</button>
+<pre id="log"></pre>
+<script>
+const SRC = '../../Lightning/iss_lightning_sos_yearly_07312023_2048p60.mp4', COLS = 160, ROWS = 18, W = 2048, H = 1024, TW = 1024, TH = 512;
+const SECT = [[-170, -30], [-30, 45], [45, 100], [100, 190]];                  // Americas | Africa, Europe and the Middle East | South and Central Asia | East Asia, Southeast Asia and Oceania (the last also takes 180 W to 170 W)
+const log = m => { document.getElementById('log').textContent += m + '\n'; };
+function sector(lon) { if (lon < -170) lon += 360; for (let s = 0; s < 4; s++) if (lon >= SECT[s][0] && lon < SECT[s][1]) return s; return -1; }
+async function run() {
+  const v = document.createElement('video'); v.muted = true; v.preload = 'auto';
+  log('loading the movie into memory (the little server can only do one thing at a time, so the video must not keep its connection open)');
+  v.src = URL.createObjectURL(await (await fetch(SRC)).blob());
+  await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error('video failed to load')); });
+  const dur = v.duration, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d', { willReadFrequently: true });
+  const th = document.createElement('canvas'); th.width = TW; th.height = TH; const tg = th.getContext('2d');
+  log(`video ${v.videoWidth}x${v.videoHeight}, ${dur.toFixed(1)} s`);
+  const seek = t => new Promise(r => { v.onseeked = r; v.currentTime = t; setTimeout(r, 10000); });
+  const colSector = new Int8Array(W); for (let x = 0; x < W; x++) colSector[x] = sector(-180 + (x + 0.5) / W * 360);
+  const cnt = new Float64Array(COLS * ROWS * 4), nfrac = [], total = [];
+  for (let i = 0; i < COLS; i++) {
+    await seek((i + 0.5) * dur / COLS); g.drawImage(v, 0, 0, W, H); const d = g.getImageData(0, 0, W, H).data; let nN = 0, nS = 0;
+    for (let y = 0; y < H; y++) { const row = Math.min(ROWS - 1, Math.floor(y / H * ROWS)); for (let x = 0; x < W; x++) { const k = (y * W + x) * 4; if (d[k] > 170 && d[k + 1] > 130 && d[k + 2] < 110) { const s = colSector[x]; if (s >= 0) cnt[(i * ROWS + row) * 4 + s]++; if (y < H / 2) nN++; else nS++; } } }
+    nfrac.push(nN + nS > 200 ? nN / (nN + nS) : null); total.push(nN + nS);
+    tg.drawImage(cv, 0, 0, TW, TH); const blob = await new Promise(r => th.toBlob(r, 'image/jpeg', 0.8));
+    try { await fetch('/saveimg/lightning/f' + String(i).padStart(3, '0') + '.jpg', { method: 'POST', body: blob }); } catch (e) { log('could not save frame ' + i); }
+    if (i % 20 === 0) log(`step ${i}/${COLS} t=${((i + 0.5) * dur / COLS).toFixed(1)} s  flash pixels ${total[i]}`);
+  }
+  // normalise each sector by its 97th percentile (like the other grids); channels: 0 Americas, 1 Africa-Europe, 2 total, 3 South-Central Asia; the "land" slot carries East Asia-Oceania
+  const per = (s) => { const a = []; for (let i = 0; i < COLS * ROWS; i++) a.push(cnt[i * 4 + s]); return a; };
+  const top = a => { const b = a.slice().sort((x, y) => x - y); return Math.max(1, b[Math.floor(b.length * 0.97)]); };
+  const tots = []; for (let i = 0; i < COLS * ROWS; i++) tots.push(cnt[i * 4] + cnt[i * 4 + 1] + cnt[i * 4 + 2] + cnt[i * 4 + 3]);
+  const tops = [top(per(0)), top(per(1)), top(tots), top(per(2)), top(per(3))];
+  const data = [], land = [];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    const i = c * ROWS + r, q = (x, t) => Math.round(Math.min(1, x / t) * 255);
+    data.push(q(cnt[i * 4], tops[0]), q(cnt[i * 4 + 1], tops[1]), q(tots[i], tops[2]), q(cnt[i * 4 + 2], tops[3])); land.push(q(cnt[i * 4 + 3], tops[4]));
+  }
+  // The movie has no date labels. Assume it runs from 1 March 2017 to 31 July 2023 and shift the start so the northern share of the lightning peaks in northern summer (mid July).
+  const t0 = Date.UTC(2017, 2, 1), t1 = Date.UTC(2023, 6, 31), span = t1 - t0; let best = -9, bo = 0;
+  for (let o = -90; o <= 90; o += 3) { const xs = [], ys = []; for (let i = 0; i < COLS; i++) if (nfrac[i] !== null) { const day = new Date(t0 + o * 86400000 + (i + 0.5) / COLS * span); const doy = (day - Date.UTC(day.getUTCFullYear(), 0, 0)) / 86400000; xs.push(nfrac[i]); ys.push(Math.cos(2 * Math.PI * (doy - 196) / 365.25)); }
+    const m = a => a.reduce((p, q) => p + q, 0) / a.length, mx = m(xs), my = m(ys); let sxy = 0, sxx = 0, syy = 0; xs.forEach((x, k) => { sxy += (x - mx) * (ys[k] - my); sxx += (x - mx) ** 2; syy += (ys[k] - my) ** 2; }); const r = sxy / Math.sqrt(sxx * syy); if (r > best) { best = r; bo = o; } }
+  const dates = []; for (let i = 0; i < COLS; i++) dates.push(new Date(t0 + bo * 86400000 + (i + 0.5) / COLS * span).toISOString().slice(0, 16) + 'Z');
+  log(`date calibration: shift ${bo} days, correlation of the northern share with northern summer r = ${best.toFixed(2)}; first ${dates[0]}, last ${dates[COLS - 1]}`);
+  const out = 'window.LIGHTNING_GRID = ' + JSON.stringify({ cols: COLS, rows: ROWS, data, land, dates, dur, shiftDays: bo, seasonR: +best.toFixed(3), note: 'channels: 0 Americas, 1 Africa-Europe, 2 all sectors, 3 South-Central Asia; land = East Asia-Oceania. Counts of yellow flash pixels per latitude band, normalised by the 97th percentile.' }) + ';';
+  try { const r = await fetch('/save/lightning_grid.js', { method: 'POST', body: out }); log(r.ok ? 'saved lightning_grid.js next to the app' : 'save failed: ' + r.status); } catch (e) { log('could not save: ' + e.message); }
+  log('done'); window.__done = true;
+}
+document.getElementById('go').onclick = () => run().catch(e => log('ERROR ' + e.message));
+if (location.search.includes('run=1')) document.getElementById('go').click();
+</script>
+</body></html>

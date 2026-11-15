@@ -121,3 +121,10 @@ Re-running `make-score.ps1` overwrites `music_scores\EarthJukebox_5voice.mscz`; 
 
 ## 13. The user (working style)
 Builds this with a parent-supervised team context (RAM AVATAR notes mention under-18 rules: keep personal information out of public copies). Prefers plain-language explanations, honest limits, and options over replacements. Asks for ideas as "is this stupid?" and expects a straight verdict. Cares about accessibility, musicality and explainability (the judging themes). Often iterates quickly with short requests; confirm before downloads, and say what will happen before publishing anything.
+
+## Update, 15 Nov 2026: lightning and the Ocean merge
+- Home now has 6 records: A1 Ocean currents (second page: `year` Year of the ocean, `ocean` One frame), A2 Aerosols, B1 Sea temperature, B2 Salinity, C1 Density, C2 Lightning. 11 track ids in total (`lightning` added).
+- `lightning` (NASA SVS 5011): time-axis track, `percussionOnly: true`, 160 columns x 18 latitude rows. Channels: 0 Americas, 1 Africa-Europe, 2 all sectors (drives timpani), 3 South-Central Asia, land slot = East Asia-Oceania; each sector plays its own bus (0, 1, 3, 4). Data `lightning_grid.js`, frames `assets/lightning/f000..f159.jpg`, made by `tools/analyse-lightning.html` (run on the workspace server on port 8766; the raw 334 MB movie is in `../Lightning/`, git-ignored).
+- Dates are ASSUMED (1 Mar 2017 to 31 Jul 2023, evenly spaced); the seasonal fit failed (r = 0.16). Say so in any claim.
+- Code: `strike`/`hit` take an optional bus; `lightningDrum(k, lat)` picks the drum; `urgentFx` and the demo voices respect `percussionOnly`.
+- Not done: loudness balance of the lightning mix was not measured by ear or offline render; no listening test.

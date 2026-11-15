@@ -7,14 +7,17 @@
   const $ = id => document.getElementById(id), home = $('jukebox'), sub = $('jbSub'), app = document.querySelector('.wrap'); if (!home || !sub || !app) return;
   const skip = /[?&](nohome|debug|nostart)/.test(location.search), reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const GROUPS = {
-    sst: { code: 'B2', title: 'Sea temperature', icon: '🌡️', blurb: 'How warm is the surface of the ocean? Choose how to hear it.', items: [
+    ocean: { code: 'A1', title: 'Ocean currents', icon: '🌊', blurb: 'How does the water move? Choose a year of the ocean, or a single frame where you can follow a current.', items: [
+      { track: 'year', title: 'Year of the ocean', dsc: 'A year of currents and temperature, March 2007 to March 2008. Hear the seasons turn.' },
+      { track: 'ocean', title: 'One frame: follow a current', dsc: "One frame of NASA's ocean currents. Follow a current and hear its temperature." } ] },
+    sst: { code: 'B1', title: 'Sea temperature', icon: '🌡️', blurb: 'How warm is the surface of the ocean? Choose how to hear it.', items: [
       { track: 'sst', title: 'Still map', dsc: "NASA's sea surface temperature map, a long-term average. A beam sweeps from west to east." },
       { track: 'sstVideo', title: 'Turning globe', dsc: 'The same temperature field as a globe turning once in a minute. The sound follows the beam.' },
       { track: 'sstEl', minor: true, title: 'El Niño through the years', dsc: "The map with NASA's monthly temperature anomaly and NOAA's El Niño index, 1982 to today." } ] },
-    sss: { code: 'C1', title: 'Salinity', icon: '🧂', blurb: 'How salty is the surface of the ocean? Choose how to hear it.', items: [
+    sss: { code: 'B2', title: 'Salinity', icon: '🧂', blurb: 'How salty is the surface of the ocean? Choose how to hear it.', items: [
       { track: 'sss', title: 'Still map', dsc: "NASA's sea surface salinity map, a long-term average. A beam sweeps from west to east." },
       { track: 'sssVideo', title: 'Turning globe', dsc: 'The same salinity field as a globe turning once in a minute. The sound follows the beam.' } ] },
-    density: { code: 'C2', title: 'Density', icon: '⚖️', blurb: 'How heavy is the water at the surface? Choose how to hear it.', items: [
+    density: { code: 'C1', title: 'Density', icon: '⚖️', blurb: 'How heavy is the water at the surface? Choose how to hear it.', items: [
       { track: 'density', title: 'Still map', dsc: "NASA's sea surface density map, a long-term average. A beam sweeps from west to east." },
       { track: 'densityVideo', title: 'Turning globe', dsc: 'The same density field as a globe turning once in a minute. The sound follows the beam.' } ] },
   };

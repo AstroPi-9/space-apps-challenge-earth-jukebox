@@ -18,7 +18,8 @@ Each track takes a NASA visualization, reads the colours in it as data, and play
 
 | Track | Data | What the sweep does |
 |---|---|---|
-| **Year of the ocean** (starts here) | NASA SVS 3912: ocean currents and sea surface temperature, 25 March 2007 to 3 March 2008 | Runs through time. You see the time-lapse and hear each hemisphere warm and cool as the seasons turn. |
+| **Lightning** (record C2) | NASA SVS 5011: lightning flashes seen from the International Space Station, March 2017 to July 2023 | Runs through time. Every flash is a drum strike: untuned drums chosen by part of the world and latitude, with timpani rolls in the strongest storms. Dates are assumed (the movie has no date labels). |
+| **Year of the ocean** (inside record A1, Ocean currents, with the one-frame "follow a current" page; starts here) | NASA SVS 3912: ocean currents and sea surface temperature, 25 March 2007 to 3 March 2008 | Runs through time. You see the time-lapse and hear each hemisphere warm and cool as the seasons turn. |
 | **Ocean currents** | NASA SVS 3912: one frame (19 June 2007) | Sweeps the globe west to east, **or** use *Follow a current* (below). |
 | **Aerosols** | NASA SVS 5669: smoke, dust, sea salt and sulfate, 19 August 2025 | Sweeps the globe from west to east. |
 | **Sea temperature**, **Salinity**, **Density** (three records, each with a second page to choose a version) | NASA SVS 3652 | **Still map:** the provided average ocean surface map; a beam sweeps from west to east. **Turning globe:** the provided movie of the Earth turning once in 60 seconds; the sound follows the line down the middle of the globe, in step with the video. Sea temperature also has **El Niño through the years** (see below). The still map is a long-term average, not one year. |
@@ -150,6 +151,7 @@ All imagery is from the NASA Scientific Visualization Studio (SVS). Full creator
 |---|---|---|
 | Aerosols, 19 Aug 2025 20:00 UTC | NASA SVS 5669, <https://svs.gsfc.nasa.gov/5669/> | Aerosols track |
 | Sea surface currents and temperature (ECCO2), 2,001 frames, 25 Mar 2007 to 3 Mar 2008 | NASA SVS 3912, <https://svs.gsfc.nasa.gov/3912/> (frame dates from NASA's `flat_ecco2_dates.txt`; temperature colour bar `sst_ecco2_cbar.png`) | Year of the ocean track |
+| Lightning events detected from the ISS, 2017 to 2023 | NASA SVS 5011, <https://svs.gsfc.nasa.gov/5011/> (visualizer Michala Garrison; Greg Shirah, Kel Elkins, Alex Kekesi; NASA SVS). Raw movie kept out of the repo; frames and counts made by `tools/analyse-lightning.html` | Lightning track |
 | Sea surface temperature, salinity and density maps and movies (released 9 Oct 2009) | NASA SVS 3652, <https://svs.gsfc.nasa.gov/3652/> | Sea temperature, Salinity, Density, Density (video) |
 
 The ECCO2 model is described on the SVS page as the MIT general circulation model combining satellite and in-situ ocean data. The frames used here are the rendered visualization, **not** the raw model arrays.

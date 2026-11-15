@@ -324,6 +324,64 @@ globeVideoTrack('sss', 'sssVideo', 'Salinity (turning globe)', 'SSS_VIDEO_GRID',
 { const sst = TRACKS.find(t => t.id === 'sst'); TRACKS.push(Object.assign({}, sst, { species: sst.species.map(s => ({ ...s })), id: 'sstEl', name: 'Sea temperature and El Niño', emoji: '🌡️' })); }   // the same map and sound, with the El Nino layer panel (elnino.js)
 
 
+// ---- Lightning (NASA SVS 5011): events, not a field. All untuned percussion, with timpani rolls where the storms are strongest. ----
+const LSECT = [{ k: 0, bus: 0 }, { k: 1, bus: 1 }, { k: 3, bus: 3 }, { k: 4, bus: 4 }];      // data channel and audio bus of the four parts of the world
+function lightningDrum(k, lat) {                       // which untuned drum a sector plays at this latitude
+  if (k === 0) return lat > 25 ? 'kit' : lat < -25 ? 'samba' : 'conga';
+  if (k === 1) return lat > 35 ? 'bodhran' : lat > 15 ? 'darbuka' : 'djembe';
+  if (k === 3) return lat > 40 ? 'daf' : 'tabla';
+  return lat > 25 ? 'taiko' : lat < -10 ? 'clapsticks' : 'kendang';
+}
+function rng32(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+if (window.LIGHTNING_GRID) TRACKS.push({
+  id: 'lightning', name: 'Lightning', emoji: '⚡', grid: window.LIGHTNING_GRID, image: 'assets/lightning/f000.jpg', timeAxis: true, startLon: 0, percussionOnly: true,
+  frames: Array.from({ length: 160 }, (_, c) => 'assets/lightning/f' + String(c).padStart(3, '0') + '.jpg'),
+  lonFn: c => c, regionFn: () => 'conga',
+  headFn: (c, r) => `${dateLabel(T.grid.dates[c])}, ${fmtLat(latOf(r))} (all longitudes in the sector)`,
+  intro: 'Hear lightning flashes detected from the International Space Station between March 2017 and July 2023 (NASA SVS 5011). Time runs from left to right across about six years, and every flash is a drum strike: untuned drums from each part of the world, with timpani rolls where the storms are strongest. The picture shows the flashes as yellow dots.',
+  alt: 'A flat map of the world on a dark background with grey continents. Thousands of yellow dots mark lightning flashes seen from the International Space Station, between about 55 degrees north and 55 degrees south. They crowd over central Africa, the Americas, and South and Southeast Asia, and they swing north and south with the seasons. The picture changes through the frames, from March 2017 to July 2023.',
+  species: [
+    { name: 'Americas', color: '#e8765a', sound: 'Untuned drums: congas, surdo and tamborim in the tropics and south, the drum kit in the north', what: 'lightning over the Americas' },
+    { name: 'Africa and Europe', color: '#c79bf0', sound: 'Untuned drums: djembe in Africa, darbuka over the Mediterranean, bodhrán in the north', what: 'lightning over Africa, Europe and the Middle East' },
+    { name: 'Storm timpani', color: '#8fc1c1', sound: 'Quiet timpani rolls, only where the storms are strongest', what: 'the strongest storms' },
+    { name: 'South and Central Asia', color: '#58e03a', sound: 'Untuned drums: tabla, and the daf in the far north', what: 'lightning over South and Central Asia' },
+    { name: 'East Asia and Oceania', color: '#b0b6bd', sound: 'Untuned drums: taiko in the north, kendang in the tropics, clapsticks in the south', what: 'lightning over East Asia and Oceania' },
+  ],
+  load: x => x[2],
+  speech: {
+    open: ["Welcome to the Earth Jukebox. This record is lightning, flashes detected from the International Space Station from March two thousand and seventeen to July two thousand and twenty-three.", "On the map, every yellow dot is a flash. They crowd over central Africa, the Americas and South and Southeast Asia, and they swing north and south with the seasons.", "First, here is what changes through the years."],
+    listen: ["Now, how to listen. This time the sweep travels through time, not across the map. About six years play from left to right, and at every moment you hear all the flashes of the world at once.", "Every flash is a drum strike. The part of the world chooses the family of drums, for example congas for the tropical Americas, djembe for Africa, tabla for South Asia and taiko for East Asia, and the latitude chooses which drum of the family. All of them are untuned.", "More flashes means more strikes, and where the storms are strongest, timpani roll as well.", "The years will now play once, and then stop."],
+  },
+  hotspots: [],
+  quiet: 'no lightning detected here at this time (the space station sees only between about 55 degrees north and south).',
+  bellRoot: 50, lowRoot: 50, chords: [[50, 54, 57], [52, 57, 59], [57, 62, 66], [54, 59, 64]], droneHz: 73.42,
+  legend: '<p class="sub">Yellow dots are lightning flashes seen from the space station. More dots in a place means more flashes there.</p>',
+  how: [
+    ['Left → right (time)', 'Time. The sweep runs through about six years, March 2017 to July 2023, so the seasons and years go by as it plays.'],
+    ['Where the flashes are', 'Each flash is a drum strike. The part of the world chooses the family of drums, and the latitude chooses which drum of the family. They are all untuned.'],
+    ['How many flashes', 'More flashes under the beam means more strikes, and louder ones. Quiet times are almost silent.'],
+    ['Strongest storms', 'Where the lightning is strongest, timpani roll as well, tuned to the scale of the moment.'],
+    ['No flashes', 'Silence. The space station sees only between about 55 degrees north and south.'],
+  ],
+  schedule(c, t, step, tot, cen, v) {
+    const rnd = rng32(c * 7919 + 17), cells = []; let sum = 0;
+    for (const S of LSECT) for (let r = 0; r < v.rows; r++) { const d = v.val(c, r, S.k); if (d >= 0.04) { cells.push([S, r, d]); sum += d; } }
+    if (!cells.length) return;
+    const rank = colRank(c), n = Math.round((2 + 14 * rank) * (harmOn() ? 0.65 : 1)), slots = Math.max(2, Math.round(step / 0.0625));
+    for (let i = 0; i < n; i++) {                                              // each strike lands in a cell chosen by its share of the flashes, at a random moment in this step
+      let x = rnd() * sum, ch = cells[cells.length - 1]; for (const cell of cells) { x -= cell[2]; if (x <= 0) { ch = cell; break; } }
+      const [S, r, d] = ch, id = lightningDrum(S.k, latOf(r)), st = INSTR[id].pat.filter(Boolean);
+      hit(id, st[Math.floor(rnd() * st.length)], t + Math.floor(rnd() * slots) * step / slots, 0.15 + 0.32 * d, S.bus);
+    }
+    if (rank >= 0.72 && c % 2 === 0) strongPlay(c, t, step, rank, cen[2], v.rows);       // some timpani, where the storms are strongest
+  },
+  explore(c, r, v) {
+    const t = A.ctx.currentTime + 0.02;
+    LSECT.forEach(S => { const d = v.val(c, r, S.k); if (d > 0.08) { const id = lightningDrum(S.k, latOf(r)), st = INSTR[id].pat.filter(Boolean); for (let i = 0; i < 3; i++) hit(id, st[i % st.length], t + i * 0.13, 0.2 + 0.3 * d, S.bus); } });
+    if (v.val(c, r, 2) > 0.6) strongPlay(c, t, 0.5, v.val(c, r, 2), r, v.rows);
+  },
+});
+
 // ================= INSTRUMENT PALETTES =================
 // Every kind of data gets its own set of instruments, so the tracks sound different as well as look different:
 //   drone (voice 0), pad (voice 1, chords), high (voice 2: strong / light instrument), lead (voice 3: melody with gamakas).
@@ -361,14 +419,17 @@ const PALETTE_TEXT = {
   densityVideo: { names: ['Dense, heavy water', 'Medium-density water', 'Light water', 'Sharp density fronts'], how: [2, 3, 4, 5] },
   year:     { names: ['Cold water', 'Mild water', 'Warm water', 'Swirling, tangled currents'], how: [2, 3, 4, 5] },
 };
+PALETTE.lightning = { lead: 'bassoon', pad: 'low', drone: 'pedal', strong: 'timpani', light: 'harp' };
 PALETTE.sstVideo = PALETTE.sstEl = PALETTE.sst; PALETTE.sssVideo = PALETTE.sss; PALETTE_TEXT.sstVideo = PALETTE_TEXT.sstEl = PALETTE_TEXT.sst; PALETTE_TEXT.sssVideo = PALETTE_TEXT.sss;
 Object.keys(PALETTE).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.instruments = PALETTE[id]; });
 // Per-track voice balance [drone, chords, high, lead, drums], set from offline renders (A-weighted levels, see PROCESS.md). Multipliers on the global TRIM.
 const TRIMS = { ocean: [4.64, 1.55, 1.33, 1.86, 1.9], year: [4.64, 1.55, 1.33, 1.86, 1.9], aerosols: [5.0, 4.58, 4.74, 0.44, 3.58], sst: [2.86, 2.17, 0.75, 0.43, 3.64], sss: [5.0, 5.73, 1.38, 0.58, 4.27], density: [1.46, 1.34, 1.05, 1.5, 3.82], densityVideo: [2.39, 1.18, 1.1, 3.39, 5.13] };
+TRIMS.lightning = [3.2, 3.2, 2.2, 3.2, 1.9];
 TRIMS.sstVideo = TRIMS.sstEl = TRIMS.sst; TRIMS.sssVideo = TRIMS.sss;
 Object.keys(TRIMS).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trim = TRIMS[id]; });
 // The same balance for the MuseScore instrument sounds (source "samples"): each voice re-measured offline and scaled to the same A-weighted targets (see PROCESS.md).
 const TRIMS_S = { ocean: [1.34, 0.30, 0.93, 1.64, 1.9], year: [1.34, 0.30, 0.93, 1.64, 1.9], aerosols: [2.6, 1.66, 2.12, 1.12, 3.58], sst: [2.35, 0.27, 0.31, 0.87, 3.64], sss: [1.33, 0.99, 0.68, 0.79, 4.27], density: [0.44, 0.27, 1.14, 1.34, 3.82], densityVideo: [0.74, 0.24, 1.68, 2.79, 5.13] };
+TRIMS_S.lightning = TRIMS.lightning;
 TRIMS_S.sstVideo = TRIMS_S.sstEl = TRIMS_S.sst; TRIMS_S.sssVideo = TRIMS_S.sss;
 Object.keys(TRIMS_S).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trimS = TRIMS_S[id]; });
 const INTRO_HEAD = {
@@ -864,23 +925,23 @@ function boxDist(lon, lat, la0, la1, lo0, lo1) {
 function computeRegions() {
   V.reg = []; for (let r = 0; r < V.rows; r++) for (let c = 0; c < V.cols; c++) V.reg.push(T.regionFn ? T.regionFn(latOf(r)) : regionAt(lonOf(c), latOf(r)));
 }
-function strike(t, g, comps) {
-  const { ctx, bus, nb } = A;
+function strike(t, g, comps, busIdx) {
+  const { ctx, bus, nb } = A, out = bus[busIdx === undefined ? 4 : busIdx];
   comps.forEach(cp => {
     if (cp[0] === 't') {
       const [, f0, f1, dur, amp] = cp, o = ctx.createOscillator(), og = ctx.createGain();
       o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + Math.min(dur, 0.15));
       og.gain.setValueAtTime(g * amp, t); og.gain.exponentialRampToValueAtTime(0.001, t + dur);
-      o.connect(og); og.connect(bus[4]); o.start(t); o.stop(t + dur + 0.02);
+      o.connect(og); og.connect(out); o.start(t); o.stop(t + dur + 0.02);
     } else {
       const [, fr, q, dur, amp, type] = cp, s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), og = ctx.createGain();
       f.type = type || 'bandpass'; f.frequency.value = fr; f.Q.value = q;
       og.gain.setValueAtTime(g * amp, t); og.gain.exponentialRampToValueAtTime(0.001, t + dur);
-      s.buffer = nb; s.connect(f); f.connect(og); og.connect(bus[4]); s.start(t, Math.random() * 1.5, dur + 0.02);
+      s.buffer = nb; s.connect(f); f.connect(og); og.connect(out); s.start(t, Math.random() * 1.5, dur + 0.02);
     }
   });
 }
-function hit(id, stroke, t, g) { noteLog(4, t, 0, 0.12, stroke, id); const I = INSTR[id]; if (I && stroke) strike(t, g, STROKES[I.kit][stroke]); }
+function hit(id, stroke, t, g, busIdx) { noteLog(4, t, 0, 0.12, stroke, id); const I = INSTR[id]; if (I && stroke) strike(t, g, STROKES[I.kit][stroke], busIdx); }
 
 // Data-driven rhythm. The stronger the data in the sweep beam, the faster the drums play, in four musical steps only:
 //   crotchets (1 per beat) -> quavers (2) -> semiquavers (4) -> demisemiquavers (8, rare).
@@ -947,7 +1008,7 @@ function stab(t, midi, gain, dur) {
 function urgentFx(c, t, step) {
   const u = EMO.urgent; if (!A || u < 0.1 || !regionsOn()) return;
   for (let k = Math.ceil((t - gridOrigin) / CROTCHET - 1e-6); gridOrigin + k * CROTCHET < t + step - 1e-6; k++) heartbeat(gridOrigin + k * CROTCHET, 0.3 + 0.45 * u);
-  if (u < 0.3) return;
+  if (u < 0.3 || T.percussionOnly) return;
   const q = CROTCHET / 2, fig = (harmOn() && barChord) ? [barChord.notes[0], barChord.notes[2], barChord.notes[0], barChord.notes[1]] : [50, 50, 51, 50];      // calm mode: the repeating figure uses the chord, not a clashing semitone
   for (let k = Math.ceil((t - gridOrigin) / q - 1e-6); gridOrigin + k * q < t + step - 1e-6; k++) stab(gridOrigin + k * q, fig[mod(k, 4)], 0.03 + 0.05 * u, 0.2);
 }
@@ -1447,6 +1508,13 @@ DATA_INFO.sstEl = Object.assign({}, DATA_INFO.sst, { source: DATA_INFO.sst.sourc
   'Naive baselines for next month\'s index: repeating this month gives an average error of 0.18 °C, against 0.65 °C for the long-term mean (correlation from one month to the next: 0.94). This app makes no predictions; any future prediction would have to beat these.',
   '"Urgent" in Play the years: the index is at or above +1.5 °C, or it is already in the El Niño range and has risen fast and steadily: in the latest quarter at least as fast as its usual quarter-to-quarter change (a robust, median-based measure from the whole 1948 to 2026 record), and at least three-quarters as fast in the quarter before. This is descriptive, not a forecast.',
 ] });
+DATA_INFO.lightning = {
+  source: 'NASA SVS 5011, "Lightning Events Detected from the International Space Station (ISS) 2017-2023" (visualizer Michala Garrison, SSAI; data from the Lightning Imaging Sensor on the ISS).', url: 'https://svs.gsfc.nasa.gov/5011/',
+  date: 'A movie of about six and a half years, from March 2017 to July 2023, with a 10-day moving window. The movie has no date labels: The dates shown are assumed: I spread 160 moments evenly from 1 March 2017 to 31 July 2023 (about 15 days apart). An attempt to check them against the seasons did not work, so treat the dates as approximate.',
+  colour: 'Yellow dots are flashes. There is no colour bar: a dot carries a place and a time, not a value.',
+  decode: ['For each of 160 moments the yellow pixels are counted in 18 latitude bands and four longitude sectors (the Americas; Africa, Europe and the Middle East; South and Central Asia; East Asia, Southeast Asia and Oceania), and scaled by their 97th percentile (tools/analyse-lightning.html).', 'Each count becomes a number of drum strikes, so more dots mean more strikes. The timpani roll when the all-sector total is in the top 28% of the record.'],
+  caveats: ['These are dots in a picture, not flash counts: dots overlap and fade, so very dense places are undercounted.', 'The satellite sees only between about 55 degrees north and south, so there is no data beyond that.', 'The dates are assumed (the movie has no date labels), so they are approximate.', 'The drums are an artistic translation, and the drum chosen for a region is not a statement about that place.'],
+};
 const globeInfo = (base, noun, bar) => ({
   source: `NASA SVS 3652: the sea surface ${noun} movie, a globe turning once in 60 seconds.`, url: 'https://svs.gsfc.nasa.gov/3652/',
   date: `Based on the same average ${noun} field as the map, so it has no single date.`, colour: bar,
@@ -1485,6 +1553,12 @@ function stopDemo(quiet) {
 async function demoVoice(k, tok) {
   const P = T.instruments, rows = V.rows, mid = Math.round(rows * 0.45), sp = T.species;
   await wake(); if (tok !== demoTok) return; const t = A.ctx.currentTime + 0.15;
+  if (T.percussionOnly) {                              // lightning: the voices are families of untuned drums, and the timpani
+    demoLabel(`${sp[k].name}: ${sp[k].sound}.`, k);
+    if (k === 2) { const f = mtof(scNote(38, 3)); for (let i = 0; i < 7; i++) timpStrike(t + i * 0.09, f, f, 0.14); }
+    else { const S = LSECT.find(s => s.bus === k), id = lightningDrum(S.k, 10), st = INSTR[id].pat.filter(Boolean); for (let i = 0; i < 8; i++) hit(id, st[i % st.length], t + i * 0.25, 0.45, S.bus); }
+    await dwait(3200); return;
+  }
   if (k === 0) {
     demoLabel(`${sp[0].name}: ${sp[0].sound}.`, 0); drone(t, T.droneHz, 0.25);
     if (T.id === 'aerosols') for (let i = 0; i < 8; i++) crackle(t + 0.2 + i * 0.35, 0.18);
@@ -1578,7 +1652,7 @@ function setTrack(i) {
   document.querySelectorAll('#tracks button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.track === T.id)));
   setReadout(`Track: ${T.name}. Press play, or click the map.`);
 }
-const TAB_ORDER = ['year', 'ocean', 'aerosols', 'sst', 'sstEl', 'sstVideo', 'sss', 'sssVideo', 'density', 'densityVideo'];        // the single-frame "Ocean currents" track is hidden: the Year track covers the same data and adds time
+const TAB_ORDER = ['year', 'ocean', 'aerosols', 'sst', 'sstEl', 'sstVideo', 'sss', 'sssVideo', 'density', 'densityVideo', 'lightning'];        // the single-frame "Ocean currents" track is hidden: the Year track covers the same data and adds time
 const tabIndex = id => TRACKS.findIndex(t => t.id === id);
 TAB_ORDER.forEach(id => {
   const i = tabIndex(id); if (i < 0) return; const t = TRACKS[i];

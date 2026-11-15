@@ -25,6 +25,7 @@ function noteLog(v, t, m, d, stroke, id) {                                    //
 function shVoiceLabels() {
   const P = (EJT() && EJT().instruments) || null, score = EJS();
   if (score) return ['Cello', 'Strings', 'Harp', 'Clarinet', 'Drum kit'];
+  if (EJT() && EJT().percussionOnly) return ['(silent)', '(silent)', 'Timpani', '(silent)', 'All the drums'];
   if (!P) return SH.NAMES;
   const nm = o => String(o).replace(/^(a|an) /, '').replace(/^soft /, '');
   const hi = { timpani: 'Timpani', marimba: 'Marimba', vibes: 'Vibraphone', gong: 'Gong' }[P.strong] + ' / ' + { harp: 'Harp', celesta: 'Celesta', kalimba: 'Kalimba', glass: 'Glass bells' }[P.light];
