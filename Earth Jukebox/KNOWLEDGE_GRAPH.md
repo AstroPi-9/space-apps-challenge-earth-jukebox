@@ -30,8 +30,8 @@ graph LR
 ```
 
 ## 2. Where things are
-- Workspace: `C:\Users\astro\Documents\Space Apps Challenge\` (the git root). **App folder: `Earth Jukebox\`.** Other folders: `Aerosols\` (raw SVS 5669 images), `salinity and density\` (raw SVS 3652, 869 MB, **git-ignored**), `El Nino data\` (raw downloads, **git-ignored**), `Challenge details.txt`, `ecco2_and_grid.jpg`, `.claude\launch.json`.
-- Related prior project: `C:\Users\astro\Documents\RAM-AVATAR-Earth-Jukebox` (Python/Tkinter, picture-colour statistics). **Methods reimplemented, no code copied**; its rights and licences are unconfirmed (see section 12). Its Python venv is used to run our numpy-only analysis scripts.
+- Workspace: the repository root (the git root). **App folder: `Earth Jukebox\`.** Other folders: `Aerosols\` (raw SVS 5669 images), `salinity and density\` (raw SVS 3652, 869 MB, **git-ignored**), `El Nino data\` (raw downloads, **git-ignored**), `Challenge details.txt`, `ecco2_and_grid.jpg`, `.claude\launch.json`.
+- Related prior project: a separate local folder `RAM-AVATAR-Earth-Jukebox` (Python/Tkinter, picture-colour statistics). **Methods reimplemented, no code copied**; its rights and licences are unconfirmed (see section 12). Its Python venv is used to run our numpy-only analysis scripts.
 - USB drive `E:` : `Time- light\data\Oceanflows` holds the 2,001 ECCO2 frames (SVS 3912) used for the Year track.
 - Dev server: preview config "earth-jukebox" runs `tools\serve.ps1` on **port 8765** (supports range requests; dev-only POST `/save/<name>.js` used by the analysis tools). Needed only for the video and pixel analysis tools; the app itself runs from `file://`. Open `http://localhost:8765/index.html?debug` for the test hook `window.__jb`; `?nostart` skips the welcome dialog.
 
