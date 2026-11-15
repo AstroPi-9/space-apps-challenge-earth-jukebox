@@ -1488,11 +1488,22 @@ function finishSweep() {                             // the sweep reached the ea
   speak('The sweep has reached the end.');
   if (window.EJ_songEnded) window.EJ_songEnded('sweep');
 }
+// The voice list: whatever voices this device and browser offer, grouped so the best-sounding ones are easy to find. Natural (neural) and online voices come first, then the
+// voices installed on the device, then other languages. The choice is remembered. Susan is the house voice when the device has her.
+const langName = (() => { let dn = null; try { dn = new Intl.DisplayNames(['en'], { type: 'language' }); } catch (e) {} return l => { try { return dn ? dn.of(l) : l; } catch (e) { return l; } }; })();
+const isEnglish = v => /^en/i.test(v.lang), isNatural = v => /natural|neural/i.test(v.name) || (!v.localService && /microsoft/i.test(v.name));
+function voiceText(v) {
+  const short = v.name.replace(/^Microsoft\s+/i, '').replace(/\s+-\s+.*$/, '').replace(/\s*Online\s*\(Natural\)/i, '').trim() || v.name;
+  return `${short} (${langName(v.lang)})${isNatural(v) ? ', natural' : !v.localService ? ', online' : ''}`;
+}
 function fillVoices() {
-  if (!SPEECH) return; const sel = $('voice'), keep = sel.value, vs = speechSynthesis.getVoices();
-  sel.innerHTML = vs.map(v => `<option value="${v.name}">${v.name} (${v.lang})</option>`).join('');
-  const en = vs.find(v => /susan/i.test(v.name)) || vs.find(v => /^en/i.test(v.lang) && v.default) || vs.find(v => /^en/i.test(v.lang));   // Susan is the house voice when the device has her
-  sel.value = vs.some(v => v.name === keep) ? keep : (en ? en.name : (vs[0] ? vs[0].name : ''));
+  if (!SPEECH) return; const sel = $('voice'), vs = speechSynthesis.getVoices(); let keep = sel.value; if (!keep) { try { keep = localStorage.getItem('ej_voice') || ''; } catch (e) {} }
+  const byName = (a, b) => a.name.localeCompare(b.name), grp = (label, list) => { if (!list.length) return ''; return `<optgroup label="${label}">` + list.sort(byName).map(v => `<option value="${v.name.replace(/"/g, '&quot;')}">${voiceText(v).replace(/&/g, '&amp;').replace(/</g, '&lt;')}</option>`).join('') + '</optgroup>'; };
+  const en = vs.filter(isEnglish), best = en.filter(v => isNatural(v) || !v.localService), local = en.filter(v => !(isNatural(v) || !v.localService));
+  sel.innerHTML = grp('Natural and online voices (English)', best) + grp('Voices on this device (English)', local) + grp('Other languages', vs.filter(v => !isEnglish(v)));
+  const pick = vs.find(v => /susan/i.test(v.name)) || best.find(isNatural) || best[0] || en.find(v => v.default) || en[0] || vs[0];
+  sel.value = vs.some(v => v.name === keep) ? keep : (pick ? pick.name : '');
+  const info = $('voiceInfo'); if (info) info.textContent = `${vs.length} voice${vs.length === 1 ? '' : 's'} found, ${best.length} natural or online.`;
 }
 if (SPEECH) { fillVoices(); speechSynthesis.addEventListener('voiceschanged', fillVoices); }
 else { $('speak').disabled = true; $('speak').parentElement.title = 'Speech is not supported in this browser'; }
@@ -1507,7 +1518,11 @@ $('speak').addEventListener('change', () => {
   try { localStorage.setItem('ej_speak', $('speak').checked ? '1' : '0'); } catch (e) {}
   if (!$('speak').checked) stopSpeech(); else speak('Spoken narration is on.', true);
 });
-$('voice').addEventListener('change', () => { if ($('speak').checked) speak('This is how I sound.', true); });
+$('voice').addEventListener('change', () => { try { localStorage.setItem('ej_voice', $('voice').value); } catch (e) {} if ($('speak').checked) speak('This is how I sound.', true); });
+$('voiceTest').addEventListener('click', () => {                    // hear the chosen voice, whether or not narration is switched on
+  if (!SPEECH) return; stopSpeech(); const u = new SpeechSynthesisUtterance('Hello. This is how I sound, reading the Earth Jukebox.'), v = speechSynthesis.getVoices().find(x => x.name === $('voice').value);
+  if (v) { u.voice = v; u.lang = v.lang; } u.rate = 0.95; speechSynthesis.speak(u);
+});
 const setReadout = t => { $('readout').textContent = t; };
 function setReadoutEvent(prefix, text) {      // the visible label beside it already shows the current date or longitude, so the prefix is only for screen readers
   const e = $('readout'), p = document.createElement('span'); p.className = 'sr-only'; p.textContent = prefix; e.textContent = ''; e.append(p, document.createTextNode(text));
