@@ -207,6 +207,10 @@
   .data-bar button{background:linear-gradient(180deg,#ff8d7c,#d11d15);color:#fff1d6;border:2px solid #d5d9de;box-shadow:0 3px 0 #4d0604,0 6px 12px rgba(0,0,0,.5)}
   .week-switch{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px;padding:8px 14px;border-radius:14px;border:2px solid #b08a3c;background:var(--grain),linear-gradient(180deg,#6b3d1c,#3a1f0d);background-color:#4a2810;box-shadow:0 8px 20px -10px #000,inset 0 0 0 3px rgba(0,0,0,.25)}
   .week-switch[hidden]{display:none}
+  #followPresets{flex-wrap:nowrap;gap:6px;padding:6px 10px}
+  #followPresets .ws-label{font-size:clamp(.75rem,1.6vw,1rem);margin-right:2px;white-space:nowrap}
+  #followPresets button{font-size:clamp(.66rem,1.45vw,.92rem);padding:6px clamp(6px,1vw,12px);white-space:nowrap;min-width:0}
+  @media (max-width:640px){#followPresets{flex-wrap:wrap}}
   .week-switch .ws-label{font:italic 1.05rem Georgia,serif;color:#ffe9a6;margin-right:6px}
   .week-switch button{background:linear-gradient(180deg,#5a3a1e,#34200f);color:#f3dfae;border:2px solid #b08a3c;box-shadow:none;font-weight:600}
   .week-switch button[aria-pressed=true]{background:linear-gradient(180deg,#ffe27a,#ffc93a);color:#1a1400;border-color:#ffd54a;box-shadow:0 0 14px -2px rgba(255,200,60,.8)}
