@@ -485,19 +485,20 @@ const PALETTE_TEXT = {
   year:     { names: ['Cold water', 'Mild water', 'Warm water', 'Swirling, tangled currents'], how: [2, 3, 4, 5] },
 };
 PALETTE.lightning = { lead: 'bassoon', pad: 'low', drone: 'pedal', strong: 'timpani', light: 'harp' };
-PALETTE.elnino26 = PALETTE.elnino25 = PALETTE.sst; PALETTE.elninoYear = PALETTE.year; PALETTE_TEXT.elnino26 = PALETTE_TEXT.elnino25 = PALETTE_TEXT.elninoYear = { names: ['Cooler than normal', 'Near normal', 'Warmer than normal', 'Strong anomalies'], how: [2, 3, 4, 5] };
+PALETTE.elnino26 = PALETTE.elnino25 = PALETTE.elninoYear = { lead: 'cello', pad: 'brass', drone: 'pedal', strong: 'timpani', light: 'celesta' };   // El Niño 2026: a cello leads the strong anomalies, brass chords and timpani rolls as the water warms
+PALETTE_TEXT.elnino26 = PALETTE_TEXT.elnino25 = PALETTE_TEXT.elninoYear = { names: ['Cooler than normal', 'Near normal', 'Warmer than normal', 'Strong anomalies'], how: [2, 3, 4, 5] };
 PALETTE.sstVideo = PALETTE.sstEl = PALETTE.sst; PALETTE.sssVideo = PALETTE.sss; PALETTE_TEXT.sstVideo = PALETTE_TEXT.sstEl = PALETTE_TEXT.sst; PALETTE_TEXT.sssVideo = PALETTE_TEXT.sss;
 Object.keys(PALETTE).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.instruments = PALETTE[id]; });
 // Per-track voice balance [drone, chords, high, lead, drums], set from offline renders (A-weighted levels, see PROCESS.md). Multipliers on the global TRIM.
 const TRIMS = { ocean: [4.64, 1.55, 1.33, 1.86, 1.9], year: [4.64, 1.55, 1.33, 1.86, 1.9], aerosols: [5.0, 4.58, 4.74, 0.44, 3.58], sst: [2.86, 2.17, 0.75, 0.43, 3.64], sss: [5.0, 5.73, 1.38, 0.58, 4.27], density: [1.46, 1.34, 1.05, 1.5, 3.82], densityVideo: [2.39, 1.18, 1.1, 3.39, 5.13] };
 TRIMS.lightning = [3.2, 3.2, 2.2, 3.2, 1.9];
-TRIMS.elnino26 = TRIMS.elnino25 = TRIMS.sst; TRIMS.elninoYear = TRIMS.year;
+TRIMS.elnino26 = [1.76, 1.57, 1.31, 0.3, 3.52]; TRIMS.elnino25 = [2.67, 1.33, 1.16, 0.43, 4.1]; TRIMS.elninoYear = [0.84, 1.04, 1.46, 0.29, 1.53];   // measured offline for the cello / brass / pedal / timpani / celesta palette (A-weighted, see PROCESS.md)
 TRIMS.sstVideo = TRIMS.sstEl = TRIMS.sst; TRIMS.sssVideo = TRIMS.sss;
 Object.keys(TRIMS).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trim = TRIMS[id]; });
 // The same balance for the MuseScore instrument sounds (source "samples"): each voice re-measured offline and scaled to the same A-weighted targets (see PROCESS.md).
 const TRIMS_S = { ocean: [1.34, 0.30, 0.93, 1.64, 1.9], year: [1.34, 0.30, 0.93, 1.64, 1.9], aerosols: [2.6, 1.66, 2.12, 1.12, 3.58], sst: [2.35, 0.27, 0.31, 0.87, 3.64], sss: [1.33, 0.99, 0.68, 0.79, 4.27], density: [0.44, 0.27, 1.14, 1.34, 3.82], densityVideo: [0.74, 0.24, 1.68, 2.79, 5.13] };
 TRIMS_S.lightning = TRIMS.lightning;
-TRIMS_S.elnino26 = TRIMS_S.elnino25 = TRIMS_S.sst; TRIMS_S.elninoYear = TRIMS_S.year;
+TRIMS_S.elnino26 = [0.31, 0.2, 0.52, 1.14, 3.35]; TRIMS_S.elnino25 = [0.35, 0.16, 0.52, 1.62, 4.2]; TRIMS_S.elninoYear = [0.19, 0.13, 0.51, 0.79, 1.47];
 TRIMS_S.sstVideo = TRIMS_S.sstEl = TRIMS_S.sst; TRIMS_S.sssVideo = TRIMS_S.sss;
 Object.keys(TRIMS_S).forEach(id => { const tr = TRACKS.find(t => t.id === id); if (tr) tr.trimS = TRIMS_S[id]; });
 const INTRO_HEAD = {
