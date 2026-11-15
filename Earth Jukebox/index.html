@@ -43,7 +43,7 @@
   button.secondary:hover{background:#1e2b39;border-color:#46586c;filter:none}
   button.tab{padding:9px 18px;font-weight:600}
   button.secondary.tab[aria-pressed=true]{background:linear-gradient(180deg,#ffe27a,#ffc93a);color:#1a1400;border-color:#ffd54a;box-shadow:0 8px 18px -10px rgba(255,200,60,.9)}
-  #play{min-height:54px;padding:12px 30px;font-size:1.08rem}
+  #play{min-height:54px;padding:12px 30px;font-size:1.08rem;margin-left:auto}
 
   /* switches: every checkbox becomes a toggle switch (no extra markup needed) */
   input[type=checkbox]{-webkit-appearance:none;appearance:none;flex:none;width:44px;height:26px;margin:0;border-radius:13px;border:1px solid var(--line2);cursor:pointer;
@@ -308,7 +308,7 @@
   </header>
 
   <main>
-    <div id="dataBar" class="data-bar" role="group" aria-label="Jukebox"><button id="backHome" type="button">↩ Back to the jukebox</button><span id="dataBarNow"></span></div>
+    <div id="dataBar" class="data-bar" role="group" aria-label="Jukebox"><button id="backHome" type="button">↩ Back to the jukebox</button><span id="dataBarNow"></span><button id="play" type="button"><span aria-hidden="true">▶</span> Play the globe</button></div>
     <div class="controls" id="tracks" role="group" aria-label="Choose a track"></div>
     <div id="stage" tabindex="0" role="application" aria-roledescription="map explorer"
          aria-label="Aerosol map of Earth. Use arrow keys to explore, Enter to hear a spot, Space to play or pause."
@@ -362,7 +362,6 @@
       <div class="ctl-card wide" role="group" aria-label="Playback">
         <h3>Playback</h3>
         <div class="row">
-          <button id="play" type="button"><span aria-hidden="true">▶</span> Play the globe</button>
           <button id="restart" type="button" class="secondary"><span aria-hidden="true">⏮</span> Restart</button>
           <button id="skip" type="button" class="secondary" hidden><span aria-hidden="true">⏭</span> Skip intro</button>
           <button id="demoAll" type="button" class="secondary"><span aria-hidden="true">🎧</span> Hear the instruments</button>
