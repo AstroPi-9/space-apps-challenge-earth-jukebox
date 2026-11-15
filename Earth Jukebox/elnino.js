@@ -86,7 +86,7 @@
   // ---- play the years ----
   function stopYears(msg) {
     if (!run) return; const A = API(); clearInterval(run.timer); cancelAnimationFrame(run.raf); run = null; window.EJ_following = false;
-    A.hold(false); A.hardStop(); $('elYears').textContent = '▶ Play the years'; $('elYears').setAttribute('aria-pressed', 'false'); if (msg) $('elStatus').textContent = msg; draw();
+    A.hold(false); A.hardStop(); $('elYears').innerHTML = '<span aria-hidden="true">▶</span> Play the years'; if (msg) $('elStatus').textContent = msg; draw();
   }
   const prevStop = window.EJ_followStop; window.EJ_followStop = () => { if (prevStop) prevStop(); stopYears(); };
   async function years() {
@@ -94,7 +94,7 @@
     const A = API(); if (!A || !onSST()) return; if (prevStop) prevStop(); A.pauseSweep();
     const startM = month >= MAXM - 3 ? 0 : month, q0 = Math.floor(startM / 3), nQ = Math.floor((MAXM - q0 * 3) / 3) + 1, QS = 0.25, MS = QS / 3;
     window.EJ_following = true; A.hold(true); await A.wake(); const ctx = window.EJ.A.ctx, t0 = ctx.currentTime + 0.3; let next = 0, prevState = 0, lastQ = -1, prevM = null, persist = 0; const qinfo = {};
-    $('elYears').textContent = '⏹ Stop'; $('elYears').setAttribute('aria-pressed', 'true'); on = true; $('elOn').checked = true;
+    $('elYears').innerHTML = '<span aria-hidden="true">⏹</span> Stop'; on = true; $('elOn').checked = true;
     const q3 = q => { let s = 0, n = 0; for (let k = 0; k < 3; k++) { const v = idxAt(q * 3 + k); if (v !== null) { s += v; n++; } } return n ? s / n : null; };
     const qMad = (() => {                                // the usual quarter-to-quarter change of the index: median absolute deviation (x 1.4826) of the changes in three-month means, whole record
       const qs = []; for (let i = 0; i + 2 < IDX.values.length; i += 3) { const a = IDX.values.slice(i, i + 3); if (a.every(v => v !== null)) qs.push((a[0] + a[1] + a[2]) / 3); }

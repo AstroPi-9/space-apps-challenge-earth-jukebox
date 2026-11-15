@@ -1095,7 +1095,7 @@ async function play() {
   clearInterval(timer); playing = true; sweepEnded = false; timpFreq = null; nextTime = A.ctx.currentTime + 0.1; gridOrigin = nextTime; nextCol = Math.floor(pos); if (nextCol >= V.cols) nextCol = 0; queue = [];
   timer = setInterval(scheduler, 50); scheduler();
   startVideo(); if (scoreOn()) startScore(); else { A.live.gain.value = 1; startMusic(); }
-  $('play').textContent = '⏸ Pause'; $('play').setAttribute('aria-pressed', 'true');
+  $('play').innerHTML = '<span aria-hidden="true">⏸</span> Pause';
   playhead.style.display = 'block'; requestAnimationFrame(frame);
 }
 
@@ -1271,7 +1271,7 @@ function hardStop() {                                  // silence everything at 
 function pause() {
   playing = false; if (T.video) $('vid').pause(); stopSpeech(); clearInterval(timer); timer = null;
   hardStop();                                                        // Pause means silence now: no fade, no ringing tail, no drone
-  $('play').textContent = '▶ Play the globe'; $('play').setAttribute('aria-pressed', 'false');
+  $('play').innerHTML = '<span aria-hidden="true">▶</span> Play the globe';
 }
 function seek(col) { lastNarrCol = -1; pos = col; if (T.video) $('vid').currentTime = col / V.cols * T.grid.dur; queue = []; sweepEnded = false; if (playing) { nextCol = col; nextTime = A.ctx.currentTime + 0.05; } setHead(col); }
 function setHead(p) {
@@ -1337,7 +1337,22 @@ function narrateTour(c) {
 const SPEECH = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 let speechQ = [], speaking = false, curUtt = null;
-function applyVolume() { if (A) A.master.gain.setTargetAtTime($('vol').value / 100 * 0.95 * (speaking ? 0.35 : 1), A.ctx.currentTime, 0.1); }   // music ducks while the voice speaks
+let reading = false, readTimer = 0;     // "Quiet the music while I read": the sound drops to a whisper while new text is being read by a screen reader
+function applyVolume() { if (A) A.master.gain.setTargetAtTime($('vol').value / 100 * 0.95 * (speaking ? 0.35 : 1) * (reading ? 0.1 : 1), A.ctx.currentTime, 0.1); }   // music ducks while the voice speaks
+function duckForReading(text) {
+  if (!$('quietRead').checked || !text) return; reading = true; applyVolume(); clearTimeout(readTimer);
+  readTimer = setTimeout(() => { reading = false; applyVolume(); }, Math.min(15000, Math.max(2500, String(text).length * 75)));   // about how long a screen reader takes to say it
+}
+function setQuiet(on, say) { $('quietRead').checked = on; try { localStorage.setItem('ej_quiet', on ? '1' : '0'); } catch (e) {} if (!on) { clearTimeout(readTimer); reading = false; applyVolume(); } if (say) { const e = $('jbLive'); e.textContent = ''; setTimeout(() => { e.textContent = on ? 'Quiet the music while I read: on.' : 'Quiet the music while I read: off.'; }, 60); } }
+try { $('quietRead').checked = localStorage.getItem('ej_quiet') === '1'; } catch (e) {}
+$('quietRead').addEventListener('change', () => setQuiet($('quietRead').checked, false));
+{ const mo = new MutationObserver(ms => { for (const m of ms) { const t = m.target.nodeType === 1 ? m.target : m.target.parentElement; if (t && $('quietRead').checked) duckForReading(t.textContent); } });
+  ['readout', 'followStatus', 'elStatus', 'demoStatus', 'jbLive'].forEach(id => { const e = $(id); if (e) mo.observe(e, { childList: true, characterData: true, subtree: true }); }); }
+document.addEventListener('keydown', e => {
+  if ((e.key !== 'm' && e.key !== 'M') || e.ctrlKey || e.altKey || e.metaKey || e.repeat) return;
+  const t = e.target; if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && t.type !== 'checkbox' && t.type !== 'range' || t.isContentEditable)) return;
+  setQuiet(!$('quietRead').checked, true);
+});
 function speak(text, interrupt) {
   if (!SPEECH || !$('speak').checked) return;
   if (interrupt) { speechQ = []; curUtt = null; speechSynthesis.cancel(); speaking = false; }
@@ -1383,7 +1398,7 @@ function say(text) {                                 // speak one sentence and r
 }
 function showGuideUI(on) {
   $('skip').hidden = !on;
-  $('play').textContent = on ? '⏹ Stop intro' : '▶ Play the globe'; $('play').setAttribute('aria-pressed', String(on));
+  $('play').innerHTML = on ? '<span aria-hidden="true">⏹</span> Stop intro' : '<span aria-hidden="true">▶</span> Play the globe';
 }
 async function runGuide() {
   stopSpeech(); guiding = true; guideSkip = false; const tok = ++guideTok; showGuideUI(true);
@@ -1399,7 +1414,7 @@ function finishSweep() {                             // the sweep reached the ea
   curBar = -1; barChord = null; heldBarFor = -2;
   if (T.video) $('vid').pause();
   clearInterval(timer); timer = null; playing = false; silenceContinuous(); fadeMusic(0.8); sleepSoon(3000);
-  $('play').textContent = '▶ Play the globe'; $('play').setAttribute('aria-pressed', 'false');
+  $('play').innerHTML = '<span aria-hidden="true">▶</span> Play the globe';
   pos = 0; lastNarrCol = -1; setHead(V.cols);
   setReadout('The sweep has reached the end. Press play to hear it again, or click the map to explore.');
   speak('The sweep has reached the end.');
@@ -1557,7 +1572,7 @@ function stopDemo(quiet) {
   demoTok++; demoTimers.forEach(clearTimeout); demoTimers = []; demoRunning = false;
   document.querySelectorAll('.voice.demo-on').forEach(e => e.classList.remove('demo-on'));
   if (!quiet) hardStop();                           // the Stop button: silence now
-  silenceContinuous(); if (!quiet) $('demoStatus').textContent = ''; $('demoAll').textContent = '🎧 Hear the instruments'; $('demoAll').setAttribute('aria-pressed', 'false'); sleepSoon(300);
+  silenceContinuous(); if (!quiet) $('demoStatus').textContent = ''; $('demoAll').innerHTML = '<span aria-hidden="true">🎧</span> Hear the instruments'; sleepSoon(300);
 }
 async function demoVoice(k, tok) {
   const P = T.instruments, rows = V.rows, mid = Math.round(rows * 0.45), sp = T.species;
@@ -1598,12 +1613,12 @@ async function demoVoice(k, tok) {
   }
 }
 async function demoOne(k) {
-  if (playing) pause(); cancelGuide(); stopDemo(true); const tok = ++demoTok; demoRunning = true; $('demoAll').textContent = '⏹ Stop';
+  if (playing) pause(); cancelGuide(); stopDemo(true); const tok = ++demoTok; demoRunning = true; $('demoAll').innerHTML = '<span aria-hidden="true">⏹</span> Stop';
   await demoVoice(k, tok); if (tok === demoTok) { stopDemo(true); $('demoStatus').textContent = 'Done. Press Hear on another voice, or Play to hear them all together.'; }
 }
 async function demoAll() {
   if (demoRunning) { stopDemo(); return; }
-  if (playing) pause(); cancelGuide(); stopSpeech(); stopDemo(true); const tok = ++demoTok; demoRunning = true; $('demoAll').textContent = '⏹ Stop'; $('demoAll').setAttribute('aria-pressed', 'true');
+  if (playing) pause(); cancelGuide(); stopSpeech(); stopDemo(true); const tok = ++demoTok; demoRunning = true; $('demoAll').innerHTML = '<span aria-hidden="true">⏹</span> Stop';
   for (let k = 0; k < 5; k++) { if (tok !== demoTok) return; await demoVoice(k, tok); await dwait(300); }
   if (tok === demoTok) { stopDemo(true); $('demoStatus').textContent = 'That is every voice. Press Play to hear them all together.'; if ($('speak').checked && SPEECH) speak('That is every voice. Press Play to hear them all together.', true); }
 }
@@ -1631,7 +1646,7 @@ function buildVoices() {
     const d = document.createElement('div');
     d.className = 'voice'; d.style.borderLeftColor = s.color;
     d.innerHTML = `<label><input type="checkbox" checked> <strong style="color:${s.color}">${s.name}</strong></label>
-      <small>${s.sound}</small>${k === 4 ? '<small id="drumNow" style="color:var(--text)">Drums now: silent</small>' : ''}<button type="button" class="hear secondary" aria-label="Hear ${s.name} on its own">▶ Hear</button><div class="meter" aria-hidden="true"><i style="color:${s.color}"></i></div>`;
+      <small>${s.sound}</small>${k === 4 ? '<small id="drumNow" style="color:var(--text)">Drums now: silent</small>' : ''}<button type="button" class="hear secondary" aria-label="Hear ${s.name} on its own"><span aria-hidden="true">▶</span> Hear</button><div class="meter" aria-hidden="true"><i style="color:${s.color}"></i></div>`;
     $('voices').appendChild(d);
     const cb = d.querySelector('input');
     cb.setAttribute('aria-label', `${s.name} voice on: ${s.sound}`);
@@ -1667,7 +1682,7 @@ const tabIndex = id => TRACKS.findIndex(t => t.id === id);
 TAB_ORDER.forEach(id => {
   const i = tabIndex(id); if (i < 0) return; const t = TRACKS[i];
   const b = document.createElement('button'); b.type = 'button'; b.className = 'secondary tab'; b.dataset.track = id;
-  b.textContent = `${t.emoji} ${t.name}`; b.setAttribute('aria-pressed', 'false');
+  b.innerHTML = `<span aria-hidden="true">${t.emoji}</span> ${t.name}`; b.setAttribute('aria-pressed', 'false');
   b.addEventListener('click', () => setTrack(i)); $('tracks').appendChild(b);
 });
 function togglePlay() { if (guiding) cancelGuide(); else if (playing) pause(); else play(); }

@@ -66,7 +66,7 @@
   function setStatus(t) { const e = $('followStatus'); if (e && e.textContent !== t) e.textContent = t; }
   function stop(msg) {
     if (run) { clearInterval(run.timer); cancelAnimationFrame(run.raf); clearTimeout(run.endT); const A = API(); run = null; window.EJ_following = false; A.hold(false); A.hardStop(); }        // at once: no fade-out, nothing left ringing
-    $('fGo').textContent = '▶ Follow'; $('fGo').setAttribute('aria-pressed', 'false'); if (msg) setStatus(msg); draw(path ? path.pts.length : -1);
+    $('fGo').innerHTML = '<span aria-hidden="true">▶</span> Follow'; if (msg) setStatus(msg); draw(path ? path.pts.length : -1);
   }
   window.EJ_followStop = () => { if (run) stop(); };
   async function go() {
@@ -76,7 +76,7 @@
     path = trace(lon, lat, hint, $('fRev').checked); const P = path.pts;
     if (P.length < 6) { draw(-1); setStatus(`There are no flow lines at ${fmtLat(lat)}, ${fmtLon(lon)}: it may be land, or the picture has no decoded colour there. Try another start.`); return; }
     window.EJ_following = true;     A.hold(true); await A.wake(); const ctx = window.EJ.A.ctx, t0 = ctx.currentTime + 0.3; let next = 0, lastText = -1;
-    $('fGo').textContent = '⏹ Stop'; $('fGo').setAttribute('aria-pressed', 'true'); setStatus(`Following ${label || 'the current'} from ${fmtLat(lat)}, ${fmtLon(lon)}.`);
+    $('fGo').innerHTML = '<span aria-hidden="true">⏹</span> Stop'; setStatus(`Following ${label || 'the current'} from ${fmtLat(lat)}, ${fmtLon(lon)}.`);
     const lightKind = A.lightKind();
     const sched = () => {
       const a = window.EJ.A; if (!a || a.ctx !== ctx) { stop(); return; }

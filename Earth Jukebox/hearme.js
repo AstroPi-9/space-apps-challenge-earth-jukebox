@@ -84,8 +84,8 @@
     if (now) speakAll(list); else timer = setTimeout(() => speakAll(list), 350);                  // from a button press, speak at once (browsers want speech to start from the press)
   }
   function setOn(v) {
-    on = v; btn.setAttribute('aria-pressed', String(on)); btn.classList.toggle('on', on); btn.innerHTML = on ? '🔊 Hear Me is on' : '🔊 Hear Me'; bar.hidden = !on;
-    if (on) { if (!ok) { btn.setAttribute('aria-pressed', 'false'); on = false; bar.hidden = true; $('jbLive').textContent = 'Sorry, this browser cannot speak. Please use a screen reader instead.'; return; } hear('Hear Me is on. I will describe each screen as you move around. Press H to hear a screen again.', true); }
+    on = v; btn.classList.toggle('on', on); btn.innerHTML = on ? '<span aria-hidden="true">🔊</span> Hear Me is on' : '<span aria-hidden="true">🔊</span> Hear Me'; bar.hidden = !on;
+    if (on) { if (!ok) { on = false; bar.hidden = true; $('jbLive').textContent = 'Sorry, this browser cannot speak. Please use a screen reader instead.'; return; } hear('Hear Me is on. I will describe each screen as you move around. Press H to hear a screen again.', true); }
     else { clearTimeout(timer); gen++; caption(''); const f = $('hearFallback'); if (f) f.hidden = true; if (ok) { SS.cancel(); const u = new SpeechSynthesisUtterance('Hear Me is off.'); SS.speak(u); } }
   }
   btn.addEventListener('click', () => { if (!on) setOn(true); else hear(null, true); });             // first press turns it on; pressing again reads the screen once more

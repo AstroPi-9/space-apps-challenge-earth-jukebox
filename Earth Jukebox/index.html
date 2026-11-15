@@ -260,7 +260,7 @@
       </div>
       <div class="jb-foot">
         <span id="jbPrompt">Press a red button to choose a record.</span>
-        <span class="jb-foot-btns"><button id="hearMe" class="hear-me" type="button" aria-pressed="false" aria-label="Hear Me: turn on a spoken summary of what is on the screen, for blind and low-vision people">🔊 Hear Me</button><button id="jbHelp" type="button" class="secondary">? How it works</button></span>
+        <span class="jb-foot-btns"><button id="hearMe" class="hear-me" type="button" aria-describedby="hearMeDesc"><span aria-hidden="true">🔊</span> Hear Me</button><button id="jbHelp" type="button" class="secondary">? How it works</button></span>
       </div>
       <p class="sub" style="margin:14px 0 0;color:#d9c08a;font-size:.85rem">Made for the NASA Space Apps Challenge 2026. An independent project, not an official NASA product. Pictures: NASA Scientific Visualization Studio.</p>
     </div>
@@ -288,6 +288,7 @@
           <div class="stack">
             <label class="toggle"><input id="showSheet" type="checkbox" role="switch" checked><span><span class="t">Show sheet music</span><small>A staff for every voice, scrolling past a fixed line</small></span></label>
             <label class="toggle"><input id="narrate" type="checkbox" role="switch"><span><span class="t">Show descriptions while playing</span><small>Text about what the beam is passing over</small></span></label>
+            <label class="toggle"><input id="quietRead" type="checkbox" role="switch"><span><span class="t">Quiet the music while I read</span><small>The sound drops to a whisper whenever new text appears, so a screen reader can be heard. Press M to switch this on or off</small></span></label>
             <label class="toggle"><input id="speak" type="checkbox" role="switch"><span><span class="t">Spoken narration</span><small>A voice describes the map, then the sweep plays once</small></span></label>
             <label class="toggle"><input id="autoClose" type="checkbox" role="switch" checked><span><span class="t">Return to the jukebox when a song ends</span><small>The doors close and you choose another record</small></span></label>
             <div class="sliders" style="margin-top:2px">
@@ -297,8 +298,8 @@
           </div>
         </div>
 </section>
-<div id="hearBar" class="hear-bar" role="group" aria-label="Hear Me" hidden><button id="hearAgain" type="button">🔊 Hear this screen again (H)</button><button id="hearOff" type="button" class="secondary">Turn Hear Me off</button><p id="hearCaption" class="hear-caption" aria-hidden="true"></p><p id="hearFallback" class="hear-caption" role="status" aria-live="assertive" hidden></p></div>
-<div id="jbLive" class="sr-only" role="status" aria-live="polite"></div>
+<div id="hearBar" class="hear-bar" role="group" aria-label="Hear Me" hidden><button id="hearAgain" type="button"><span aria-hidden="true">🔊</span> Hear this screen again (H)</button><button id="hearOff" type="button" class="secondary">Turn Hear Me off</button><p id="hearCaption" class="hear-caption" aria-hidden="true"></p><p id="hearFallback" class="hear-caption" role="status" aria-live="assertive" hidden></p></div>
+<span id="hearMeDesc" class="sr-only">Turns on a spoken summary of what is on the screen, for blind and low-vision people.</span><div id="jbLive" class="sr-only" role="status" aria-live="polite"></div>
 <a class="skip" href="#controls">Skip to controls</a>
 <div class="wrap">
   <header>
@@ -307,9 +308,9 @@
   </header>
 
   <main>
-    <div id="dataBar" class="data-bar" role="group" aria-label="Jukebox"><button id="backHome" type="button">↩ Back to the jukebox</button><span id="dataBarNow" aria-live="polite"></span></div>
+    <div id="dataBar" class="data-bar" role="group" aria-label="Jukebox"><button id="backHome" type="button">↩ Back to the jukebox</button><span id="dataBarNow"></span></div>
     <div class="controls" id="tracks" role="group" aria-label="Choose a track"></div>
-    <div id="stage" tabindex="0" role="group"
+    <div id="stage" tabindex="0" role="application" aria-roledescription="map explorer"
          aria-label="Aerosol map of Earth. Use arrow keys to explore, Enter to hear a spot, Space to play or pause."
          aria-describedby="help">
       <img id="map" src="assets/aerosols.png" alt="">
@@ -322,7 +323,7 @@
     </div>
     <section id="sheetWrap" aria-label="Scrolling sheet music: one staff for each voice">
       <canvas id="sheet" aria-hidden="true"></canvas>
-      <p id="sheetNow" class="sub" aria-live="polite">Sheet music: every voice has its own staff. Notes scroll from right to left past the white line. Press play. A words-only version of what is playing appears here.</p>
+      <p id="sheetNow" class="sub">Sheet music: every voice has its own staff. Notes scroll from right to left past the white line. Press play. A words-only version of what is playing appears here.</p>
       <p id="scaleNow" class="sub" style="margin-top:2px"></p>
     </section>
     <section id="followPanel" class="panel" hidden aria-label="Follow a current">
@@ -334,7 +335,7 @@
         <label>latitude <input id="fLat" type="number" min="-80" max="80" value="26" style="width:5em"></label>
         <label class="toggle compact"><input id="fPick" type="checkbox" role="switch"><span class="t">Click the map to choose the start</span></label>
         <label class="toggle compact"><input id="fRev" type="checkbox" role="switch"><span class="t">Reverse direction</span></label>
-        <button id="fGo" type="button" aria-pressed="false">&#9654; Follow</button>
+        <button id="fGo" type="button"><span aria-hidden="true">&#9654;</span> Follow</button>
       </div>
       <p id="followStatus" class="sub" aria-live="polite">Pick a named current, or enter a start point and press Follow.</p>
     </section>
@@ -349,7 +350,7 @@
       <div class="controls" id="elPresets" role="group" aria-label="Choose a month"></div>
       <div class="controls">
         <label>Month <input id="elMonth" type="range" min="0" max="537" value="191" style="width:min(420px,60vw)" aria-valuetext="December 1997"> <span id="elMonthOut" aria-hidden="true"></span></label>
-        <button id="elYears" type="button" aria-pressed="false">&#9654; Play the years</button>
+        <button id="elYears" type="button"><span aria-hidden="true">&#9654;</span> Play the years</button>
       </div>
       <p id="elStatus" class="sub" aria-live="polite">Tick "Add the El Niño layer", choose a month, and press Play, or press "Play the years" to hear the Niño 3.4 index from 1982 to the latest month while the maps change.</p>
     </section>
@@ -361,10 +362,10 @@
       <div class="ctl-card wide" role="group" aria-label="Playback">
         <h3>Playback</h3>
         <div class="row">
-          <button id="play" type="button" aria-pressed="false">▶ Play the globe</button>
-          <button id="restart" type="button" class="secondary">⏮ Restart</button>
-          <button id="skip" type="button" class="secondary" hidden>⏭ Skip intro</button>
-          <button id="demoAll" type="button" class="secondary" aria-pressed="false">🎧 Hear the instruments</button>
+          <button id="play" type="button"><span aria-hidden="true">▶</span> Play the globe</button>
+          <button id="restart" type="button" class="secondary"><span aria-hidden="true">⏮</span> Restart</button>
+          <button id="skip" type="button" class="secondary" hidden><span aria-hidden="true">⏭</span> Skip intro</button>
+          <button id="demoAll" type="button" class="secondary"><span aria-hidden="true">🎧</span> Hear the instruments</button>
         </div>
         <div class="sliders">
           <label class="field"><span>Volume</span><input id="vol" type="range" min="0" max="100" value="70"></label>
@@ -377,8 +378,8 @@
       <div class="ctl-card wide" role="group" aria-label="Note trace">
         <h3>Export the note trace</h3>
         <div class="row">
-          <button id="traceCsv" type="button" class="secondary">⬇ CSV</button>
-          <button id="traceJson" type="button" class="secondary">⬇ JSON, with sources and method</button>
+          <button id="traceCsv" type="button" class="secondary"><span aria-hidden="true">⬇</span> CSV</button>
+          <button id="traceJson" type="button" class="secondary"><span aria-hidden="true">⬇</span> JSON, with sources and method</button>
           <span id="traceStatus" class="sub" aria-live="polite">Every note played is recorded with its column, longitude or month, the data under it, the scale and mood, and the source file's fingerprint. Play something, then export.</span>
         </div>
       </div>
