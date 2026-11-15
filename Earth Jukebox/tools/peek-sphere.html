@@ -1,0 +1,5 @@
+<!doctype html><meta charset="utf-8"><body style="background:#222;margin:0"><div id="o"></div><script>
+(async()=>{const v=document.createElement('video');v.muted=true;v.src=URL.createObjectURL(await(await fetch('../../Lightning/iss_lightning_sphere_07312023.mp4')).blob());
+await new Promise(r=>v.onloadeddata=r);const o=document.getElementById('o');window.__info=v.videoWidth+'x'+v.videoHeight+' '+v.duration.toFixed(1)+'s';
+for(const f of [0.05,0.2,0.4,0.6,0.8,0.95]){await new Promise(r=>{v.onseeked=r;v.currentTime=f*v.duration});const c=document.createElement('canvas');c.width=480;c.height=270;c.getContext('2d').drawImage(v,0,0,480,270);c.style.cssText='margin:2px';o.appendChild(c)}window.__done=1})();
+</script>

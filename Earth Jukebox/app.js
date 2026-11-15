@@ -332,13 +332,22 @@ function lightningDrum(k, lat) {                       // which untuned drum a s
   if (k === 3) return lat > 40 ? 'daf' : 'tabla';
   return lat > 25 ? 'taiko' : lat < -10 ? 'clapsticks' : 'kendang';
 }
+const LCOL = { 0: '#ff8a65', 1: '#d7aaff', 3: '#7dff5a', 4: '#e6ebf0', 2: '#8fe0e0' }, LB = { 0: [2.78, 38.89], 1: [41.67, 20.83], 3: [62.5, 15.28], 4: [77.78, 22.22], 2: [0, 100] };
+function lit(k, r, d, t) {                              // show a strike on the map: a bar in its part of the world, at its latitude, lit at the moment it is heard
+  const L = $('lightLayer'); if (!L || !A.ctx) return; const ms = Math.max(0, (t - A.ctx.currentTime) * 1000);
+  setTimeout(() => {
+    if (T.id !== 'lightning') return; const e = document.createElement('i'), b = LB[k], h = 100 / V.rows; e.className = 'lh';
+    e.style.cssText = `left:${b[0]}%;width:${b[1]}%;top:${r * h}%;height:${h}%;background:${LCOL[k]};box-shadow:0 0 6px 0 ${LCOL[k]}`; if (k === 2) { e.style.height = '3px'; e.style.top = ((r + .5) * h) + '%'; }
+    L.appendChild(e); setTimeout(() => e.remove(), 520);
+  }, ms);
+}
 function rng32(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 if (window.LIGHTNING_GRID) TRACKS.push({
   id: 'lightning', name: 'Lightning', emoji: '⚡', grid: window.LIGHTNING_GRID, image: 'assets/lightning/f000.jpg', timeAxis: true, startLon: 0, percussionOnly: true,
   frames: Array.from({ length: 160 }, (_, c) => 'assets/lightning/f' + String(c).padStart(3, '0') + '.jpg'),
   lonFn: c => c, regionFn: () => 'conga',
   headFn: (c, r) => `${dateLabel(T.grid.dates[c])}, ${fmtLat(latOf(r))} (all longitudes in the sector)`,
-  intro: 'Hear lightning flashes detected from the International Space Station between March 2017 and July 2023 (NASA SVS 5011). Time runs from left to right across about six years, and every flash is a drum strike: untuned drums from each part of the world, with timpani rolls where the storms are strongest. The picture shows the flashes as yellow dots.',
+  intro: 'Hear lightning flashes detected from the International Space Station between March 2017 and July 2023 (NASA SVS 5011). Time runs from left to right across about six years, and every flash is a drum strike: untuned drums from each part of the world, with timpani rolls where the storms are strongest. The picture shows the flashes as yellow dots, and coloured bars light up the part of the world and the latitude of each drum you hear.',
   alt: 'A flat map of the world on a dark background with grey continents. Thousands of yellow dots mark lightning flashes seen from the International Space Station, between about 55 degrees north and 55 degrees south. They crowd over central Africa, the Americas, and South and Southeast Asia, and they swing north and south with the seasons. The picture changes through the frames, from March 2017 to July 2023.',
   species: [
     { name: 'Americas', color: '#e8765a', sound: 'Untuned drums: congas, surdo and tamborim in the tropics and south, the drum kit in the north', what: 'lightning over the Americas' },
@@ -371,13 +380,13 @@ if (window.LIGHTNING_GRID) TRACKS.push({
     for (let i = 0; i < n; i++) {                                              // each strike lands in a cell chosen by its share of the flashes, at a random moment in this step
       let x = rnd() * sum, ch = cells[cells.length - 1]; for (const cell of cells) { x -= cell[2]; if (x <= 0) { ch = cell; break; } }
       const [S, r, d] = ch, id = lightningDrum(S.k, latOf(r)), st = INSTR[id].pat.filter(Boolean);
-      hit(id, st[Math.floor(rnd() * st.length)], t + Math.floor(rnd() * slots) * step / slots, 0.15 + 0.32 * d, S.bus);
+      const tt = t + Math.floor(rnd() * slots) * step / slots; hit(id, st[Math.floor(rnd() * st.length)], tt, 0.15 + 0.32 * d, S.bus); lit(S.k, r, d, tt);
     }
-    if (rank >= 0.72 && c % 2 === 0) strongPlay(c, t, step, rank, cen[2], v.rows);       // some timpani, where the storms are strongest
+    if (rank >= 0.72 && c % 2 === 0) { strongPlay(c, t, step, rank, cen[2], v.rows); lit(2, Math.min(v.rows - 1, Math.round(cen[2])), rank, t); }       // some timpani, where the storms are strongest
   },
   explore(c, r, v) {
     const t = A.ctx.currentTime + 0.02;
-    LSECT.forEach(S => { const d = v.val(c, r, S.k); if (d > 0.08) { const id = lightningDrum(S.k, latOf(r)), st = INSTR[id].pat.filter(Boolean); for (let i = 0; i < 3; i++) hit(id, st[i % st.length], t + i * 0.13, 0.2 + 0.3 * d, S.bus); } });
+    LSECT.forEach(S => { const d = v.val(c, r, S.k); if (d > 0.08) { const id = lightningDrum(S.k, latOf(r)), st = INSTR[id].pat.filter(Boolean); for (let i = 0; i < 3; i++) hit(id, st[i % st.length], t + i * 0.13, 0.2 + 0.3 * d, S.bus); lit(S.k, r, d, t); } });
     if (v.val(c, r, 2) > 0.6) strongPlay(c, t, 0.5, v.val(c, r, 2), r, v.rows);
   },
 });
@@ -1639,6 +1648,7 @@ function setTrack(i) {
   const vid = $('vid');
   if (T.video) { $('map').style.display = 'none'; vid.style.display = 'block'; vid.setAttribute('aria-label', T.alt); vid.src = T.video; $('vcap').style.display = 'block'; $('vcap').textContent = ''; }
   else { vid.pause(); vid.removeAttribute('src'); vid.load(); vid.style.display = 'none'; $('vcap').style.display = 'none'; $('map').style.display = 'block'; $('map').src = T.image; $('map').alt = T.alt; }
+  if ($('lightLayer')) $('lightLayer').style.display = T.id === 'lightning' ? 'block' : 'none';
   $('vcap').style.display = (T.video || T.timeAxis) ? 'block' : 'none'; $('tlineWrap').style.display = T.timeAxis ? 'block' : 'none';
   $('help').textContent = T.timeAxis ? 'Drag the time slider to move through the year. Click or tap the picture to hear the latitude you click, at the current time. With a keyboard: left and right arrows move through time, up and down change latitude, Enter replays the spot, Space plays or pauses.' : HELP0;
   if (T.timeAxis) { T._pre = T._pre || T.frames.map(s => { const i = new Image(); i.src = s; return i; }); lastFrameIdx = -1; $('tline').max = V.cols - 1; $('vcap').textContent = dateLabel(T.grid.dates[0]); }
